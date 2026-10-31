@@ -4,7 +4,7 @@ export default defineConfig({
   testMatch: "*.spec.ts",
   timeout: 90000,
   use: {
-    baseURL: process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:3001",
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3002",
     launchOptions: {
       executablePath: "C:/Program Files/Google/Chrome/Application/chrome.exe",
     },

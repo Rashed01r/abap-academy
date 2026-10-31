@@ -28,6 +28,12 @@ export function Roadmap({
     count =
       (progress.labs.includes("orientation") ? 1 : 0) +
       progress.missions.length;
+  const total = missions.length + 1;
+  const foundation = (progress.labs.includes("orientation") ? 1 : 0) + ["addition", "structures"].filter(id => progress.missions.includes(id)).length;
+  const prerequisiteTitle = (id: string) => {
+    const prerequisite = missions.find(m => m.id === id)?.prerequisite;
+    return missions.find(m => m.id === prerequisite)?.title || { en: t.orientation, ar: t.orientation };
+  };
   return (
     <section className="journey-section">
       <div className="section-heading">
@@ -96,14 +102,7 @@ export function Roadmap({
                                 missions.find((x) => x.id === m.id)?.goal.ar ||
                                 "",
                             },
-                            prerequisite:
-                              missions.find((x) => x.id === m.id)
-                                ?.prerequisite === "addition"
-                                ? missions[0].title
-                                : {
-                                    en: t.orientation,
-                                    ar: t.orientation,
-                                  },
+                            prerequisite: prerequisiteTitle(m.id),
                             implemented: m.id,
                             minutes: m.minutes,
                           })
@@ -111,11 +110,13 @@ export function Roadmap({
                   >
                     <div>
                       <small>
-                        {i === 0 ? t.lab : `${t.mission} 0${i}`} · {m.minutes}{" "}
-                        {t.minutes}
+                        {i === 0 ? t.lab : `${t.mission} ${String(i).padStart(2, "0")}`} · {m.minutes}{" "}
+                        {t.minutes} · {"xp" in m ? m.xp : 25} XP
                       </small>
                       <h3>{m.title[lang]}</h3>
                       <p>{m.subtitle[lang]}</p>
+                      {"objectives" in m && <p className="mission-skills">{m.objectives.map(o => o[lang]).join(" · ")}</p>}
+                      {m.id !== "orientation" && <p className="small">{t.prerequisite}: {prerequisiteTitle(m.id)[lang]}</p>}
                       <span className="node-status">
                         {complete
                           ? t.completed
@@ -123,7 +124,7 @@ export function Roadmap({
                             ? t.available
                             : t.locked}
                         {!available &&
-                          ` · ${t.prerequisite}: ${missions.find((x) => x.id === m.id)?.prerequisite === "addition" ? missions[0].title[lang] : t.orientation}`}
+                          ` · ${t.prerequisite}: ${prerequisiteTitle(m.id)[lang]}`}
                       </span>
                     </div>
                     <ArrowRight size={20} />
@@ -132,8 +133,12 @@ export function Roadmap({
               );
             })}
             {[
-              { en: "Conditions", ar: "الشروط" },
-              { en: "Loops", ar: "الحلقات" },
+              { en: "04 · Repeat actions with DO", ar: "04 · تكرار التعليمات باستخدام DO" },
+              { en: "05 · Control repetition with WHILE", ar: "05 · التحكم في التكرار باستخدام WHILE" },
+              { en: "06 · Create and fill an internal table", ar: "06 · إنشاء جدول داخلي وإضافة صفوف إليه" },
+              { en: "07 · Read table rows with LOOP AT", ar: "07 · قراءة صفوف الجدول باستخدام LOOP AT" },
+              { en: "08 · Control loops with EXIT and CONTINUE", ar: "08 · التحكم في الحلقات باستخدام EXIT وCONTINUE" },
+              { en: "09 · Employee records processor", ar: "09 · مشروع معالجة سجلات الموظفين" },
             ].map((name, i) => (
               <div className="roadmap-node future-node" key={name.en}>
                 <span className="node-dot">
@@ -145,9 +150,7 @@ export function Roadmap({
                     setPreview({
                       title: name,
                       concepts: name,
-                      prerequisite: i
-                        ? { en: "Conditions", ar: "الشروط" }
-                        : missions[1].title,
+                      prerequisite: i ? { en: "Complete the preceding beginner mission", ar: "إكمال المهمة السابقة في مسار المبتدئين" } : missions.at(-1)!.title,
                       minutes: 6,
                     })
                   }
@@ -213,20 +216,23 @@ export function Roadmap({
             <div
               className="progress-ring"
               style={{
-                background: `conic-gradient(var(--accent) ${(count / 3) * 360}deg,var(--line) 0)`,
+                background: `conic-gradient(var(--accent) ${(count / total) * 360}deg,var(--line) 0)`,
               }}
             >
               <div>
                 <strong>
-                  {Math.round((count / 3) * 100)}
+                  {Math.round((count / total) * 100)}
                   <small>%</small>
                 </strong>
               </div>
             </div>
             <h3>
-              {count} / 3 {t.completed}
+              {count} / {total} {t.completed}
             </h3>
             <p>{t.pathProgress}</p>
+            <p data-testid="foundation-progress">{foundation === 3 ? t.foundationComplete : t.foundationProgress} — {foundation}/3</p>
+            <p>{t.availableProgress}: {count}/{total}</p>
+            <small>{t.previewProgress}</small>
             <div className="xp-row">
               <Sparkles size={17} />
               <strong>{earnedXP(progress)}</strong> XP
@@ -235,8 +241,8 @@ export function Roadmap({
           </div>
           <div className="milestone-card">
             <Trophy size={25} />
-            <h3>{count === 3 ? t.allDone : t.milestone}</h3>
-            <p>{count === 3 ? t.allDoneSub : t.orientationGoal}</p>
+            <h3>{foundation === 3 ? t.allDone : t.milestone}</h3>
+            <p>{foundation === 3 ? t.allDoneSub : t.orientationGoal}</p>
           </div>
         </aside>
       </div>

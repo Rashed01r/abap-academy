@@ -140,7 +140,7 @@ export function CodeEditor({
               tokenizer: {
                 root: [
                   [
-                    /\b(DATA|TYPES|BEGIN|END|OF|TYPE|VALUE|WRITE|IF|ELSE|ENDIF)\b/i,
+                    /\b(DATA|TYPES|BEGIN|END|OF|TYPE|VALUE|WRITE|IF|ELSEIF|ELSE|ENDIF)\b/i,
                     "keyword",
                   ],
                   [/'([^']|'')*'/, "string"],

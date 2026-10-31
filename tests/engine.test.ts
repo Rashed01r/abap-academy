@@ -136,7 +136,7 @@ test("escaped quotes, periods, and case insensitive identifiers", () => {
 });
 test("mission solutions pass and hardcoded arithmetic does not", () => {
   for (const m of missions)
-    assert.equal(evaluate(m.solution, m.id).correct, true);
+    for (const c of m.challenges || [m]) assert.equal(evaluate(c.solution, c.id).correct, true);
   assert.equal(evaluate("WRITE 30.", "addition").correct, false);
   assert.equal(
     evaluate(
@@ -181,4 +181,96 @@ test("mission prerequisites and XP prevent duplicate rewards", () => {
     0,
   );
   assert.equal(parse(additionExample)[0].kind, "data");
+});
+test("ELSEIF selects only the first true branch and emits only tested conditions", () => {
+  const template = `DATA score TYPE i VALUE 75.
+IF score >= 80.
+ WRITE 'High'.
+ELSEIF score >= 50.
+ WRITE 'Medium'.
+ELSEIF score >= 0.
+ WRITE 'Low'.
+ELSE.
+ WRITE 'Invalid'.
+ENDIF.`;
+  for (const [value, label, conditions] of [[100, "High", 1], [80, "High", 1], [79, "Medium", 2], [50, "Medium", 2], [0, "Low", 3], [-1, "Invalid", 3]] as const) {
+    const code = template.replace("VALUE 75", `VALUE ${value}`);
+    const events = simulate(code);
+    assert.deepEqual(events.at(-1)!.output, [label]);
+    assert.equal(events.filter(e => e.operation === "condition").length, conditions);
+    assert.equal(events.filter(e => e.operation === "end").length, 1);
+    assert.equal(events.filter(e => e.operation === "write").length, 1);
+    assert.ok(events.at(-1)!.skippedRanges.length >= 2);
+    for (const e of events) assert.equal(code.slice(e.range.start, e.range.end), e.statement);
+  }
+});
+test("nested IF and ELSEIF keep independent boundaries and snapshots", () => {
+  const code = `DATA score TYPE i VALUE 75.
+DATA result TYPE i.
+IF score > 0.
+ IF score >= 80.
+  result = 3.
+ ELSEIF score >= 50.
+  result = 2.
+ ELSE.
+  result = 1.
+ ENDIF.
+ELSE.
+ result = 0.
+ENDIF.
+WRITE result.`;
+  const events = simulate(code);
+  assert.deepEqual(events.at(-1)!.output, ["2"]);
+  assert.equal(events[1].memory.result, 0);
+  assert.equal(events.at(-1)!.memory.result, 2);
+  assert.equal(events.filter(e => e.operation === "end").length, 2);
+  const elseif = events.find(e => e.statement.startsWith("ELSEIF"))!;
+  assert.equal(elseif.condition?.expression, "75 >= 50");
+  assert.equal(elseif.range.startLine, 6);
+  assert.deepEqual(elseif.output, []);
+});
+test("all branches are validated even when unselected, with accurate ELSEIF locations", () => {
+  assert.throws(() => simulate("IF 1 = 1. WRITE 1.\nELSEIF missing > 0. WRITE 2. ENDIF."), (e: unknown) => e instanceof SimulationError && e.code === "unknown" && e.range.startLine === 2);
+  fails("IF 1 = 1. ELSE. ELSEIF 2 = 2. ENDIF.", "block");
+  fails("IF 1 = 1. ELSE. ELSE. ENDIF.", "block");
+  fails("ELSEIF 1 = 1. ENDIF.", "block");
+  fails("IF 1 = 1. ELSEIF 2 = 2. WRITE 3.", "block");
+  fails("IF 1 = 1. ELSEIF 2 = 2. DATA x TYPE i. ENDIF.", "unsupported");
+  fails("DO 5 TIMES. WRITE 1. ENDDO.", "unsupported");
+});
+test("Conditions assessments reject hardcoding, threshold errors, and overwritten inputs", () => {
+  const [positive, bonus, ranges] = missions.find(m => m.id === "conditions")!.challenges!;
+  assert.equal(evaluate(positive.solution.replace("> 0", ">= 0"), positive.id).correct, false);
+  assert.deepEqual(evaluate(positive.solution.replace("> 0", ">= 0"), positive.id).failure, { name: "lv_number", input: 0, expected: "Not positive", actual: "Positive" });
+  assert.equal(evaluate(bonus.solution.replace(">= 5000", "> 5000"), bonus.id).correct, false);
+  assert.equal(evaluate(ranges.solution.replace(">= 80", ">= 79"), ranges.id).correct, false);
+  assert.equal(evaluate("DATA lv_number TYPE i VALUE 4. WRITE 'Positive'.", positive.id).correct, false);
+  assert.equal(evaluate(positive.solution.replace("IF lv_number", "lv_number = 4.\nIF lv_number"), positive.id).correct, false);
+  assert.equal(evaluate(ranges.starter + "WRITE 'Medium'.", ranges.id).correct, false);
+});
+test("registry migration retains foundation results, unlocks Conditions, and deduplicates XP", () => {
+  const old = { labs: ["orientation", "addition", "structures"], missions: ["addition", "structures"], current: "structures", results: { addition: { attempts: 3, passed: true } } };
+  const migrated = normalizeProgress(old);
+  assert.equal(earnedXP(migrated), 275);
+  assert.deepEqual(migrated.missions, old.missions);
+  assert.deepEqual(migrated.results, old.results);
+  assert.equal(unlocked("conditions", migrated), true);
+  assert.equal(unlocked("do", migrated), false);
+  const completed = normalizeProgress({ ...migrated, labs: [...migrated.labs, "conditions"], missions: [...migrated.missions, "conditions", "conditions"] });
+  assert.equal(earnedXP(completed), 475);
+  assert.equal(completed.missions.length, 3);
+});
+test("curriculum prerequisites are ordered and Conditions teaches each assessed decision construct", () => {
+  const seen = new Set(["orientation"]);
+  for (const mission of missions) {
+    assert.ok(seen.has(mission.prerequisite), `${mission.id} has an earlier prerequisite`);
+    assert.ok(!seen.has(mission.id), "mission IDs are unique");
+    seen.add(mission.id);
+    assert.ok(mission.objectives.length && mission.practice.en && mission.practice.ar);
+    simulate(mission.example);
+  }
+  const conditions = missions.find(m => m.id === "conditions")!;
+  const taught = new Set(conditions.tokens.map(t => t.id));
+  for (const id of ["if", "else", "elseif", "endif", "compare", "compare-assignment", "write", "period"]) assert.ok(taught.has(id));
+  assert.equal(conditions.challenges!.length, 3);
 });

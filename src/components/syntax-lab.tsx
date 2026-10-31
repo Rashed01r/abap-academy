@@ -4,6 +4,7 @@ import { Check, MousePointer2, ArrowRight } from "lucide-react";
 import { SyntaxToken } from "@/lib/curriculum";
 import { Locale } from "@/lib/engine";
 import { ui } from "@/lib/i18n";
+import { TechnicalText } from "./technical-text";
 export function Quiz({
   question,
   options,
@@ -24,7 +25,7 @@ export function Quiz({
   return (
     <div className="quiz">
       <div className="eyebrow">{t.question}</div>
-      <h3>{question}</h3>
+      <h3><TechnicalText>{question}</TechnicalText></h3>
       <div className="answer-options">
         {options.map((o, i) => (
           <button
@@ -35,7 +36,7 @@ export function Quiz({
               if (i === answer) onCorrect();
             }}
           >
-            {choice === i && i === answer && <Check size={16} />} {o}
+            {choice === i && i === answer && <Check size={16} />} <TechnicalText>{o}</TechnicalText>
           </button>
         ))}
       </div>
@@ -44,7 +45,7 @@ export function Quiz({
           role="status"
           className={choice === answer ? "success-text" : "error-text"}
         >
-          {choice === answer ? t.right : t.tryAgain} {explanation}
+          {choice === answer ? t.right : t.tryAgain} <TechnicalText>{explanation}</TechnicalText>
         </p>
       )}
     </div>
@@ -79,6 +80,7 @@ export function SyntaxLab({
         (key === "." && k.id === "period") ||
         ((key === ":" || key === ",") && k.id === "chain") ||
         (key === "=" && k.id === "equals") ||
+        (["=", "<>", ">", "<", ">=", "<="].includes(key) && k.id === "compare") ||
         (key === "+" && k.id === "plus") ||
         (key === "-" && k.id === "hyphen") ||
         (["begin", "of"].includes(key) && k.id === "begin") ||
@@ -123,8 +125,8 @@ export function SyntaxLab({
             ))}
           </div>
           <pre className="clickable-code" dir="ltr" aria-label="ABAP">
-            {example.split(/(\b[a-zA-Z_]\w*\b|[.:,+=-])/g).map((s, i) =>
-              /^[a-zA-Z_]|^[.:,+=-]$/.test(s) ? (
+            {example.split(/(\b[a-zA-Z_]\w*\b|>=|<=|<>|[.:,+=<>-])/g).map((s, i) =>
+              /^[a-zA-Z_]|^(>=|<=|<>|[.:,+=<>-])$/.test(s) ? (
                 <button key={i} onClick={() => selectCode(s)}>
                   {s}
                 </button>
@@ -141,11 +143,11 @@ export function SyntaxLab({
           </span>
           <dl>
             <dt>{t.meaning}</dt>
-            <dd>{token.meaning[lang]}</dd>
+            <dd><TechnicalText>{token.meaning[lang]}</TechnicalText></dd>
             <dt>{t.why}</dt>
-            <dd>{token.why[lang]}</dd>
+            <dd><TechnicalText>{token.why[lang]}</TechnicalText></dd>
             <dt>{t.write}</dt>
-            <dd>{token.write[lang]}</dd>
+            <dd><TechnicalText>{token.write[lang]}</TechnicalText></dd>
           </dl>
           <div className="example-pair">
             <div>

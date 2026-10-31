@@ -2017,6 +2017,28 @@ footer {
     scroll-behavior: auto !important;
   }
 }
+.glossary {
+  margin: 24px auto;
+  width: min(1120px, calc(100% - 40px));
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+.glossary summary { cursor: pointer; font-weight: 600; }
+.glossary dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 20px; }
+.glossary dt { font-weight: 600; }
+.glossary dd { margin: 8px 0 0; line-height: 1.8; }
+[dir="rtl"] body { font-family: Tahoma, Arial, sans-serif; }
+[dir="rtl"] .instruction p,
+[dir="rtl"] .learn-card p,
+[dir="rtl"] .what-happened p,
+[dir="rtl"] .feedback,
+[dir="rtl"] .token-explainer dd {
+  font-size: 15px;
+  line-height: 1.9;
+}
+.mission-skills { color: var(--muted); font-size: 13px; }
+.probe-feedback { margin-top: 12px; border-top: 1px solid currentColor; padding-top: 8px; }
 .theme-select:focus-within {
   outline: 3px solid #d99b40;
   outline-offset: 4px;

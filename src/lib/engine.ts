@@ -63,6 +63,7 @@ export type Node =
       endRange: Range;
       yesRange?: Range;
       noRange?: Range;
+      elseifs?: { left: Expr; op: string; right: Expr; body: Node[]; range: Range; bodyRange?: Range }[];
     };
 export type ExecutionEvent = {
   id: number;
@@ -223,7 +224,7 @@ export function parse(source: string): Node[] {
   const period = (start: number) => {
     if (!at(".")) {
       if (
-        ["data", "types", "write", "if", "else", "endif"].includes(peek()?.text)
+        ["data", "types", "write", "if", "elseif", "else", "endif"].includes(peek()?.text)
       )
         throw new SimulationError("period", range(start), ".");
       fail("period", ".", Math.max(start, p - 1));
@@ -232,7 +233,7 @@ export function parse(source: string): Node[] {
   };
   function nodes(nested = false): Node[] {
     const list: Node[] = [];
-    while (peek() && !at("else") && !at("endif")) {
+    while (peek() && !at("else") && !at("elseif") && !at("endif")) {
       const start = p;
       let node!: Node;
       if (at("data")) {
@@ -289,6 +290,19 @@ export function parse(source: string): Node[] {
           yesStart = p,
           yes = nodes(true);
         const yesRange = yes.length ? range(yesStart) : undefined;
+        const elseifs: NonNullable<Extract<Node, { kind: "if" }>["elseifs"]> = [];
+        while (at("elseif")) {
+          const branchStart = p++;
+          const left = atom();
+          const op = peek()?.text;
+          if (!["=", "<>", ">=", "<=", ">", "<"].includes(op)) fail("assignment");
+          p++;
+          const right = atom();
+          period(branchStart);
+          const branchRange = range(branchStart), bodyStart = p;
+          const body = nodes(true);
+          elseifs.push({ left, op, right, body, range: branchRange, bodyRange: body.length ? range(bodyStart) : undefined });
+        }
         let no: Node[] = [],
           noRange: Range | undefined;
         if (at("else")) {
@@ -311,6 +325,7 @@ export function parse(source: string): Node[] {
           endRange: range(endStart),
           yesRange,
           noRange,
+          elseifs,
         };
       } else if (peek().kind === "word") {
         if (
@@ -408,6 +423,11 @@ export function execute(nodes: Node[], source: string): ExecutionEvent[] {
       } else {
         if (exprType(n.left, n) !== exprType(n.right, n)) error("type", n);
         validate(n.yes);
+        for (const branch of n.elseifs || []) {
+          const branchNode = { ...n, range: branch.range };
+          if (exprType(branch.left, branchNode) !== exprType(branch.right, branchNode)) error("type", branchNode);
+          validate(branch.body);
+        }
         validate(n.no);
       }
     }
@@ -512,28 +532,44 @@ export function execute(nodes: Node[], source: string): ExecutionEvent[] {
         output.push(String(v));
         emit(n, "write", { key: "write", value: v }, ["output"]);
       } else {
-        const a = get(n.left, n),
-          b = get(n.right, n);
-        const result =
-          n.op === "="
-            ? a === b
-            : n.op === "<>"
-              ? a !== b
-              : n.op === ">="
-                ? a >= b
-                : n.op === "<="
-                  ? a <= b
-                  : n.op === ">"
-                    ? a > b
-                    : a < b;
-        const skipped = [result ? n.noRange : n.yesRange].filter(
-          (r): r is Range => !!r,
-        );
-        emit(n, "condition", { key: "condition" }, [], skipped, {
-          expression: `${a} ${n.op} ${b}`,
-          result,
-        });
-        run(result ? n.yes : n.no);
+        const branches = [{ left: n.left, op: n.op, right: n.right, body: n.yes, range: n.range, bodyRange: n.yesRange }, ...(n.elseifs || [])];
+        let selected = -1;
+        const skipped: Range[] = [];
+        for (let index = 0; index < branches.length; index++) {
+          const branch = branches[index];
+          const a = get(branch.left, n),
+            b = get(branch.right, n);
+          const result =
+            branch.op === "="
+              ? a === b
+              : branch.op === "<>"
+                ? a !== b
+                : branch.op === ">="
+                  ? a >= b
+                  : branch.op === "<="
+                    ? a <= b
+                    : branch.op === ">"
+                      ? a > b
+                      : a < b;
+          if (!result && branch.bodyRange) skipped.push(branch.bodyRange);
+          if (result) {
+            selected = index;
+            for (const later of branches.slice(index + 1)) {
+              skipped.push(later.range);
+              if (later.bodyRange) skipped.push(later.bodyRange);
+            }
+            if (n.noRange) skipped.push(n.noRange);
+          }
+          emit(n, "condition", { key: "condition" }, [], [...skipped], {
+            expression: `${a} ${branch.op} ${b}`,
+            result,
+          }, branch.range);
+          if (result) {
+            run(branch.body);
+            break;
+          }
+        }
+        if (selected === -1) run(n.no);
         emit(
           n,
           "end",
@@ -552,14 +588,16 @@ export function execute(nodes: Node[], source: string): ExecutionEvent[] {
 export function simulate(source: string) {
   return execute(parse(source), source);
 }
+export type ChallengeFailure = { name: string; input: number; expected: string; actual: string };
 export function evaluate(
   source: string,
   id: string,
-): { correct: boolean; events: ExecutionEvent[] } {
+): { correct: boolean; events: ExecutionEvent[]; failure?: ChallengeFailure } {
   const nodes = parse(source),
     events = execute(nodes, source),
     last = events.at(-1)!;
   let correct = false;
+  let failure: ChallengeFailure | undefined;
   if (id === "addition") {
     const data = nodes.filter(
       (n): n is Extract<Node, { kind: "data" }> => n.kind === "data",
@@ -589,6 +627,27 @@ export function evaluate(
       correct =
         execute(probe, source).at(-1)?.output.join("\n") === "23" &&
         nodes.some((n) => n.kind === "assign" && n.value.kind === "add");
+    }
+  } else if (id.startsWith("conditions-")) {
+    const specs: Record<string, { input: string; initial: number; probes: number[]; expected: (value: number) => string; elseif?: boolean }> = {
+      "conditions-positive": { input: "lv_number", initial: 4, probes: [-8, -1, 0, 1, 4, 19], expected: v => v > 0 ? "Positive" : "Not positive" },
+      "conditions-bonus": { input: "lv_sales", initial: 6000, probes: [0, 4999, 5000, 5001, 6000, 9000], expected: v => v >= 5000 ? "Bonus" : "No bonus" },
+      "conditions-ranges": { input: "lv_score", initial: 75, probes: [-1, 0, 49, 50, 75, 79, 80, 100], expected: v => v >= 80 ? "High" : v >= 50 ? "Medium" : "Low", elseif: true },
+    };
+    const spec = specs[id];
+    const walk = (list: Node[]): Node[] => list.flatMap(n => n.kind === "if" ? [n, ...walk(n.yes), ...walk(n.no), ...(n.elseifs || []).flatMap(b => walk(b.body))] : [n]);
+    const all = walk(nodes);
+    const declaration = spec && nodes.find(n => n.kind === "data" && n.name === spec.input && n.type === "i" && n.initial?.kind === "literal" && n.initial.value === spec.initial);
+    if (spec && declaration && all.some(n => n.kind === "if" && (!spec.elseif || n.elseifs?.length)) && !all.some(n => n.kind === "assign" && n.target === spec.input)) {
+      correct = spec.probes.every(value => {
+        const probe = structuredClone(nodes);
+        const input = probe.find(n => n.kind === "data" && n.name === spec.input)! as Extract<Node, { kind: "data" }>;
+        input.initial = { kind: "literal", value };
+        const actual = execute(probe, source).at(-1)?.output.join("\n") || "";
+        const expected = spec.expected(value);
+        if (actual !== expected) failure = { name: spec.input, input: value, expected, actual };
+        return actual === expected;
+      });
     }
   } else if (id === "structures") {
     const d = nodes.find(
@@ -620,5 +679,5 @@ export function evaluate(
       }
     }
   }
-  return { correct, events };
+  return { correct, events, failure };
 }

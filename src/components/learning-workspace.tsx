@@ -18,8 +18,11 @@ import {
   simulate,
   evaluate,
   Locale,
+  ChallengeFailure,
 } from "@/lib/engine";
 import { ui, errors, explain } from "@/lib/i18n";
+import { diagnosticAdvice } from "@/lib/diagnostics";
+import { TechnicalText } from "./technical-text";
 export function LearningWorkspace({
   initialCode,
   lang,
@@ -39,6 +42,7 @@ export function LearningWorkspace({
     [playing, setPlaying] = useState(false),
     [error, setError] = useState<SimulationError>(),
     [feedback, setFeedback] = useState<"correct" | "wrong" | "">(""),
+    [failure, setFailure] = useState<ChallengeFailure>(),
     [hint, setHint] = useState(false),
     [reset, setReset] = useState(false),
     [field, setField] = useState("");
@@ -59,18 +63,21 @@ export function LearningWorkspace({
     setPlaying(false);
     setError(undefined);
     setFeedback("");
+    setFailure(undefined);
     setField("");
     onResult?.(false, false);
   }
   function run(check = false) {
     setPlaying(false);
     setError(undefined);
+    setFailure(undefined);
     try {
       if (check && mission) {
         const result = evaluate(code, mission.id);
         setEvents(result.events);
         setIndex(result.events.length - 1);
         setFeedback(result.correct ? "correct" : "wrong");
+        setFailure(result.failure);
         onResult?.(result.correct, true);
       } else {
         setEvents(simulate(code));
@@ -137,9 +144,10 @@ export function LearningWorkspace({
           )}
           {error && (
             <div role="alert" className="feedback error">
-              <strong>{errors[lang][error.code]}</strong>
+              <strong><TechnicalText>{errors[lang][error.code]}</TechnicalText></strong>
               {error.detail && <code dir="ltr"> {error.detail}</code>}
-              <p>{t.errorHint}</p>
+              <p><TechnicalText>{diagnosticAdvice[error.code].hint[lang]}</TechnicalText></p>
+              <details><summary>{t.explainWhy}</summary><p>{diagnosticAdvice[error.code].why[lang]}</p><pre dir="ltr">{diagnosticAdvice[error.code].example}</pre></details>
               <span>
                 {t.source}: {error.range.startLine}:{error.range.startColumn}
               </span>
@@ -150,7 +158,8 @@ export function LearningWorkspace({
               role="status"
               className={`feedback ${feedback === "correct" ? "success" : "warning"}`}
             >
-              {feedback === "correct" ? t.correct : t.wrong}
+              <p>{feedback === "correct" ? t.correct : t.wrong}</p>
+              {failure && <div className="probe-feedback"><p>{t.failedInput}: <code dir="ltr">{failure.name} = {failure.input}</code></p><p>{t.expected}: <code dir="ltr">{failure.expected}</code></p><p>{t.actualOutput}: <code dir="ltr">{failure.actual || "∅"}</code></p><p>{t.probeExplanation}</p></div>}
             </div>
           )}
           <details className="limits">
@@ -161,7 +170,7 @@ export function LearningWorkspace({
         <section className="execution-panel" aria-label={t.active}>
           <div className="panel-title">
             <span className="eyebrow">{t.active}</span>
-            <span>
+            <span dir="ltr">
               {events.length ? `${index + 1} / ${events.length}` : "—"}
             </span>
           </div>
@@ -179,7 +188,7 @@ export function LearningWorkspace({
               </div>
               <div className="what-happened" aria-live="polite">
                 <h3>{t.happened}</h3>
-                <p>{explain(event, lang)}</p>
+                <p><TechnicalText>{explain(event, lang)}</TechnicalText></p>
               </div>
             </>
           ) : (

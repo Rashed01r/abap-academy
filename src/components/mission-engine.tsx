@@ -1,12 +1,13 @@
 ﻿"use client";
 import { useState } from "react";
 import { ArrowRight, Check, BookOpen } from "lucide-react";
-import { Mission } from "@/lib/curriculum";
+import { Mission, missions } from "@/lib/curriculum";
 import { Locale } from "@/lib/engine";
 import { ui } from "@/lib/i18n";
 import { Progress } from "@/lib/progress";
 import { SyntaxLab, Quiz } from "./syntax-lab";
 import { LearningWorkspace } from "./learning-workspace";
+import { TechnicalText } from "./technical-text";
 export function MissionEngine({
   mission,
   lang,
@@ -26,8 +27,12 @@ export function MissionEngine({
 }) {
   const [stage, setStage] = useState(0),
     [passed, setPassed] = useState(false),
+    [challengeIndex, setChallengeIndex] = useState(0),
     [quiz, setQuiz] = useState(false);
   const t = ui[lang];
+  const challenge = mission.challenges?.[challengeIndex];
+  const activeMission = challenge ? { ...mission, ...challenge } : mission;
+  const moreChallenges = !!mission.challenges && challengeIndex < mission.challenges.length - 1;
   const next = () => {
     setStage((s) => s + 1);
     window.scrollTo({ top: 0, behavior: "instant" });
@@ -36,10 +41,10 @@ export function MissionEngine({
     <section className="mission-engine">
       <div className="mission-title">
         <span className="eyebrow">
-          {t.mission} {mission.id === "addition" ? "01" : "02"} ·{" "}
+          {t.mission} {String(missions.findIndex(m => m.id === mission.id) + 1).padStart(2, "0")} ·{" "}
           {mission.minutes} {t.minutes} · {mission.xp} XP
         </span>
-        <h1>{mission.title[lang]}</h1>
+        <h1><TechnicalText>{mission.title[lang]}</TechnicalText></h1>
         <p>{mission.subtitle[lang]}</p>
       </div>
       <ol className="stages">
@@ -51,6 +56,8 @@ export function MissionEngine({
         ))}
       </ol>
       {stage === 0 ? (
+        <>
+        <div className="instruction"><h2>{t.learn}</h2><p><TechnicalText>{mission.brief[lang]}</TechnicalText></p><ul>{mission.objectives.map(objective => <li key={objective.en}><TechnicalText>{objective[lang]}</TechnicalText></li>)}</ul></div>
         <SyntaxLab
           id={mission.id}
           tokens={mission.tokens}
@@ -62,15 +69,16 @@ export function MissionEngine({
             next();
           }}
         />
+        </>
       ) : stage === 1 ? (
         <div className="brief-grid">
           <article className="learn-card">
             <BookOpen size={28} />
             <h2>{t.learn}</h2>
-            <p>{mission.brief[lang]}</p>
+            <p><TechnicalText>{mission.brief[lang]}</TechnicalText></p>
             <div className="goal-box">
               <span className="eyebrow">{t.challenge}</span>
-              <p>{mission.goal[lang]}</p>
+              <p><TechnicalText>{mission.goal[lang]}</TechnicalText></p>
             </div>
           </article>
           <div className="concept-card">
@@ -87,7 +95,8 @@ export function MissionEngine({
           <div className="eyebrow">
             +{progress.missions.includes(mission.id) ? 0 : mission.xp} XP
           </div>
-          <h2>{t.correct}</h2>
+          <h2>{t.quiz}</h2>
+          <p>{t.correct}</p>
           <Quiz
             lang={lang}
             question={mission.quiz[lang]}
@@ -112,27 +121,26 @@ export function MissionEngine({
                   : t.stageNames[stage]}
             </span>
             <p>
-              {stage === 4
-                ? mission.goal[lang]
+              <TechnicalText>{stage === 4
+                ? activeMission.goal[lang]
                 : stage === 2
                   ? mission.visual[lang]
-                  : lang === "en"
-                    ? "Change a value, predict the result, then build a new trace. Use Previous to revisit memory. Editing clears the old trace."
-                    : "غيّر قيمة وتوقع النتيجة ثم أنشئ تتبعاً جديداً. استخدم السابق لمراجعة الذاكرة. يمحو التحرير التتبع القديم."}
+                  : mission.practice[lang]}</TechnicalText>
             </p>
+            {stage === 4 && challenge && <h2>{challenge.title[lang]} ({challengeIndex + 1}/{mission.challenges!.length})</h2>}
           </div>
           <LearningWorkspace
-            key={stage}
+            key={`${stage}-${challengeIndex}`}
             initialCode={
               stage === 4
                 ? lang === "ar"
-                  ? mission.starterAr || mission.starter
-                  : mission.starter
+                  ? activeMission.starterAr || activeMission.starter
+                  : activeMission.starter
                 : mission.example
             }
             lang={lang}
             theme={theme}
-            mission={stage === 4 ? mission : undefined}
+            mission={stage === 4 ? activeMission : undefined}
             onResult={(correct, attempt) => {
               setPassed(correct);
               if (attempt) onAttempt(correct);
@@ -146,18 +154,24 @@ export function MissionEngine({
             className="secondary"
             onClick={() => {
               setStage((s) => s - 1);
+                if (stage === 4) setChallengeIndex(0);
               setPassed(false);
             }}
           >
             {t.previous}
           </button>
-          <span>{stage + 1} / 6</span>
+          <span dir="ltr">{stage + 1} / 6</span>
           <button
             className="primary"
             disabled={stage === 4 && !passed}
-            onClick={next}
+            onClick={() => {
+              if (stage === 4 && moreChallenges) {
+                setChallengeIndex(i => i + 1);
+                setPassed(false);
+              } else next();
+            }}
           >
-            {t.next}
+            {stage === 4 && moreChallenges ? t.nextChallenge : t.next}
             <ArrowRight size={16} />
           </button>
         </div>

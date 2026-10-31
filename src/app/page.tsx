@@ -31,6 +31,7 @@ import { SyntaxLab } from "@/components/syntax-lab";
 import { MissionEngine } from "@/components/mission-engine";
 import { LearningWorkspace } from "@/components/learning-workspace";
 import { Roadmap, MissionPreview } from "@/components/roadmap";
+import { glossary } from "@/lib/glossary";
 type Appearance = "light" | "dark" | "system";
 export default function Academy() {
   const [lang, setLang] = useState<Locale>("en"),
@@ -47,9 +48,7 @@ export default function Academy() {
       appearance === "system" ? (systemDark ? "dark" : "light") : appearance;
   const current = !progress.labs.includes("orientation")
     ? "orientation"
-    : !progress.missions.includes("addition")
-      ? "addition"
-      : "structures";
+    : missions.find(m => !progress.missions.includes(m.id))?.id || missions.at(-1)!.id;
   const count =
     (progress.labs.includes("orientation") ? 1 : 0) + progress.missions.length;
   // Hydrate device-only settings after SSR and synchronize browser storage failures.
@@ -186,7 +185,7 @@ export default function Academy() {
                   disabled={!ready}
                   onClick={() =>
                     open(
-                      unlocked(progress.current, progress) && count > 0
+                      unlocked(progress.current, progress) && count > 0 && !progress.missions.includes(progress.current) && !(progress.current === "orientation" && progress.labs.includes("orientation"))
                         ? progress.current
                         : current,
                     )
@@ -299,8 +298,7 @@ export default function Academy() {
                   setProgress((p) => ({
                     ...p,
                     missions: Array.from(new Set([...p.missions, selected.id])),
-                    current:
-                      selected.id === "addition" ? "structures" : "structures",
+                    current: missions[missions.findIndex(m => m.id === selected.id) + 1]?.id || selected.id,
                   }));
                   setView("home");
                 }}
@@ -340,6 +338,10 @@ export default function Academy() {
           </>
         )}
       </main>
+      <details className="glossary">
+        <summary>{t.glossary}</summary>
+        <dl>{glossary.map(([en, ar, enDefinition, arDefinition]) => <div key={en}><dt><bdi dir="ltr">{en}</bdi> · <bdi dir="rtl">{ar}</bdi></dt><dd>{lang === "ar" ? arDefinition : enDefinition}</dd></div>)}</dl>
+      </details>
       <footer>
         <span>
           ABAP academy <sup>2.0</sup>

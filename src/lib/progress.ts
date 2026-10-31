@@ -4,6 +4,7 @@
   current: string;
   results: Record<string, { attempts: number; passed: boolean }>;
 };
+import { missions as registry } from "./curriculum";
 export const initialProgress: Progress = {
   labs: [],
   missions: [],
@@ -14,28 +15,20 @@ export function normalizeProgress(value: unknown): Progress {
   if (!value || typeof value !== "object")
     return structuredClone(initialProgress);
   const p = value as Partial<Progress>;
-  const ids = ["orientation", "addition", "structures"];
+  const ids = ["orientation", ...registry.map(m => m.id)];
   const labs = Array.isArray(p.labs)
     ? Array.from(new Set(p.labs.filter((v) => ids.includes(v))))
     : [];
   const completed = Array.isArray(p.missions) ? p.missions : [];
   const missions: string[] = [];
-  if (
-    labs.includes("orientation") &&
-    labs.includes("addition") &&
-    completed.includes("addition")
-  )
-    missions.push("addition");
-  if (
-    missions.includes("addition") &&
-    labs.includes("structures") &&
-    completed.includes("structures")
-  )
-    missions.push("structures");
+  for (const mission of registry) {
+    const prerequisiteMet = mission.prerequisite === "orientation" ? labs.includes("orientation") : missions.includes(mission.prerequisite);
+    if (prerequisiteMet && labs.includes(mission.id) && completed.includes(mission.id)) missions.push(mission.id);
+  }
   const results: Progress["results"] = {};
-  for (const id of ["addition", "structures"]) {
+  for (const id of registry.map(m => m.id)) {
     const r = p.results?.[id];
-    if (r && typeof r.attempts === "number")
+    if (r && typeof r.attempts === "number" && Number.isFinite(r.attempts))
       results[id] = {
         attempts: Math.max(0, Math.floor(r.attempts)),
         passed: r.passed === true,
@@ -51,15 +44,12 @@ export function normalizeProgress(value: unknown): Progress {
 export function unlocked(id: string, p: Progress) {
   return (
     id === "orientation" ||
-    (id === "addition"
-      ? p.labs.includes("orientation")
-      : id === "structures" && p.missions.includes("addition"))
+    registry.some(m => m.id === id && (m.prerequisite === "orientation" ? p.labs.includes("orientation") : p.missions.includes(m.prerequisite)))
   );
 }
 export function earnedXP(p: Progress) {
   return (
     (p.labs.includes("orientation") ? 25 : 0) +
-    (p.missions.includes("addition") ? 100 : 0) +
-    (p.missions.includes("structures") ? 150 : 0)
+    registry.reduce((xp, m) => xp + (p.missions.includes(m.id) ? m.xp : 0), 0)
   );
 }

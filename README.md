@@ -1,6 +1,8 @@
 ﻿# ABAP Academy 2.0 — SAP ABAP for Everyone
 
-A standalone Next.js App Router application in `abap-academy-2`. The original sibling `abap-academy` application is untouched. No book PDFs, authentication, backend, telemetry, or paid service is included.
+A standalone Next.js App Router application. No book PDFs, authentication, backend, telemetry, or paid service is included.
+
+Phase 2 is implemented through Stage C (Conditions). See `docs/PHASE_2_DELIVERY.md` for the delivered scope and `NEXT_STEPS.md` for remaining stages. DO, WHILE, internal tables, loop control, and the employee project remain explicitly labeled previews.
 
 ## Start locally
 
@@ -20,13 +22,14 @@ npm.cmd start -- --port 3002
 
 Monaco is served from this app: `predev` and `prebuild` copy its assets to the ignored `public/monaco/` directory. No editor CDN is required. Dependencies are pinned by `package-lock.json`.
 
-## The playable MVP
+## Playable curriculum
 
 1. **Syntax Orientation** — statements, keywords, periods, whitespace, comments, naming, editing, and simulation; complete each short token check to earn 25 XP and unlock Mission 1.
 2. **Add Two Numbers** — Syntax Lab, briefing, synchronized demonstration, editable practice, an arithmetic challenge, and reflection quiz. Completing the challenge and quiz earns 100 XP and unlocks Mission 2.
 3. **Create a Structure** — a structure Syntax Lab, employee record demonstration, editable practice, Product record challenge, and reflection quiz. Completion earns 150 XP.
+4. **Make a Decision with IF / ELSE** — purchase approval visualization, comparison and ELSEIF Syntax Labs, threshold practice, three separately checked challenges (positive numbers, employee bonuses, score ranges), and a final quiz. Completion earns 200 XP after Create a Structure.
 
-The nine-path roadmap covers the requested future curriculum. Later concepts are inspectable previews, with estimated time and prerequisite information, and cannot be launched as lessons. The progress percentage applies to the three playable foundation activities, not the future curriculum. A separate simulator offers arithmetic, structures, and the conditional regression example.
+The connected roadmap preserves nine learning paths. Mission 04 through Mission 09 and advanced topics remain inspectable previews. The original foundation has its own 3/3 milestone; current path and available-activity completion use all four playable activities. Preview lessons are excluded from the denominator. Existing completed missions, attempts, and XP survive normalization against the mission registry.
 
 ## Connected execution workspace
 
@@ -47,12 +50,12 @@ Supported:
 - DATA for integer `i`, `string`, and a previously defined local structure type; optional literal VALUE for scalar variables.
 - Local `TYPES: BEGIN OF type_name, field TYPE i/string, ... END OF type_name.` chains with scalar fields.
 - Scalar and structure-component assignments, integer addition, and WRITE of scalar expressions.
-- IF comparisons (`=`, `<>`, `>`, `<`, `>=`, `<=`) with optional ELSE and matching ENDIF, including nested conditions.
+- IF comparisons (`=`, `<>`, `>`, `<`, `>=`, `<=`) with ordered ELSEIF branches, optional final ELSE, and matching ENDIF, including nested conditions. Only reached comparisons generate execution events.
 - Case-insensitive names, statements spanning physical lines, `*` comments in column 1, double-quote line comments, and doubled single quotes within text literals.
 
 Not supported: database access, loops, tables, methods/classes, nested structures, constructor expressions, conversion rules, and other ABAP features. DATA/TYPES declarations inside IF branches are intentionally rejected. This model does not reproduce every SAP formatting or implicit conversion behavior: each WRITE adds one output entry. Integers use the signed 32-bit range; text literals cannot cross physical lines. Programs are limited to 16,000 characters, 2,000 lexical tokens, and 150 statements.
 
-No `eval`, Function constructor, remote execution, or keyword-only grading is used. Arithmetic grading checks the parsed declarations, final output, addition, and a second set of input values to reject hardcoded answers. Structure grading checks the type's component types, record values, and WRITE of the actual name component. These are exercise checks within the supported model, not claims of arbitrary ABAP correctness.
+No `eval`, Function constructor, remote execution, or keyword-only grading is used. Arithmetic grading checks the parsed declarations, final output, addition, and a second set of input values to reject hardcoded answers. Structure grading checks the type's component types, record values, and WRITE of the actual name component. Conditions checks run multiple boundary and non-boundary inputs against the parsed program, require conditional control flow (including ELSEIF for range classification), and reject overwriting the designated input. A failed probe reports its input and expected/actual output separately from the editor's current trace. These are exercise checks within the supported model, not claims of arbitrary ABAP correctness.
 
 ## Languages, appearance, and device progress
 
@@ -77,14 +80,14 @@ npm.cmd test
 npm.cmd run build
 ```
 
-For browser tests, start the app first. The configuration defaults to port 3001 and can target any local preview:
+For browser tests, start the app first. The configuration defaults to port 3002 and can target any local preview:
 
 ```powershell
-$env:PLAYWRIGHT_BASE_URL='http://127.0.0.1:3002'
+$env:PLAYWRIGHT_BASE_URL='http://localhost:3002'
 npm.cmd run test:e2e
 ```
 
-The Playwright config uses installed Windows Chrome. Set its `executablePath` for your environment (or install a Playwright browser and remove the override).
+The Playwright config uses installed Windows Chrome and defaults to `http://localhost:3002`, matching the start command. Set its `executablePath` for your environment (or install a Playwright browser and remove the override). Use the same localhost hostname as the development server; Next.js dev origin checks may block resources through a different hostname.
 
 Tests cover parser diagnostics, multi-line source ranges, arithmetic, structures, conditions, skipped branches, immutable memory/output, grading, prerequisite progression and XP; browser tests cover the full journey in English/Arabic and light/dark on desktop/mobile, system theme changes, Monaco execution pointers, navigation, trace invalidation, diagnostics, reset confirmation, future previews, local progress, and horizontal overflow.
 
