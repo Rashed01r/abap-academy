@@ -23,6 +23,8 @@ import {
 import { ui, errors, explain } from "@/lib/i18n";
 import { diagnosticAdvice } from "@/lib/diagnostics";
 import { TechnicalText } from "./technical-text";
+import { TableMemory } from "./table-memory";
+import { LoopVisualizer } from "./loop-visualizer";
 export function LearningWorkspace({
   initialCode,
   lang,
@@ -46,6 +48,7 @@ export function LearningWorkspace({
     [hint, setHint] = useState(false),
     [reset, setReset] = useState(false),
     [field, setField] = useState("");
+  const [speed, setSpeed] = useState(1400);
   const t = ui[lang],
     event = events[index];
   useEffect(() => {
@@ -53,9 +56,9 @@ export function LearningWorkspace({
     const timer = setTimeout(() => {
       if (index >= events.length - 1) setPlaying(false);
       else setIndex((i) => i + 1);
-    }, 1400);
+    }, speed);
     return () => clearTimeout(timer);
-  }, [playing, index, events.length]);
+  }, [playing, index, events.length, speed]);
   function change(v: string) {
     setCode(v);
     setEvents([]);
@@ -133,7 +136,7 @@ export function LearningWorkspace({
           )}
           {hint && mission && (
             <div className="hint-panel">
-              <p>{mission.hint[lang]}</p>
+              <p><TechnicalText>{mission.hint[lang]}</TechnicalText></p>
               <button
                 className="text-button"
                 onClick={() => change(mission.solution)}
@@ -240,6 +243,12 @@ export function LearningWorkspace({
               <RotateCcw size={17} />
             </button>
           </div>
+          <label className="playback-speed">{t.playbackSpeed}
+            <select value={speed} onChange={e => setSpeed(Number(e.target.value))}>
+              <option value={2200}>{t.slow}</option><option value={1400}>{t.normal}</option><option value={600}>{t.fast}</option>
+            </select>
+          </label>
+          {event && <LoopVisualizer event={event} lang={lang} />}
           <div className="memory-heading">
             <h3>{t.memory}</h3>
             <span>{t.changed} ●</span>
@@ -251,13 +260,13 @@ export function LearningWorkspace({
               Object.entries(event.memory).map(([name, v]) => (
                 <div
                   key={name}
-                  className={`memory-card ${event.changed.includes(name) ? "changed" : ""}`}
+                  className={`memory-card ${Array.isArray(v) ? "table-memory-card" : ""} ${event.changed.includes(name) ? "changed" : ""}`}
                 >
                   <div className="memory-name">
                     <code dir="ltr">{name}</code>
                     {event.changed.includes(name) && <span>↳ {t.changed}</span>}
                   </div>
-                  {typeof v === "object" ? (
+                  {Array.isArray(v) ? <TableMemory name={name} rows={v} event={event} lang={lang} /> : typeof v === "object" ? (
                     <div className="structure-fields">
                       {Object.entries(v).map(([key, val]) => (
                         <button
@@ -341,7 +350,7 @@ export function LearningWorkspace({
                         : t.future}
                   </small>
                 </button>
-                {(e.operation === "end" ? e.skippedRanges : []).map((r) => (
+                {((e.operation === "end" || e.operation === "control") ? e.skippedRanges : []).map((r) => (
                   <div className="skipped-event" key={r.start}>
                     <span>↷ {t.skipped}</span>
                     <pre dir="ltr">{code.slice(r.start, r.end)}</pre>

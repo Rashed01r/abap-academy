@@ -76,6 +76,7 @@ export function SyntaxLab({
     const found = tokens.findIndex(
       (k) =>
         k.label.toLowerCase() === key ||
+        k.label.toLowerCase().split(/\s+/).includes(key) ||
         k.id === key ||
         (key === "." && k.id === "period") ||
         ((key === ":" || key === ",") && k.id === "chain") ||
@@ -125,8 +126,8 @@ export function SyntaxLab({
             ))}
           </div>
           <pre className="clickable-code" dir="ltr" aria-label="ABAP">
-            {example.split(/(\b[a-zA-Z_]\w*\b|>=|<=|<>|[.:,+=<>-])/g).map((s, i) =>
-              /^[a-zA-Z_]|^(>=|<=|<>|[.:,+=<>-])$/.test(s) ? (
+            {example.split(/(\bsy-index\b|\b[a-zA-Z_]\w*\b|>=|<=|<>|[.:,+=<>/()-])/g).map((s, i) =>
+              /^[a-zA-Z_]|^(>=|<=|<>|[.:,+=<>/()-])$/.test(s) ? (
                 <button key={i} onClick={() => selectCode(s)}>
                   {s}
                 </button>

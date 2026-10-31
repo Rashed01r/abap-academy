@@ -1,5 +1,6 @@
 ﻿import { Locale } from "./engine";
 export type Text = { en: string; ar: string };
+import { fundamentals } from "./fundamentals";
 export const text = (en: string, ar: string): Text => ({ en, ar });
 export type SyntaxToken = {
   id: string;
@@ -627,7 +628,12 @@ export type Mission = {
   id: string;
   pathId: string;
   objectives: Text[];
-  visualization: "scalar" | "structure" | "condition";
+  visualization: "scalar" | "structure" | "condition" | "loop" | "table" | "project";
+  difficulty?: "beginner" | "intermediate" | "advanced";
+  environment?: "browser" | "sap-required";
+  assessment?: "simulated" | "conceptual" | "structural" | "guided";
+  references?: string[];
+  hints?: Text[];
   practice: Text;
   prerequisite: string;
   minutes: number;
@@ -768,7 +774,7 @@ export const conditionChallenges: Challenge[] = [
     solution: "DATA lv_score TYPE i VALUE 75.\nIF lv_score >= 80.\n  WRITE 'High'.\nELSEIF lv_score >= 50.\n  WRITE 'Medium'.\nELSE.\n  WRITE 'Low'.\nENDIF.", expected: "Medium",
   },
 ];
-export const missions: Mission[] = [
+const originalMissions: Mission[] = [
   {
     id: "addition",
     pathId: "fundamentals",
@@ -901,6 +907,13 @@ export const missions: Mission[] = [
     challenges: conditionChallenges,
   },
 ];
+export const missions: Mission[] = [...originalMissions, ...fundamentals].map(mission => ({
+  difficulty: "beginner",
+  environment: "browser",
+  assessment: "simulated",
+  references: ["https://learning.sap.com/courses/basic-abap-programming/using-control-structures-in-abap_a4d7803e-eac2-458e-acf9-8628289f3701"],
+  ...mission,
+}));
 export const paths = [
   {
     id: "fundamentals",
@@ -925,7 +938,7 @@ export const paths = [
     title: text("ABAP Dictionary", "قاموس ABAP"),
     concepts: text(
       "Domains · Data elements · Structures · Database tables · Foreign keys · Search helps",
-      "المجالات · عناصر البيانات · بُنى البيانات · جداول قواعد البيانات · المفاتيح الخارجية · وسائل المساعدة في البحث",
+      "النطاقات · عناصر البيانات · بُنى البيانات · جداول قواعد البيانات · المفاتيح الخارجية · وسائل المساعدة في البحث",
     ),
     time: 60,
   },

@@ -56,7 +56,7 @@ for (const lang of ["en", "ar"] as const)
         .click();
       await page.getByRole("button", { name: t.start, exact: true }).click();
       await lab(page, lang, orientation.length, true);
-      await expect(page.locator(".progress-ring")).toContainText("25");
+      await expect(page.locator(".progress-ring")).toContainText(String(Math.round(100 / (missions.length + 1))));
       for (let i = 0; i < 2; i++) {
         const m = missions[i];
         await page
@@ -126,11 +126,11 @@ for (const lang of ["en", "ar"] as const)
           .getByRole("button", { name: t.complete, exact: true })
           .click();
       }
-      await expect(page.locator(".progress-ring")).toContainText("75");
+      await expect(page.locator(".progress-ring")).toContainText(String(Math.round(300 / (missions.length + 1))));
       await expect(page.getByTestId("foundation-progress")).toContainText("3/3");
       await expect(page.locator(".xp-row")).toContainText("275");
       await page.reload();
-      await expect(page.locator(".progress-ring")).toContainText("75");
+      await expect(page.locator(".progress-ring")).toContainText(String(Math.round(300 / (missions.length + 1))));
       await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
       await expect(page.locator("html")).toHaveAttribute("lang", lang);
       expect(

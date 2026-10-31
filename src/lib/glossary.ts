@@ -19,4 +19,8 @@ export const glossary = [
   ["Challenge", "تحدٍّ برمجي", "A task solved by writing and checking code.", "مهمة تطبّق فيها ما تعلمته بكتابة برنامج والتحقق من سلوكه."],
   ["Hint", "تلميح", "Guidance toward a solution.", "إرشاد يساعدك على الوصول إلى الحل وفهمه خطوة بخطوة."],
   ["Learning path", "مسار التعلّم", "An ordered sequence of related lessons.", "مجموعة دروس مترابطة تُرتّب من الأساسيات إلى المفاهيم الأكثر تقدمًا."],
+  ["Domain", "نطاق", "A Dictionary definition of technical characteristics and possible values.", "تعريف في قاموس ABAP يحدد الخصائص التقنية والقيم الممكنة للبيانات."],
+  ["Data element", "عنصر بيانات", "Describes a field's semantic meaning and may reference a domain.", "يصف المعنى الوظيفي للحقل، ويمكن أن يستند إلى نطاق يحدد خصائصه التقنية."],
+  ["Object", "كائن", "An instance created from a class, with its own instance data.", "نسخة تُنشأ من صنف، وتحتفظ ببياناتها الخاصة."],
+  ["Method", "دالة عضو", "An operation defined by a class or interface.", "عملية تُعرّف ضمن صنف أو واجهة، وتسمى أيضًا طريقة برمجية بحسب السياق."],
 ] as const;

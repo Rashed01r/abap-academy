@@ -15,12 +15,14 @@ export function Roadmap({
   lang,
   progress,
   storage,
+  ready,
   open,
   setPreview,
 }: {
   lang: Locale;
   progress: Progress;
   storage: boolean;
+  ready: boolean;
   open: (id: string) => void;
   setPreview: (preview: MissionPreview) => void;
 }) {
@@ -30,6 +32,7 @@ export function Roadmap({
       progress.missions.length;
   const total = missions.length + 1;
   const foundation = (progress.labs.includes("orientation") ? 1 : 0) + ["addition", "structures"].filter(id => progress.missions.includes(id)).length;
+  const nextMission = !progress.labs.includes("orientation") ? "orientation" : missions.find(m => !progress.missions.includes(m.id))?.id;
   const prerequisiteTitle = (id: string) => {
     const prerequisite = missions.find(m => m.id === id)?.prerequisite;
     return missions.find(m => m.id === prerequisite)?.title || { en: t.orientation, ar: t.orientation };
@@ -72,10 +75,11 @@ export function Roadmap({
                   m.id === "orientation"
                     ? progress.labs.includes(m.id)
                     : progress.missions.includes(m.id),
-                available = unlocked(m.id, progress);
+                available = unlocked(m.id, progress),
+                inProgress = !complete && (progress.labs.includes(m.id) || (progress.results[m.id]?.attempts || 0) > 0);
               return (
                 <div
-                  className={`roadmap-node ${complete ? "complete" : available ? "available" : "locked"}`}
+                  className={`roadmap-node ${complete ? "complete" : available ? "available" : "locked"} ${nextMission === m.id ? "recommended" : ""}`}
                   key={m.id}
                 >
                   <span className="node-dot">
@@ -89,6 +93,7 @@ export function Roadmap({
                   </span>
                   <button
                     className="node-card"
+                    disabled={!ready}
                     onClick={() =>
                       available
                         ? open(m.id)
@@ -120,7 +125,7 @@ export function Roadmap({
                       <span className="node-status">
                         {complete
                           ? t.completed
-                          : available
+                          : inProgress ? t.inProgress : available
                             ? t.available
                             : t.locked}
                         {!available &&
@@ -139,7 +144,7 @@ export function Roadmap({
               { en: "07 · Read table rows with LOOP AT", ar: "07 · قراءة صفوف الجدول باستخدام LOOP AT" },
               { en: "08 · Control loops with EXIT and CONTINUE", ar: "08 · التحكم في الحلقات باستخدام EXIT وCONTINUE" },
               { en: "09 · Employee records processor", ar: "09 · مشروع معالجة سجلات الموظفين" },
-            ].map((name, i) => (
+            ].slice(Math.max(0, missions.length - 3)).map((name, i) => (
               <div className="roadmap-node future-node" key={name.en}>
                 <span className="node-dot">
                   <Lock size={15} />
@@ -241,8 +246,9 @@ export function Roadmap({
           </div>
           <div className="milestone-card">
             <Trophy size={25} />
-            <h3>{foundation === 3 ? t.allDone : t.milestone}</h3>
-            <p>{foundation === 3 ? t.allDoneSub : t.orientationGoal}</p>
+            <h3>{count === total ? t.fundamentalsComplete : foundation === 3 ? t.allDone : t.milestone}</h3>
+            <p>{count === total ? t.fundamentalsCompleteSub : foundation === 3 ? t.allDoneSub : t.orientationGoal}</p>
+            {nextMission && <button className="secondary" disabled={!ready} onClick={() => open(nextMission)}>{t.resume} <ArrowRight size={16}/></button>}
           </div>
         </aside>
       </div>

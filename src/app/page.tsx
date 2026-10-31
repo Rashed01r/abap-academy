@@ -237,6 +237,7 @@ export default function Academy() {
               </div>
             </section>
             <Roadmap
+              ready={ready}
               lang={lang}
               progress={progress}
               storage={storage}

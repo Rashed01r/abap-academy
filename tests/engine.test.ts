@@ -236,7 +236,7 @@ test("all branches are validated even when unselected, with accurate ELSEIF loca
   fails("ELSEIF 1 = 1. ENDIF.", "block");
   fails("IF 1 = 1. ELSEIF 2 = 2. WRITE 3.", "block");
   fails("IF 1 = 1. ELSEIF 2 = 2. DATA x TYPE i. ENDIF.", "unsupported");
-  fails("DO 5 TIMES. WRITE 1. ENDDO.", "unsupported");
+  fails("SELECT * FROM employees.", "unsupported");
 });
 test("Conditions assessments reject hardcoding, threshold errors, and overwritten inputs", () => {
   const [positive, bonus, ranges] = missions.find(m => m.id === "conditions")!.challenges!;
@@ -273,4 +273,18 @@ test("curriculum prerequisites are ordered and Conditions teaches each assessed 
   const taught = new Set(conditions.tokens.map(t => t.id));
   for (const id of ["if", "else", "elseif", "endif", "compare", "compare-assignment", "write", "period"]) assert.ok(taught.has(id));
   assert.equal(conditions.challenges!.length, 3);
+});
+test("large string tables are stopped by a memory budget before snapshots expand without bound", () => {
+  const source = `DATA text TYPE string VALUE '${"x".repeat(8000)}'. DATA rows TYPE STANDARD TABLE OF string WITH EMPTY KEY. DO 100 TIMES. APPEND text TO rows. ENDDO.`;
+  assert.throws(() => simulate(source), (e: unknown) => e instanceof SimulationError && e.code === "limit" && e.detail === "memory");
+});
+test("CONTINUE marks the whole skipped nested block rather than only its header", () => {
+  const source = "DO 1 TIMES.\nCONTINUE.\nIF 1 = 1.\nWRITE 'skipped'.\nENDIF.\nENDDO.";
+  const event = simulate(source).find(e => e.operation === "control")!;
+  assert.equal(source.slice(event.skippedRanges[0].start, event.skippedRanges[0].end), "IF 1 = 1.\nWRITE 'skipped'.\nENDIF.");
+});
+test("row selection survives nested counted loops and clears after the final row", () => {
+  const events = simulate("DATA rows TYPE STANDARD TABLE OF i WITH EMPTY KEY. APPEND 4 TO rows. LOOP AT rows INTO DATA(row). DO 2 TIMES. WRITE row. ENDDO. ENDLOOP.");
+  assert.deepEqual(events.filter(e => e.operation === "write").map(e => e.tableSelection?.index), [0, 0]);
+  assert.equal(events.at(-1)!.tableSelection, undefined);
 });

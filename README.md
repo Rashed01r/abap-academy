@@ -2,7 +2,7 @@
 
 A standalone Next.js App Router application. No book PDFs, authentication, backend, telemetry, or paid service is included.
 
-Phase 2 is implemented through Stage C (Conditions). See `docs/PHASE_2_DELIVERY.md` for the delivered scope and `NEXT_STEPS.md` for remaining stages. DO, WHILE, internal tables, loop control, and the employee project remain explicitly labeled previews.
+ABAP Fundamentals now includes Orientation and nine playable missions. The remaining eight paths are future previews. Full-platform implementation and continuation records live in `docs/academy-development/`; start with `NEXT_STEPS.md`. The earlier `docs/PHASE_2_DELIVERY.md` is a historical record.
 
 ## Start locally
 
@@ -29,7 +29,9 @@ Monaco is served from this app: `predev` and `prebuild` copy its assets to the i
 3. **Create a Structure** — a structure Syntax Lab, employee record demonstration, editable practice, Product record challenge, and reflection quiz. Completion earns 150 XP.
 4. **Make a Decision with IF / ELSE** — purchase approval visualization, comparison and ELSEIF Syntax Labs, threshold practice, three separately checked challenges (positive numbers, employee bonuses, score ranges), and a final quiz. Completion earns 200 XP after Create a Structure.
 
-The connected roadmap preserves nine learning paths. Mission 04 through Mission 09 and advanced topics remain inspectable previews. The original foundation has its own 3/3 milestone; current path and available-activity completion use all four playable activities. Preview lessons are excluded from the denominator. Existing completed missions, attempts, and XP survive normalization against the mission registry.
+Missions 04–09 add DO (sequence and running total, 220 XP), WHILE (sequence and loop repair, 220 XP), standard tables (numeric and structured rows, 240 XP), LOOP AT (totals and employee names, 250 XP), EXIT/CONTINUE (skip/stop, 240 XP), and a two-stage employee salary project (350 XP). Each has its own Syntax Lab, practice, two graded challenges and quiz.
+
+The connected roadmap preserves nine learning paths. The original foundation keeps its 3/3 milestone; implemented-content completion uses ten activities. Advanced previews are excluded. Existing completed missions, attempts, preferences and XP are preserved. Completing Fundamentals earns 1,995 XP including Orientation. Its 100% indicator applies to implemented content, not the entire planned academy.
 
 ## Connected execution workspace
 
@@ -53,7 +55,9 @@ Supported:
 - IF comparisons (`=`, `<>`, `>`, `<`, `>=`, `<=`) with ordered ELSEIF branches, optional final ELSE, and matching ENDIF, including nested conditions. Only reached comparisons generate execution events.
 - Case-insensitive names, statements spanning physical lines, `*` comments in column 1, double-quote line comments, and doubled single quotes within text literals.
 
-Not supported: database access, loops, tables, methods/classes, nested structures, constructor expressions, conversion rules, and other ABAP features. DATA/TYPES declarations inside IF branches are intentionally rejected. This model does not reproduce every SAP formatting or implicit conversion behavior: each WRITE adds one output entry. Integers use the signed 32-bit range; text literals cannot cross physical lines. Programs are limited to 16,000 characters, 2,000 lexical tokens, and 150 statements.
+Also supported: DO count TIMES / ENDDO, WHILE comparison / ENDWHILE, read-only sy-index inside DO/WHILE, STANDARD TABLE OF i/string/local_structure WITH EMPTY KEY, APPEND copy semantics, LOOP AT INTO existing or inline DATA work areas, and nearest-loop EXIT/CONTINUE. Each WRITE, WRITE /, or WRITE: / produces one output line. Loop counters and selected rows are snapshot-driven; playback has three speeds.
+
+Not supported: database access, classes/methods, sorted/hashed tables, field symbols, READ/MODIFY/DELETE/INSERT, nested structures/tables, constructor expressions, subtraction/multiplication, AND/OR/NOT, comma-separated WRITE chains, full SAP list formatting and implicit conversions. Ordinary DATA/TYPES must be outside control blocks. Integers are signed 32-bit. Static limits: 16,000 characters, 2,000 tokens, 150 statements, nesting 12. Runtime limits: 100 iterations per loop, 1,000 steps/events, 100 rows per table, 65,536 estimated serialized memory/output bytes and 4,000,000 total serialized trace bytes. Runaway loops stop with educational diagnostics.
 
 No `eval`, Function constructor, remote execution, or keyword-only grading is used. Arithmetic grading checks the parsed declarations, final output, addition, and a second set of input values to reject hardcoded answers. Structure grading checks the type's component types, record values, and WRITE of the actual name component. Conditions checks run multiple boundary and non-boundary inputs against the parsed program, require conditional control flow (including ELSEIF for range classification), and reject overwriting the designated input. A failed probe reports its input and expected/actual output separately from the editor's current trace. These are exercise checks within the supported model, not claims of arbitrary ABAP correctness.
 
@@ -77,6 +81,7 @@ XP and milestones derive from completed activities, so replaying a mission canno
 npm.cmd run lint
 npm.cmd run typecheck
 npm.cmd test
+npm.cmd run validate:curriculum
 npm.cmd run build
 ```
 

@@ -97,6 +97,8 @@ export function MissionEngine({
           </div>
           <h2>{t.quiz}</h2>
           <p>{t.correct}</p>
+          <h3>{t.skillsLearned}</h3>
+          <ul>{mission.objectives.map(objective => <li key={objective.en}><TechnicalText>{objective[lang]}</TechnicalText></li>)}</ul>
           <Quiz
             lang={lang}
             question={mission.quiz[lang]}

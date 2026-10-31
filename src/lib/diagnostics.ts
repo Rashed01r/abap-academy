@@ -49,6 +49,6 @@ export const diagnosticAdvice = {
   },
   limit: {
     why: text("Deterministic limits keep examples responsive and their traces readable.", "تحافظ الحدود الثابتة على استجابة المحاكي وسهولة متابعة خطوات التنفيذ."),
-    hint: text("Use no more than 16,000 characters, 2,000 tokens, and 150 statements. Split a large example into smaller programs.", "التزم بحد أقصى 16000 محرف و2000 وحدة لغوية و150 تعليمة. قسّم البرنامج الكبير إلى أمثلة أصغر."), example: "WRITE 1.",
+    hint: text("For a repeating WHILE, update the counter so its condition becomes false. Otherwise simplify the program: 100 iterations per loop, 1,000 execution steps, 100 rows per table, depth 12, 16,000 source characters, 2,000 tokens, and 150 statements.", "إذا استمرت WHILE دون توقف، فحدّث العداد داخل الحلقة حتى يصبح الشرط خاطئًا. أو بسّط المثال للالتزام بالحدود: 100 دورة لكل حلقة و1000 خطوة تنفيذ و100 صف لكل جدول وعمق 12 و16000 محرف و2000 وحدة لغوية و150 تعليمة."), example: "DATA counter TYPE i VALUE 1.\nWHILE counter <= 5.\n  WRITE counter.\n  counter = counter + 1.\nENDWHILE.",
   },
 } satisfies Record<ErrorCode, { why: ReturnType<typeof text>; hint: ReturnType<typeof text>; example: string }>;
