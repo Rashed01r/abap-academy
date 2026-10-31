@@ -234,6 +234,21 @@ main {
   gap: 50px;
   padding: 70px 0 65px;
 }
+@keyframes hero-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .hero-intro {
+    animation: hero-enter 0.3s ease-out;
+  }
+}
 .hero h1 {
   margin: 23px 0;
 }

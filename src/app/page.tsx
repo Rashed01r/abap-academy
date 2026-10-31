@@ -1,6 +1,5 @@
 ﻿"use client";
 import { useEffect, useRef, useState } from "react";
-import { motion, useReducedMotion } from "motion/react";
 import {
   ArrowRight,
   Check,
@@ -43,8 +42,7 @@ export default function Academy() {
     [view, setView] = useState("home"),
     [preview, setPreview] = useState<MissionPreview>(),
     [example, setExample] = useState(0);
-  const reduced = useReducedMotion(),
-    t = ui[lang],
+  const t = ui[lang],
     theme =
       appearance === "system" ? (systemDark ? "dark" : "light") : appearance;
   const current = !progress.labs.includes("orientation")
@@ -169,10 +167,7 @@ export default function Academy() {
         {view === "home" ? (
           <>
             <section className="hero">
-              <motion.div
-                initial={reduced ? false : { opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-              >
+              <div className="hero-intro">
                 <div className="eyebrow">
                   <span className="status-dot" />
                   {t.tag}
@@ -204,7 +199,7 @@ export default function Academy() {
                   <Check size={14} />
                   {t.saved}
                 </p>
-              </motion.div>
+              </div>
               <div className="hero-art" dir="ltr">
                 <div className="orbit" />
                 <div className="hero-code">
