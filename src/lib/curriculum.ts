@@ -1,6 +1,7 @@
 ﻿import { Locale } from "./engine";
 export type Text = { en: string; ar: string };
 import { fundamentals } from "./fundamentals";
+import { dataMissions } from "./data-missions";
 export const text = (en: string, ar: string): Text => ({ en, ar });
 export type SyntaxToken = {
   id: string;
@@ -655,6 +656,8 @@ export type Mission = {
   solution: string;
   expected: string;
   challenges?: Challenge[];
+  activity?: "table-categories";
+  requiredActivities?: string[];
 };
 export type Challenge = Pick<Mission, "id" | "title" | "goal" | "hint" | "starter" | "starterAr" | "solution" | "expected">;
 export const conditionTokens: SyntaxToken[] = [
@@ -907,7 +910,7 @@ const originalMissions: Mission[] = [
     challenges: conditionChallenges,
   },
 ];
-export const missions: Mission[] = [...originalMissions, ...fundamentals].map(mission => ({
+export const missions: Mission[] = [...originalMissions, ...fundamentals, ...dataMissions].map(mission => ({
   difficulty: "beginner",
   environment: "browser",
   assessment: "simulated",

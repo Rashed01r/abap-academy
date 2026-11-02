@@ -1,0 +1,56 @@
+import {test, expect} from "@playwright/test";
+import {missions} from "../src/lib/curriculum";
+import {ui} from "../src/lib/i18n";
+
+for (const lang of ["en","ar"] as const) test(`${lang}: category comparison and both assessments are available immediately`, async ({page}) => {
+  const m=missions.find(m=>m.id === "data-table-categories")!;
+  const t=ui[lang];
+  await page.addInitScript(lang => {localStorage.setItem("abap2-language",lang);localStorage.setItem("abap2-appearance","light");},lang);
+  await page.goto("/");
+  await page.getByLabel(t.difficulty,{exact:true}).selectOption("intermediate");
+  await expect(page.locator('[data-mission="addition"]')).toHaveCount(0);
+  await page.locator(`[data-mission="${m.id}"] .node-card`).click();
+  await page.getByRole("button",{name:t.reviewExample,exact:true}).click();
+  const explorer=page.locator(".category-explorer");
+  for (let i=0;i<3;i++) await explorer.locator(".primary").click();
+  await expect(page.getByTestId("category-rows")).toHaveText("30, 10, 30");
+  await explorer.getByRole("button",{name:"SORTED",exact:true}).click();
+  await expect(page.getByTestId("category-rows")).toHaveText("10, 30, 30");
+  await explorer.getByRole("button",{name:"HASHED",exact:true}).click();
+  await expect(page.getByTestId("category-rows")).toHaveText("30, 10");
+  await expect(explorer.locator('[role="status"]')).toContainText(lang === "en" ? "duplicate key" : "يتكرر المفتاح");
+  if(lang === "ar") await page.screenshot({path:test.info().outputPath("arabic-category-comparison.png"),fullPage:true});
+  await page.getByRole("button",{name:t.startChallenge,exact:true}).click();
+  await page.getByRole("textbox").first().focus();
+  await page.keyboard.press("ControlOrMeta+A");
+  await page.keyboard.insertText(m.solution);
+  await page.getByRole("button",{name:t.check,exact:true}).click();
+  await expect(page.locator(".feedback.success")).toBeVisible();
+  await page.locator(".stages button").nth(5).click();
+  await page.locator(".completion-card .answer-options button").nth(m.answer).click();
+  await expect(page.getByRole("button",{name:t.complete,exact:true})).toBeDisabled();
+  await page.getByRole("button",{name:t.startChallenge,exact:true}).click();
+  await page.locator(".category-question").first().getByRole("button",{name:"HASHED",exact:true}).click();
+  await expect(page.locator(".category-question").first()).toContainText(lang === "en" ? "Consider order" : "راعِ الترتيب");
+  for(const [i,category] of ["STANDARD","SORTED","HASHED"].entries()) await page.locator(".category-question").nth(i).getByRole("button",{name:category,exact:true}).click();
+  await page.locator(".stages button").nth(5).click();
+  await expect(page.getByRole("button",{name:t.complete,exact:true})).toBeEnabled();
+  await page.getByRole("button",{name:t.complete,exact:true}).click();
+  await expect(page.locator(".xp-row")).toContainText(String(m.xp));
+  const progress=await page.evaluate(()=>JSON.parse(localStorage.getItem("abap2-master-progress")!));
+  expect(progress.missions).toEqual([m.id]);
+  expect(progress.labs).toEqual([]);
+  expect(progress.passedChallenges).toEqual(expect.arrayContaining([m.challenges![0].id,"data-category-choice"]));
+  await page.locator(`[data-mission="${m.id}"] .node-card`).click();
+  for(let i=0;i<m.tokens.length;i++) {
+    await page.locator(".token-list button").nth(i).click();
+    await page.locator(".syntax-lab .answer-options button").nth(m.tokens[i].answer).click();
+  }
+  await page.getByRole("button",{name:t.syntaxDone,exact:true}).click();
+  await page.getByRole("button",{name:t.back,exact:false}).click();
+  await expect(page.locator(".xp-row")).toContainText(String(m.xp));
+  await page.reload();
+  await expect(page.locator(".xp-row")).toContainText(String(m.xp));
+  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem("abap2-master-progress")!).labs)).toEqual([m.id]);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
+});

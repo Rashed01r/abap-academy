@@ -2,6 +2,17 @@
 export type { Locale };
 export const ui = {
   en: {
+    explore: "Explore Academy", exploreTopics: "Explore Other Topics", allPaths: "All Learning Paths",
+    searchLessons: "Search Lessons", difficulty: "Difficulty", allDifficulties: "All difficulties",
+    beginner: "Beginner", intermediate: "Intermediate", advanced: "Advanced",
+    recommendedFirst: "Recommended first", recommendedNext: "Recommended Next Lesson",
+    continueLearning: "Continue Learning", recentLessons: "Recently Visited", completedLessons: "Completed Lessons",
+    allTopics: "Explore All Topics", noLessons: "No available lessons match these filters.", comingSoon: "Coming Soon",
+    learnSyntax: "Learn Syntax", startChallenge: "Start Challenge", reviewExample: "Review Example",
+    optionalLab: "Syntax Labs are recommended preparation. You can explore any stage without completing them.",
+    assessmentRequired: "Pass every challenge and the knowledge check to complete this mission. Syntax Lab completion is optional.",
+    explorationNote: "Explore in any order. Recommendations guide your learning; assessments earn completion and XP.",
+    allAvailableDone: "All Available Missions Completed",
     path: "Learning roadmap",
     lab: "Syntax Lab",
     playground: "Simulator",
@@ -11,7 +22,7 @@ export const ui = {
     intro:
       "A small step. A visible result. Build your ABAP confidence through guided missions—no SAP system needed.",
     start: "Begin your journey",
-    resume: "Continue your journey",
+    resume: "Continue Learning",
     journey: "Your learning journey",
     journeySub: "Start with the essentials. Build something real.",
     progress: "Current path · available activities",
@@ -126,7 +137,7 @@ export const ui = {
     errorHint:
       "Check the highlighted statement. Each complete statement ends with a period; a line break alone does not end it.",
     tokenProgress: "tokens understood",
-    pathProgress: "Available lessons in ABAP Fundamentals",
+    pathProgress: "Available lessons across the academy",
     noReset: "Language and appearance changes preserve your current work.",
     nextChallenge: "Next challenge",
     loopCounter: "Loop counter",
@@ -160,6 +171,17 @@ export const ui = {
     explainWhy: "Explain why · example",
   },
   ar: {
+    explore: "استكشف الأكاديمية", exploreTopics: "استكشف موضوعات أخرى", allPaths: "جميع مسارات التعلّم",
+    searchLessons: "ابحث عن درس", difficulty: "المستوى", allDifficulties: "جميع المستويات",
+    beginner: "مبتدئ", intermediate: "متوسط", advanced: "متقدم",
+    recommendedFirst: "يُقترح أن تبدأ بـ", recommendedNext: "الدرس التالي المقترح",
+    continueLearning: "تابع التعلّم", recentLessons: "زرتها مؤخرًا", completedLessons: "الدروس المكتملة",
+    allTopics: "استكشف جميع الموضوعات", noLessons: "لا توجد دروس متاحة تطابق خيارات البحث.", comingSoon: "قريبًا",
+    learnSyntax: "تعلّم الصياغة البرمجية", startChallenge: "ابدأ التحدّي", reviewExample: "راجع المثال",
+    optionalLab: "ننصح بمختبر الصياغة البرمجية استعدادًا للتطبيق. يمكنك استكشاف أي مرحلة دون إكماله.",
+    assessmentRequired: "اجتز جميع التحديات واختبار الفهم لإكمال المهمة. إكمال مختبر الصياغة البرمجية اختياري.",
+    explorationNote: "استكشف بالترتيب الذي يناسبك. تساعدك التوصيات على التعلّم، وتُكتسب نقاط الخبرة بإتمام التقييمات.",
+    allAvailableDone: "أكملت جميع المهام المتاحة",
     path: "خريطة التعلّم",
     lab: "مختبر الصياغة البرمجية",
     playground: "المحاكي",
@@ -169,7 +191,7 @@ export const ui = {
     intro:
       "تعلّم ABAP خطوة بخطوة: افهم التعليمة، وشاهد أثرها، ثم جرّب بنفسك. مهام عملية بإرشادات واضحة، دون الحاجة إلى نظام SAP.",
     start: "ابدأ رحلتك",
-    resume: "تابع رحلتك",
+    resume: "تابع التعلّم",
     journey: "رحلتك التعليمية",
     journeySub: "ابدأ بالأساسيات، ثم طبّقها في برامج عملية.",
     progress: "المسار الحالي · الأنشطة المتاحة",
@@ -275,7 +297,7 @@ export const ui = {
     errorHint:
       "راجع التعليمة المحددة. تنتهي كل تعليمة مكتملة بنقطة؛ الانتقال إلى سطر جديد لا ينهيها.",
     tokenProgress: "رموز مفهومة",
-    pathProgress: "الدروس المتاحة في مسار أساسيات ABAP",
+    pathProgress: "الدروس المتاحة في الأكاديمية",
     noReset: "يحافظ تغيير اللغة والمظهر على عملك الحالي.",
     nextChallenge: "التحدّي التالي",
     loopCounter: "عداد الحلقة التكرارية",

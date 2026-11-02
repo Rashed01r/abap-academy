@@ -7,6 +7,26 @@ import { normalizeProgress, earnedXP, unlocked } from "../src/lib/progress";
 const output = (source: string) => simulate(source).at(-1)!.output;
 const rejects = (source: string) => assert.throws(() => simulate(source), SimulationError);
 
+test("data model challenge checks duplicates, copies and data-derived output", () => {
+  const mission = missions.find(m => m.id === "data-table-model")!;
+  const challenge = mission.challenges![0];
+  assert.equal(evaluate(challenge.solution, challenge.id).correct, true);
+  for (const source of [
+    "WRITE 'Keyboard'. WRITE 'Keyboard'.",
+    challenge.solution.replace("WRITE ls_product-name.", "WRITE 'Keyboard'."),
+    challenge.solution.replace("APPEND ls_product TO lt_products.\nAPPEND ls_product TO lt_products.", "APPEND ls_product TO lt_products."),
+    challenge.solution.replace("ls_product-name = 'Mouse'.", "ls_product-name = 'Other'."),
+    challenge.solution.replace("ls_product-id = 501.", "ls_product-id = 502."),
+  ]) assert.equal(evaluate(source, challenge.id).correct, false);
+  const trace = simulate(mission.example);
+  const changed = trace.find(e => e.operation === "assign" && e.statement.includes("Mouse"))!;
+  assert.deepEqual(changed.memory.lt_products, [{ id: 501, name: "Keyboard" }, { id: 501, name: "Keyboard" }]);
+  const old = normalizeProgress({ labs: ["orientation", ...missions.slice(0, 9).map(m => m.id)], missions: missions.slice(0, 9).map(m => m.id), current: "employees", results: { addition: { attempts: 4, passed: true } } });
+  assert.equal(unlocked(mission.id, old), true);
+  assert.equal(earnedXP(old), 1995);
+  assert.equal(old.results.addition.attempts, 4);
+});
+
 test("DO repeats source ranges and exposes immutable per-iteration memory", () => {
   const source = "DATA total TYPE i VALUE 0.\nDO 3 TIMES.\n total = total + sy-index.\nENDDO.\nWRITE total.";
   const events = simulate(source);
@@ -85,7 +105,11 @@ test("all nine fundamentals have executable examples and behavior-graded challen
 test("legacy foundation records survive normalization and repeated completion cannot duplicate XP", () => {
   const old = { labs: ["orientation", "addition", "structures", "conditions"], missions: ["addition", "structures", "conditions"], current: "conditions", results: { addition: { attempts: 2, passed: true } } };
   const progress = normalizeProgress(old);
-  assert.deepEqual(progress, old);
+  assert.deepEqual(progress.missions, old.missions);
+  assert.deepEqual(progress.labs, old.labs);
+  assert.deepEqual(progress.results, old.results);
+  assert.equal(progress.current, old.current);
+  assert.equal(progress.version, 2);
   assert.equal(unlocked(missions[3].id, progress), true);
   assert.equal(earnedXP(normalizeProgress({ ...old, missions: [...old.missions, ...old.missions] })), earnedXP(progress));
 });

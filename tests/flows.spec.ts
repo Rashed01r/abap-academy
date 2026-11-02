@@ -48,13 +48,10 @@ for (const lang of ["en", "ar"] as const)
         lang === "ar" ? "rtl" : "ltr",
       );
       await page.locator(".node-card").nth(2).click();
-      await expect(page.getByRole("dialog")).toContainText(t.locked);
-      await page
-        .getByRole("dialog")
-        .getByRole("button", { name: t.back, exact: true })
-        .last()
-        .click();
-      await page.getByRole("button", { name: t.start, exact: true }).click();
+      await expect(page.getByRole("heading", { level: 1 })).toHaveText(missions[1].title[lang]);
+      await expect(page.getByRole("dialog")).toHaveCount(0);
+      await page.getByRole("button", { name: t.back, exact: false }).click();
+      await page.locator('[data-mission="orientation"] .node-card').click();
       await lab(page, lang, orientation.length, true);
       await expect(page.locator(".progress-ring")).toContainText(String(Math.round(100 / (missions.length + 1))));
       for (let i = 0; i < 2; i++) {
@@ -262,7 +259,7 @@ test("system appearance follows OS and future roadmap items have previews", asyn
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
   await page.locator(".future-paths details").last().locator("summary").click();
   await page
-    .getByRole("button", { name: "API integration", exact: true })
+    .getByRole("button", { name: "API integration", exact: false })
     .click();
   await expect(page.getByRole("dialog")).toContainText(ui.en.futureIntro);
   await page.keyboard.press("Escape");

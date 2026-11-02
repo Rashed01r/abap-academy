@@ -758,6 +758,45 @@ export function evaluate(
         execute(probe, source).at(-1)?.output.join("\n") === "23" &&
         nodes.some((n) => n.kind === "assign" && n.value.kind === "add");
     }
+  } else if (id === "data-category-sequence") {
+    const entries = nodes.filter((n): n is Extract<Node,{kind:"append"}> => n.kind === "append" && n.table === "lt_ids");
+    const grade = (tree: Node[], values: number[]) => {
+      const trace = execute(tree, source);
+      const end = trace.at(-1)!;
+      return JSON.stringify(end.memory.lt_ids) === JSON.stringify(values) && end.output.join("\n") === values.join("\n") && trace.filter(e => e.operation === "append").length === 3;
+    };
+    if (entries.length === 3 && entries.every(n => n.value.kind === "literal") && nodes.some(n => n.kind === "loop" && n.table === "lt_ids" && n.body.some(s => s.kind === "write" && s.value.kind === "ref")) && grade(nodes,[30,10,30])) {
+      correct = [[7,-2,7],[12,4,9]].every(values => {
+        const tree = structuredClone(nodes);
+        tree.filter((n): n is Extract<Node,{kind:"append"}> => n.kind === "append" && n.table === "lt_ids").forEach((n,i) => n.value = {kind:"literal",value:values[i]});
+        return grade(tree,values);
+      });
+    }
+  } else if (id === "data-table-copies") {
+    // Check actual row copies and their use, then vary the source name so literal output cannot pass.
+    const grade = (tree: Node[], name: string) => {
+      const trace = execute(tree, source);
+      const end = trace.at(-1)!;
+      const rows = end.memory.lt_products;
+      const appends = trace.filter(e => e.operation === "append");
+      return Array.isArray(rows) && rows.length === 2 && rows.every(row => typeof row === "object" && row.id === 501 && row.name === name) &&
+        appends.length === 2 && end.output.join("\n") === `${name}\n${name}` &&
+        trace.some(e => {
+          const area = e.memory.ls_product;
+          return area && typeof area === "object" && !Array.isArray(area) && area.name === "Mouse" && Array.isArray(e.memory.lt_products) && e.memory.lt_products.length === 2;
+        });
+    };
+    const assignments = nodes.filter((n): n is Extract<Node, {kind:"assign"}> => n.kind === "assign" && n.target === "ls_product-name");
+    if (assignments.length === 2 && assignments[0].value.kind === "literal" && assignments[0].value.value === "Keyboard" &&
+        assignments[1].value.kind === "literal" && assignments[1].value.value === "Mouse" &&
+        nodes.some(n => n.kind === "loop" && n.table === "lt_products" && n.body.some(s => s.kind === "write" && s.value.kind === "ref")) && grade(nodes, "Keyboard")) {
+      correct = ["Screen", "Cable"].every(name => {
+        const tree = structuredClone(nodes);
+        const input = tree.find((n): n is Extract<Node, {kind:"assign"}> => n.kind === "assign" && n.target === "ls_product-name")!;
+        input.value = {kind:"literal", value:name};
+        return grade(tree, name);
+      });
+    }
   } else if (id.startsWith("conditions-")) {
     const specs: Record<string, { input: string; initial: number; probes: number[]; expected: (value: number) => string; elseif?: boolean }> = {
       "conditions-positive": { input: "lv_number", initial: 4, probes: [-8, -1, 0, 1, 4, 19], expected: v => v > 0 ? "Positive" : "Not positive" },

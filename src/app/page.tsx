@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
   Check,
-  Lock,
   GraduationCap,
   Globe2,
   Sparkles,
@@ -26,6 +25,9 @@ import {
   initialProgress,
   normalizeProgress,
   unlocked,
+  visitMission,
+  startMission,
+  completeMission,
 } from "@/lib/progress";
 import { SyntaxLab } from "@/components/syntax-lab";
 import { MissionEngine } from "@/components/mission-engine";
@@ -51,6 +53,7 @@ export default function Academy() {
     : missions.find(m => !progress.missions.includes(m.id))?.id || missions.at(-1)!.id;
   const count =
     (progress.labs.includes("orientation") ? 1 : 0) + progress.missions.length;
+  const hasActivity = !!(count || progress.viewed?.length || progress.started?.length);
   // Hydrate device-only settings after SSR and synchronize browser storage failures.
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
@@ -90,7 +93,7 @@ export default function Academy() {
   /* eslint-enable react-hooks/set-state-in-effect */
   function open(id: string) {
     if (!unlocked(id, progress)) return;
-    setProgress((p) => ({ ...p, current: id }));
+    setProgress((p) => visitMission(p, id));
     setView(id);
     window.scrollTo({ top: 0 });
   }
@@ -185,15 +188,16 @@ export default function Academy() {
                   disabled={!ready}
                   onClick={() =>
                     open(
-                      unlocked(progress.current, progress) && count > 0 && !progress.missions.includes(progress.current) && !(progress.current === "orientation" && progress.labs.includes("orientation"))
+                      unlocked(progress.current) && hasActivity && !progress.missions.includes(progress.current) && !(progress.current === "orientation" && progress.labs.includes("orientation"))
                         ? progress.current
                         : current,
                     )
                   }
                 >
-                  {count ? t.resume : t.start}
+                  {hasActivity ? t.continueLearning : t.start}
                   <ArrowRight size={18} />
                 </button>
+                <a className="secondary explore-link" href="#academy-topics">{t.explore}</a>
                 <p className="hero-foot">
                   <Check size={14} />
                   {t.saved}
@@ -247,17 +251,21 @@ export default function Academy() {
           </>
         ) : (
           <>
+            <nav className="lesson-navigation" aria-label={t.explore}>
             <button
               className="text-button back-link"
               onClick={() => setView("home")}
             >
               ← {t.back}
             </button>
+            <a className="text-button" href="#academy-topics" onClick={() => setView("home")}>{t.exploreTopics}</a>
+            </nav>
             {view === "orientation" ? (
               <section className="orientation">
                 <span className="eyebrow">00 · 4 {t.minutes} · 25 XP</span>
                 <h1>{t.orientation}</h1>
                 <p className="intro">{t.orientationGoal}</p>
+                <div onClickCapture={() => setProgress(p => startMission(p, "orientation"))}>
                 <SyntaxLab
                   id="orientation"
                   tokens={orientation}
@@ -274,6 +282,7 @@ export default function Academy() {
                     setView("home");
                   }}
                 />
+                </div>
               </section>
             ) : selected ? (
               <MissionEngine
@@ -283,22 +292,23 @@ export default function Academy() {
                 theme={theme}
                 progress={progress}
                 onLab={() => lab(selected.id)}
-                onAttempt={(passed) =>
+                onStart={() => setProgress(p => startMission(p, selected.id))}
+                onAttempt={(challengeId, passed) =>
                   setProgress((p) => ({
                     ...p,
+                    passedChallenges: passed ? Array.from(new Set([...(p.passedChallenges || []), challengeId])) : p.passedChallenges,
                     results: {
                       ...p.results,
                       [selected.id]: {
                         attempts: (p.results[selected.id]?.attempts || 0) + 1,
-                        passed,
+                        passed: passed || p.results[selected.id]?.passed === true,
                       },
                     },
                   }))
                 }
                 onComplete={() => {
                   setProgress((p) => ({
-                    ...p,
-                    missions: Array.from(new Set([...p.missions, selected.id])),
+                    ...completeMission(p, selected.id, true),
                     current: missions[missions.findIndex(m => m.id === selected.id) + 1]?.id || selected.id,
                   }));
                   setView("home");
@@ -357,14 +367,13 @@ export default function Academy() {
           onClose={() => setPreview(undefined)}
         >
           <span className="pill">
-            <Lock size={14} />
-            {preview.implemented ? t.locked : t.preview}
+            {t.comingSoon}
           </span>
-          <p>{preview.implemented ? "" : t.futureIntro}</p>
+          <p>{t.futureIntro}</p>
           <h3>{t.skills}</h3>
           <p>{preview.concepts[lang]}</p>
           <p>
-            <strong>{t.prerequisite}:</strong> {preview.prerequisite[lang]}
+            <strong>{t.recommendedFirst}:</strong> {preview.prerequisite[lang]}
           </p>
           <p>
             ≈{preview.minutes} {t.minutes}

@@ -166,8 +166,8 @@ test("product challenge checks fields, values, and component output", () => {
     false,
   );
 });
-test("mission prerequisites and XP prevent duplicate rewards", () => {
-  assert.equal(unlocked("addition", initialProgress), false);
+test("implemented missions are freely accessible and XP prevents duplicate rewards", () => {
+  assert.equal(unlocked("addition", initialProgress), true);
   const p = normalizeProgress({
     labs: ["orientation", "addition", "structures"],
     missions: ["addition", "addition", "structures"],
@@ -178,7 +178,7 @@ test("mission prerequisites and XP prevent duplicate rewards", () => {
   assert.equal(p.missions.length, 2);
   assert.equal(
     normalizeProgress({ missions: ["structures"] }).missions.length,
-    0,
+    1,
   );
   assert.equal(parse(additionExample)[0].kind, "data");
 });
@@ -255,7 +255,7 @@ test("registry migration retains foundation results, unlocks Conditions, and ded
   assert.deepEqual(migrated.missions, old.missions);
   assert.deepEqual(migrated.results, old.results);
   assert.equal(unlocked("conditions", migrated), true);
-  assert.equal(unlocked("do", migrated), false);
+  assert.equal(unlocked("do", migrated), true);
   const completed = normalizeProgress({ ...migrated, labs: [...migrated.labs, "conditions"], missions: [...migrated.missions, "conditions", "conditions"] });
   assert.equal(earnedXP(completed), 475);
   assert.equal(completed.missions.length, 3);

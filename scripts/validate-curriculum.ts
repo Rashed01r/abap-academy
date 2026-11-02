@@ -31,6 +31,11 @@ for (const mission of missions) {
     check(token.correct && token.mistake && token.options[token.answer], `${mission.id}/${token.id}: incomplete syntax exercise`);
   }
   try { simulate(mission.example); } catch (error) { failures.push(`${mission.id}: unsupported demonstration (${String(error)})`); }
+  for (const id of mission.requiredActivities || []) {
+    check(!challenges.has(id), `Duplicate activity ID ${id}`);
+    check(mission.activity === "table-categories" && id === "data-category-choice", `${mission.id}: unknown guided assessment`);
+    challenges.add(id);
+  }
   for (const challenge of mission.challenges || [mission]) {
     check(!challenges.has(challenge.id), `Duplicate assessment ID ${challenge.id}`);
     challenges.add(challenge.id);

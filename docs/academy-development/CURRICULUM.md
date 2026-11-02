@@ -5,7 +5,7 @@ All nine paths below are required by the full-platform request. Only registered,
 | Milestone | Path ID | Target | Status at checkpoint |
 | --- | --- | --- | --- |
 | 1 | fundamentals | Orientation + Missions 01–09 | VERIFIED: all 10 activities; 1,995 XP |
-| 2 | data | 10 missions | PLANNED |
+| 2 | data | 10 missions | IN_PROGRESS: first two missions VERIFIED; 8 planned |
 | 3 | dictionary | 12 missions | PLANNED |
 | 4 | database | 12 missions | PLANNED |
 | 5 | oop | 13 missions | PLANNED |
@@ -34,3 +34,5 @@ Cloud: introduction; restrictions/released APIs; ADT; CDS view entities; RAP arc
 Projects: Employee Management; Leave Management; Sales Order Processing; SAP Data Reporting; SAP API Integration; RAP Business Application. Every project needs business problem, objectives, prerequisites, architecture, stages, labs, guided coding, checkpoints, debugging and final assessment. Identify external SAP access requirements per stage.
 
 Each mission must include problem, syntax lab, appropriate visualization, guided practice, independent challenge, useful feedback and gated completion/once-only XP. Future planned mission IDs are provisional until registered; do not create references to invented playable routes.
+
+Free exploration is the default: prerequisites describe recommended knowledge, never access rules. Every new registered lesson is immediately available without earlier completions. Syntax Labs are optional preparation, with independent completion records. Assessment gates protect achievement/XP only; they must never prevent leaving, reading explanations, switching stages, reviewing examples or attempting another challenge. Data category comparisons are guided conceptual models; only supported standard-table code executes locally.

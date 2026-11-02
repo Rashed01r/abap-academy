@@ -162,6 +162,7 @@ export function LearningWorkspace({
               className={`feedback ${feedback === "correct" ? "success" : "warning"}`}
             >
               <p>{feedback === "correct" ? t.correct : t.wrong}</p>
+              {feedback === "wrong" && mission && <p><TechnicalText>{mission.hint[lang]}</TechnicalText></p>}
               {failure && <div className="probe-feedback"><p>{t.failedInput}: <code dir="ltr">{failure.name} = {failure.input}</code></p><p>{t.expected}: <code dir="ltr">{failure.expected}</code></p><p>{t.actualOutput}: <code dir="ltr">{failure.actual || "∅"}</code></p><p>{t.probeExplanation}</p></div>}
             </div>
           )}

@@ -4,10 +4,11 @@ import { ArrowRight, Check, BookOpen } from "lucide-react";
 import { Mission, missions } from "@/lib/curriculum";
 import { Locale } from "@/lib/engine";
 import { ui } from "@/lib/i18n";
-import { Progress } from "@/lib/progress";
+import { Progress, allChallengesPassed } from "@/lib/progress";
 import { SyntaxLab, Quiz } from "./syntax-lab";
 import { LearningWorkspace } from "./learning-workspace";
 import { TechnicalText } from "./technical-text";
+import { TableCategoryExplorer } from "./table-category-explorer";
 export function MissionEngine({
   mission,
   lang,
@@ -15,6 +16,7 @@ export function MissionEngine({
   progress,
   onLab,
   onAttempt,
+  onStart,
   onComplete,
 }: {
   mission: Mission;
@@ -22,7 +24,8 @@ export function MissionEngine({
   theme: "light" | "dark";
   progress: Progress;
   onLab: () => void;
-  onAttempt: (passed: boolean) => void;
+  onAttempt: (challengeId: string, passed: boolean) => void;
+  onStart: () => void;
   onComplete: () => void;
 }) {
   const [stage, setStage] = useState(0),
@@ -33,12 +36,18 @@ export function MissionEngine({
   const challenge = mission.challenges?.[challengeIndex];
   const activeMission = challenge ? { ...mission, ...challenge } : mission;
   const moreChallenges = !!mission.challenges && challengeIndex < mission.challenges.length - 1;
+  const assessed = allChallengesPassed(progress, mission.id);
+  function goToStage(index: number) {
+    setStage(index);
+    setPassed(false);
+    onStart();
+  }
   const next = () => {
     setStage((s) => s + 1);
     window.scrollTo({ top: 0, behavior: "instant" });
   };
   return (
-    <section className="mission-engine">
+    <section className="mission-engine" onClickCapture={onStart}>
       <div className="mission-title">
         <span className="eyebrow">
           {t.mission} {String(missions.findIndex(m => m.id === mission.id) + 1).padStart(2, "0")} ·{" "}
@@ -46,12 +55,20 @@ export function MissionEngine({
         </span>
         <h1><TechnicalText>{mission.title[lang]}</TechnicalText></h1>
         <p>{mission.subtitle[lang]}</p>
+        <p>{t.optionalLab}</p>
+        <div className="explore-actions">
+          <button className="secondary" onClick={() => goToStage(0)}>{t.learnSyntax}</button>
+          <button className="primary" onClick={() => goToStage(4)}>{t.startChallenge}</button>
+          <button className="secondary" onClick={() => goToStage(2)}>{t.reviewExample}</button>
+        </div>
       </div>
       <ol className="stages">
         {t.stageNames.map((s, i) => (
           <li key={i} aria-current={i === stage ? "step" : undefined}>
-            <span>{i < stage ? <Check size={13} /> : i + 1}</span>
-            {s}
+            <button type="button" onClick={() => goToStage(i)} aria-current={i === stage ? "step" : undefined}>
+              <span>{(i === 0 && progress.labs.includes(mission.id)) || (i === 4 && assessed) || (i === 5 && progress.missions.includes(mission.id)) ? <Check size={13} /> : i + 1}</span>
+              {s}
+            </button>
           </li>
         ))}
       </ol>
@@ -96,7 +113,7 @@ export function MissionEngine({
             +{progress.missions.includes(mission.id) ? 0 : mission.xp} XP
           </div>
           <h2>{t.quiz}</h2>
-          <p>{t.correct}</p>
+          <p>{t.assessmentRequired}</p>
           <h3>{t.skillsLearned}</h3>
           <ul>{mission.objectives.map(objective => <li key={objective.en}><TechnicalText>{objective[lang]}</TechnicalText></li>)}</ul>
           <Quiz
@@ -107,7 +124,7 @@ export function MissionEngine({
             explanation={mission.quizExplanation[lang]}
             onCorrect={() => setQuiz(true)}
           />
-          <button className="primary" disabled={!quiz} onClick={onComplete}>
+          <button className="primary" disabled={!quiz || !assessed} onClick={onComplete}>
             {t.complete}
             <ArrowRight size={16} />
           </button>
@@ -131,6 +148,10 @@ export function MissionEngine({
             </p>
             {stage === 4 && challenge && <h2>{challenge.title[lang]} ({challengeIndex + 1}/{mission.challenges!.length})</h2>}
           </div>
+          {stage === 4 && mission.challenges && <div className="explore-actions" role="group" aria-label={t.challenge}>
+            {mission.challenges.map((item, index) => <button className="secondary" key={item.id} aria-pressed={index === challengeIndex} onClick={() => {setChallengeIndex(index);setPassed(false);}}>{item.title[lang]}</button>)}
+          </div>}
+          {mission.activity === "table-categories" && <TableCategoryExplorer lang={lang} assessment={stage === 4} completed={progress.passedChallenges?.includes("data-category-choice")} onPass={() => onAttempt("data-category-choice", true)}/>}
           <LearningWorkspace
             key={`${stage}-${challengeIndex}`}
             initialCode={
@@ -145,7 +166,7 @@ export function MissionEngine({
             mission={stage === 4 ? activeMission : undefined}
             onResult={(correct, attempt) => {
               setPassed(correct);
-              if (attempt) onAttempt(correct);
+              if (attempt) onAttempt(activeMission.id, correct);
             }}
           />
         </>

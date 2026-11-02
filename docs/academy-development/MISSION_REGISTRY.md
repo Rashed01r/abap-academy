@@ -15,12 +15,12 @@ Canonical executable definitions: `src/lib/curriculum.ts` and imported lesson mo
 | 08 loop-control | EXIT/CONTINUE | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | None |
 | 09 employees | Employee Records Processor | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | None |
 
-The following IDs are stable planning records. They are not registered playable routes. Every component remains PLANNED; prerequisites and implementation must be authored and verified before registration. The next mission is `data-table-model`.
+The following IDs are stable tracking records. data-table-model and data-table-categories are registered and VERIFIED (2026-11-02); all other rows remain PLANNED previews. Next mission: `data-keys`.
 
 | Mission ID | Path | Topic | Overall | Syntax lab | English | Arabic | Visualization | Challenge | Validation | Browser |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| data-table-model | data | Internal tables in depth | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
-| data-table-categories | data | Standard sorted and hashed tables | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
+| data-table-model | data | Internal tables in depth | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED |
+| data-table-categories | data | Standard sorted and hashed tables | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED |
 | data-keys | data | Keys and uniqueness | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
 | data-work-areas-field-symbols | data | Work areas and field symbols | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
 | data-read-table | data | READ TABLE and key lookup | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
@@ -122,4 +122,6 @@ The following IDs are stable planning records. They are not registered playable 
 | projects-api-integration | projects | SAP API Integration | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
 | projects-rap-application | projects | RAP Business Application | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
 
-Status vocabulary: PLANNED → IN_PROGRESS → CONTENT_COMPLETE → FUNCTIONAL → TESTED → VERIFIED; BLOCKED requires a concrete unresolved blocker. VERIFIED requires all applicable quality checks, including rendered bilingual review. A successful build alone does not establish lesson quality.
+Status vocabulary: PLANNED, IN_PROGRESS, IMPLEMENTED, TESTED, VERIFIED; BLOCKED requires a concrete unresolved blocker. VERIFIED requires all applicable quality checks, including rendered bilingual review. A successful build alone does not establish lesson quality.
+
+2026-11-02 totals: orientation + 11 registered missions = 12 VERIFIED playable activities, 20 assessments (19 code + 1 guided category assessment), 2,455 available XP. Data has 2/10 verified missions; Fundamentals remains the only complete path. 100 planned missions/projects remain. Prerequisites are recommendations only. All implemented IDs are accessible immediately. Labs and achievements are tracked independently.
