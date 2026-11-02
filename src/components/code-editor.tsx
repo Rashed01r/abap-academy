@@ -15,6 +15,8 @@ export function CodeEditor({
   theme,
   lang,
   onField,
+  teachingRange,
+  onSourceLine,
 }: {
   code: string;
   onChange: (code: string) => void;
@@ -23,11 +25,15 @@ export function CodeEditor({
   theme: "light" | "dark";
   lang: Locale;
   onField: (name: string) => void;
+  teachingRange?: Range;
+  onSourceLine?: (line: number) => void;
 }) {
   const ref = useRef<editor.IStandaloneCodeEditor | null>(null),
     monacoRef = useRef<Parameters<OnMount>[1] | null>(null),
     decorations = useRef<editor.IEditorDecorationsCollection | null>(null),
+    teachingDecorations = useRef<editor.IEditorDecorationsCollection | null>(null),
     disposable = useRef<IDisposable | null>(null);
+  const sourceLineCallback=useRef(onSourceLine);
   const synchronize = useRef<() => void>(() => {});
   const t = ui[lang];
   const apply = () => {
@@ -69,6 +75,7 @@ export function CodeEditor({
         options: { className: "error-range", isWholeLine: true },
       });
     decorations.current?.set(list);
+    teachingDecorations.current?.set(teachingRange ? [{range:range(teachingRange),options:{isWholeLine:true,className:"anatomy-education-line",linesDecorationsClassName:"anatomy-education-gutter",hoverMessage:{value:t.learningSelection}}}] : []);
     const model = ed.getModel();
     if (model)
       m.editor.setModelMarkers(
@@ -89,6 +96,7 @@ export function CodeEditor({
       );
   };
   useEffect(() => {
+    sourceLineCallback.current=onSourceLine;
     synchronize.current = apply;
     apply();
   });
@@ -96,6 +104,7 @@ export function CodeEditor({
     () => () => {
       disposable.current?.dispose();
       decorations.current?.clear();
+      teachingDecorations.current?.clear();
     },
     [],
   );
@@ -156,9 +165,11 @@ export function CodeEditor({
           ref.current = ed;
           monacoRef.current = m;
           decorations.current = ed.createDecorationsCollection();
+          teachingDecorations.current = ed.createDecorationsCollection();
           disposable.current = ed.onMouseDown((e) => {
             if (!e.target.position) return;
             const { lineNumber, column } = e.target.position;
+            sourceLineCallback.current?.(lineNumber);
             const line = ed.getModel()?.getLineContent(lineNumber) || "";
             for (const match of line.matchAll(/[a-z_]\w*-[a-z_]\w*/gi))
               if (

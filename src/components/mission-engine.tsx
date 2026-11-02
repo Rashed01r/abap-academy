@@ -80,6 +80,7 @@ export function MissionEngine({
           tokens={mission.tokens}
           example={mission.example}
           lang={lang}
+          theme={theme}
           completed={progress.labs.includes(mission.id)}
           onComplete={() => {
             onLab();

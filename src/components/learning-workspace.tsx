@@ -19,6 +19,7 @@ import {
   evaluate,
   Locale,
   ChallengeFailure,
+  Range,
 } from "@/lib/engine";
 import { ui, errors, explain } from "@/lib/i18n";
 import { diagnosticAdvice } from "@/lib/diagnostics";
@@ -31,12 +32,18 @@ export function LearningWorkspace({
   theme,
   mission,
   onResult,
+  teachingRange,
+  teachingSource,
+  onSourceLine,
 }: {
   initialCode: string;
   lang: Locale;
   theme: "light" | "dark";
   mission?: Mission;
   onResult?: (correct: boolean, attempt: boolean) => void;
+  teachingRange?: Range;
+  teachingSource?: string;
+  onSourceLine?: (line: number) => void;
 }) {
   const [code, setCode] = useState(initialCode),
     [events, setEvents] = useState<ExecutionEvent[]>([]),
@@ -106,6 +113,8 @@ export function LearningWorkspace({
             theme={theme}
             lang={lang}
             onField={setField}
+            teachingRange={code === teachingSource ? teachingRange : undefined}
+            onSourceLine={code === teachingSource ? onSourceLine : undefined}
           />
           <div className="toolbar">
             <button className="primary" onClick={() => run(false)}>

@@ -610,13 +610,15 @@ lv_result = lv_first + lv_second.
 
 WRITE lv_result.`;
 export const structureExample = `TYPES: BEGIN OF ty_employee,
-         id TYPE i,
+         id   TYPE i,
          name TYPE string,
        END OF ty_employee.
 
 DATA ls_employee TYPE ty_employee.
+
 ls_employee-id = 101.
 ls_employee-name = 'Ahmed'.
+
 WRITE ls_employee-name.`;
 export const conditionalExample = `DATA total TYPE i VALUE 1200.
 
@@ -836,6 +838,7 @@ const originalMissions: Mission[] = [
   {
     id: "structures",
     pathId: "fundamentals",
+    references: ["https://learning.sap.com/courses/basic-abap-programming/declaring-a-structured-data-object_cd245e79-eb25-4099-a5b4-9ad46b1659b6", "https://help.sap.com/docs/ABAP_PLATFORM_BW4HANA/7bfe8cdcfbb040dcb6702dada8c3e2f0/05bfe43c3bc24d2294335787bc381721.html"],
     objectives: [text("Define a structure type", "تعريف نوع بنية بيانات"), text("Create a record and access its fields", "إنشاء سجل والوصول إلى حقوله")],
     visualization: "structure",
     practice: text("Change Ahmed to a different name and change the employee ID. Predict which memory fields change. Build a trace, then click ls_employee-name in the editor to find the matching field.", "غيّر اسم Ahmed ورقم الموظف. توقّع الحقول التي ستتغير في الذاكرة، ثم أنشئ تتبع التنفيذ. انقر ls_employee-name في المحرر لتحديد الحقل المقابل."),

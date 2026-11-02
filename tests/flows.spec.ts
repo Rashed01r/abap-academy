@@ -1,5 +1,6 @@
+import {matchAnatomy} from "./anatomy-helpers";
 ﻿import { test, expect, Page } from "@playwright/test";
-import { missions, orientation, structureExample } from "../src/lib/curriculum";
+import { missions, structureExample } from "../src/lib/curriculum";
 import { ui } from "../src/lib/i18n";
 import { Locale } from "../src/lib/engine";
 async function edit(page: Page, code: string) {
@@ -12,7 +13,7 @@ async function edit(page: Page, code: string) {
 async function lab(
   page: Page,
   lang: Locale,
-  count: number,
+  id: string,
   orientationLab = false,
 ) {
   const region = page.locator(".syntax-lab");
@@ -21,10 +22,7 @@ async function lab(
     exact: true,
   });
   await expect(finish).toBeDisabled();
-  for (let i = 0; i < count; i++) {
-    await region.locator(".token-list button").nth(i).click();
-    await region.locator(".quiz .answer-options button").first().click();
-  }
+  await matchAnatomy(page,id,lang);
   await expect(finish).toBeEnabled();
   await finish.click();
 }
@@ -52,7 +50,7 @@ for (const lang of ["en", "ar"] as const)
       await expect(page.getByRole("dialog")).toHaveCount(0);
       await page.getByRole("button", { name: t.back, exact: false }).click();
       await page.locator('[data-mission="orientation"] .node-card').click();
-      await lab(page, lang, orientation.length, true);
+      await lab(page, lang, "orientation", true);
       await expect(page.locator(".progress-ring")).toContainText(String(Math.round(100 / (missions.length + 1))));
       for (let i = 0; i < 2; i++) {
         const m = missions[i];
@@ -65,7 +63,7 @@ for (const lang of ["en", "ar"] as const)
             }),
           })
           .click();
-        await lab(page, lang, m.tokens.length);
+        await lab(page, lang, m.id);
         await page
           .locator(".stage-footer")
           .getByRole("button", { name: t.next, exact: true })

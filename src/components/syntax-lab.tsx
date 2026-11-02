@@ -1,10 +1,13 @@
 ﻿"use client";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Check, MousePointer2, ArrowRight } from "lucide-react";
 import { SyntaxToken } from "@/lib/curriculum";
 import { Locale } from "@/lib/engine";
 import { ui } from "@/lib/i18n";
 import { TechnicalText } from "./technical-text";
+import { VisualCodeAnatomy } from "./visual-code-anatomy";
+import { getAnatomy } from "@/lib/anatomy-content";
+import { missions } from "@/lib/curriculum";
 export function Quiz({
   question,
   options,
@@ -58,6 +61,7 @@ export function SyntaxLab({
   lang,
   completed,
   onComplete,
+  theme = "light",
 }: {
   id: string;
   tokens: SyntaxToken[];
@@ -65,12 +69,16 @@ export function SyntaxLab({
   lang: Locale;
   completed: boolean;
   onComplete: () => void;
+  theme?: "light" | "dark";
 }) {
   const [selected, setSelected] = useState(0),
-    [understood, setUnderstood] = useState<string[]>([]);
+    [understood, setUnderstood] = useState<string[]>([]),
+    [matched, setMatched] = useState(false),
+    [detailsOpen, setDetailsOpen] = useState(false);
+  const detailsRef = useRef<HTMLDetailsElement>(null);
   const t = ui[lang],
     token = tokens[selected];
-  const ready = completed || understood.length === tokens.length;
+  const ready = completed || matched || understood.length === tokens.length;
   function selectCode(s: string) {
     const key = s.toLowerCase();
     const found = tokens.findIndex(
@@ -102,13 +110,20 @@ export function SyntaxLab({
         </span>
         <div>
           <div className="eyebrow">{t.lab}</div>
-          <h2>{t.readToken}</h2>
+          <h2>{t.anatomy}</h2>
         </div>
         <span className="muted">
-          {completed ? tokens.length : understood.length} / {tokens.length}{" "}
-          {t.tokenProgress}
+          {completed ? t.completed : t.selectGroup}
         </span>
       </div>
+      <VisualCodeAnatomy doc={getAnatomy(id,example)} lang={lang} theme={theme} onMatched={()=>setMatched(true)} references={missions.find(m=>m.id === id)?.references} onExplore={refs=>{
+        const found=tokens.findIndex(token=>refs.includes(token.id));
+        if(found>=0) setSelected(found);
+        setDetailsOpen(true);
+        requestAnimationFrame(()=>{detailsRef.current?.querySelector("summary")?.focus();detailsRef.current?.scrollIntoView({block:"start",behavior:"instant"});});
+      }}/>
+      <details className="syntax-details" ref={detailsRef} open={detailsOpen} onToggle={event=>setDetailsOpen(event.currentTarget.open)}>
+      <summary>{t.syntaxOptional} · {understood.length}/{tokens.length}</summary>
       <div className="lab-layout">
         <div>
           <div className="token-list" dir="ltr">
@@ -193,8 +208,9 @@ export function SyntaxLab({
           </div>
         </article>
       </div>
+      </details>
       <div className="stage-footer">
-        <span>{ready ? t.labReady : t.choose}</span>
+        <span>{ready ? t.matchReady : t.groupComplete}</span>
         <button className="primary" disabled={!ready} onClick={onComplete}>
           {id === "orientation" ? t.finishOrientation : t.syntaxDone}
           <ArrowRight size={16} />

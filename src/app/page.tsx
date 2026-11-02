@@ -34,6 +34,7 @@ import { MissionEngine } from "@/components/mission-engine";
 import { LearningWorkspace } from "@/components/learning-workspace";
 import { Roadmap, MissionPreview } from "@/components/roadmap";
 import { glossary } from "@/lib/glossary";
+import { orientationExamples } from "@/lib/anatomy-content";
 type Appearance = "light" | "dark" | "system";
 export default function Academy() {
   const [lang, setLang] = useState<Locale>("en"),
@@ -269,12 +270,9 @@ export default function Academy() {
                 <SyntaxLab
                   id="orientation"
                   tokens={orientation}
-                  example={
-                    lang === "en"
-                      ? "* My first ABAP statement\nWRITE\n  5."
-                      : "* أول تعليمة ABAP\nWRITE\n  5."
-                  }
+                  example={orientationExamples[lang]}
                   lang={lang}
+                  theme={theme}
                   completed={progress.labs.includes("orientation")}
                   onComplete={() => {
                     lab("orientation");

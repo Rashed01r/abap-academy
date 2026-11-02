@@ -1,8 +1,8 @@
 # Academy architecture
 
-Checkpoint: 2026-10-31. This directory is the continuation record for the full-platform request. Inspect the repository before trusting implementation status.
+Checkpoint: 2026-11-02. This directory is the continuation record for the full-platform request. Inspect the repository before trusting implementation status.
 
-The existing Next.js App Router application is preserved. `src/app/page.tsx` coordinates learner selection, locale, appearance and local progress. `src/components/roadmap.tsx` renders the connected roadmap; `mission-engine.tsx` owns the learning stages; `syntax-lab.tsx` owns token exploration and questions. `learning-workspace.tsx` connects the Monaco editor, diagnostics, execution trace, memory and output. `code-editor.tsx` keeps editor selection independent from the execution decoration.
+The existing Next.js App Router application is preserved. `src/app/page.tsx` coordinates learner selection, locale, appearance and local progress. `src/components/roadmap.tsx` renders the connected roadmap; `mission-engine.tsx` owns the learning stages; `syntax-lab.tsx` now defaults to grouped Visual Code Anatomy, with keyword exploration optional. `learning-workspace.tsx` connects the Monaco editor, diagnostics, execution trace, memory and output. `code-editor.tsx` keeps editor selection, educational section selection and execution decorations independent.
 
 `src/lib/curriculum.ts` is the public mission/path registry. Mission content is declarative, bilingual and separate from UI. Reuse the existing mission stages for executable lessons; add a specialized interaction model for DDIC, SQL, objects and RAP where necessary. Do not represent guided artifact exercises as SAP execution.
 
@@ -17,3 +17,15 @@ Tests: `engine.test.ts` covers the preserved runtime; `fundamentals.test.ts` cov
 2026-11-02 free-exploration update (supersedes the earlier storage-shape note): the existing page opener validates implementation only. Roadmap groups registered lessons under expandable paths, with search, path/difficulty filters, recent/completed collections, continuation and suggested-next actions. Preview buttons open descriptions, never lesson routes. Mission stage buttons and individual challenge tabs allow browsing without passing labs or assessments. Only all persisted challenge/activity passes plus the current knowledge check enable mission completion; optional labs are recorded separately. Opening records viewed/recent; interaction records started. Completion remains idempotent.
 
 `table-category-mission.ts` supplies the next complete Data lesson. `table-category-explorer.tsx` and the pure finite model `table-categories.ts` compare ordering/duplicates/membership without claiming SAP hashing execution. Required guided activity IDs are persisted alongside code-challenge passes; `allChallengesPassed` includes both. Sorted/hashed source declarations remain reference material requiring SAP execution.
+
+## Visual Code Anatomy authoring contract
+
+`code-anatomy.ts` defines typed groups (stable ID, bilingual title/explanation, source range, optional details/glossary/syntax references, visualizer target and field exploration) and validates source coverage, ordering, localization and matching questions. `anatomy-content.ts` supplies reviewed group definitions for every registered mission and both orientation examples. `anatomy-concepts.ts` is an original beginner glossary with meaning, usage, example, mistake and technical detail. Rendering is shared in `visual-code-anatomy.tsx`; no mission-specific interface is duplicated.
+
+For each new lesson, author meaningful line ranges and matching prompts against the complete example. Cover every nonblank line without overlap. Add a fixed `sourceFingerprint` only after reviewing code, ranges and explanations; do not blindly regenerate it after an example changes. The fingerprint catches source drift, including whitespace that shifts source ranges. `validate:curriculum` rejects missing anatomy or references. Selection uses explicit ranges, not substring lookup. The optional legacy keyword view retains its existing interactions.
+
+The default layout shows complete grouped code, a short explanation and an appropriate result. Type groups show a blueprint, explicitly without a record. Snapshot groups use actual simulator events belonging to that source range; untaken branches show that they were not reached. Repeated groups label the last executed visit, with Watch Execution exposing the existing full trace and controls. Structure assignment highlights both fields from actual changed-field events.
+
+Watch Execution passes an educational range into a separate Monaco decoration collection (dashed purple gutter/underline). Green execution pointers continue to follow trace events only. Clicking source lines selects groups by line number without running code or moving the execution timeline. Editing source clears educational highlighting until the original example is restored. Monaco remains dynamically loaded.
+
+Lab completion accepts correct group matching or the existing optional keyword questions. Selecting groups alone is not assessment. Existing completed labs remain completed, and no progress shape, stable mission ID or XP rule changed in this batch. Syntax Labs remain optional for mission access and mission assessment.

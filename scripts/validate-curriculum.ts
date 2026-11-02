@@ -1,7 +1,9 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-import { missions, paths } from "../src/lib/curriculum";
+import { missions, paths, orientation } from "../src/lib/curriculum";
 import { evaluate, simulate } from "../src/lib/engine";
+import { getAnatomy, orientationExamples } from "../src/lib/anatomy-content";
+import { validateAnatomy } from "../src/lib/code-anatomy";
 
 const failures: string[] = [];
 const check = (condition: unknown, message: string) => { if (!condition) failures.push(message); };
@@ -31,6 +33,11 @@ for (const mission of missions) {
     check(token.correct && token.mistake && token.options[token.answer], `${mission.id}/${token.id}: incomplete syntax exercise`);
   }
   try { simulate(mission.example); } catch (error) { failures.push(`${mission.id}: unsupported demonstration (${String(error)})`); }
+  try {
+    const anatomy=getAnatomy(mission.id,mission.example);
+    validateAnatomy(anatomy,mission.example);
+    for(const group of anatomy.groups) for(const ref of group.syntaxRefs || []) check(tokens.has(ref), `${mission.id}/${group.id}: missing optional syntax reference ${ref}`);
+  } catch(error) { failures.push(String(error)); }
   for (const id of mission.requiredActivities || []) {
     check(!challenges.has(id), `Duplicate activity ID ${id}`);
     check(mission.activity === "table-categories" && id === "data-category-choice", `${mission.id}: unknown guided assessment`);
@@ -43,6 +50,11 @@ for (const mission of missions) {
     try { check(evaluate(challenge.solution, challenge.id).correct, `${challenge.id}: reference solution fails semantic grading`); }
     catch (error) { failures.push(`${challenge.id}: invalid assessment (${String(error)})`); }
   }
+}
+for(const source of Object.values(orientationExamples)) {
+  const anatomy=getAnatomy("orientation",source);
+  validateAnatomy(anatomy,source);
+  for(const group of anatomy.groups) for(const ref of group.syntaxRefs || []) check(orientation.some(token=>token.id === ref), `orientation/${group.id}: missing syntax reference ${ref}`);
 }
 
 // Check local Markdown links in the maintained continuation records, not external URLs.

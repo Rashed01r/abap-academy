@@ -1,3 +1,4 @@
+import {matchAnatomy} from "./anatomy-helpers";
 import {test, expect} from "@playwright/test";
 import {missions} from "../src/lib/curriculum";
 import {ui} from "../src/lib/i18n";
@@ -42,10 +43,7 @@ for (const lang of ["en","ar"] as const) test(`${lang}: category comparison and 
   expect(progress.labs).toEqual([]);
   expect(progress.passedChallenges).toEqual(expect.arrayContaining([m.challenges![0].id,"data-category-choice"]));
   await page.locator(`[data-mission="${m.id}"] .node-card`).click();
-  for(let i=0;i<m.tokens.length;i++) {
-    await page.locator(".token-list button").nth(i).click();
-    await page.locator(".syntax-lab .answer-options button").nth(m.tokens[i].answer).click();
-  }
+  await matchAnatomy(page,m.id,lang);
   await page.getByRole("button",{name:t.syntaxDone,exact:true}).click();
   await page.getByRole("button",{name:t.back,exact:false}).click();
   await expect(page.locator(".xp-row")).toContainText(String(m.xp));

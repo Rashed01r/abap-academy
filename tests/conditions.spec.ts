@@ -1,3 +1,4 @@
+import {matchAnatomy} from "./anatomy-helpers";
 import { test, expect, Page } from "@playwright/test";
 import { missions } from "../src/lib/curriculum";
 import { ui } from "../src/lib/i18n";
@@ -30,11 +31,7 @@ for (const lang of ["en", "ar"] as const) {
     await page.locator(".node-card").filter({ has: page.getByRole("heading", { name: mission.title[lang], exact: true }) }).click();
     await expect(page.locator(".mission-title")).toContainText("03");
     await expect(page.getByRole("button", { name: t.syntaxDone, exact: true })).toBeDisabled();
-    const region = page.locator(".syntax-lab");
-    for (let i = 0; i < mission.tokens.length; i++) {
-      await region.locator(".token-list button").nth(i).click();
-      await region.locator(".quiz .answer-options button").nth(mission.tokens[i].answer).click();
-    }
+    await matchAnatomy(page,mission.id,lang);
     await page.getByRole("button", { name: t.syntaxDone, exact: true }).click();
     const next = page.locator(".stage-footer").getByRole("button", { name: t.next, exact: true });
     await next.click();
