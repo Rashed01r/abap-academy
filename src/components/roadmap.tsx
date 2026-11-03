@@ -47,7 +47,8 @@ export function Roadmap({ lang, progress, storage, ready, open, setPreview }: {
       {paths.filter(p => pathFilter === "all" || pathFilter === p.id).map((p) => {
         const available = filtered.filter(m => m.pathId === p.id);
         const implemented = activities.filter(m => m.pathId === p.id);
-        const previews = p.id === "fundamentals" || collection !== "all" || difficulty !== "all" ? [] : p.concepts.en.split(" \u00b7 ").map((en,j) => ({en, ar:p.concepts.ar.split(" \u00b7 ")[j] || en})).filter(c => !(p.id === "data" && implemented.length && c.en === "Internal tables")).filter(c => `${c.en} ${c.ar}`.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()));
+        const coveredTopics = new Set(implemented.flatMap(m => "coveredTopics" in m ? m.coveredTopics || [] : []));
+        const previews = p.id === "fundamentals" || collection !== "all" || difficulty !== "all" ? [] : p.concepts.en.split(" \u00b7 ").map((en,j) => ({en, ar:p.concepts.ar.split(" \u00b7 ")[j] || en})).filter(c => !coveredTopics.has(c.en)).filter(c => `${c.en} ${c.ar}`.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()));
         if (!available.length && !previews.length && (search || collection !== "all" || difficulty !== "all")) return null;
         return <details key={p.id} data-path={p.id} open={expandAll || implemented.length > 0 || pathFilter !== "all" || !!search}>
           <summary><span className="path-number">{String(paths.findIndex(path => path.id === p.id)+1).padStart(2,"0")}</span><span>{p.title[lang]}<small>{implemented.length ? `${implemented.length} ${t.available}` : t.comingSoon}</small></span><span>+</span></summary>

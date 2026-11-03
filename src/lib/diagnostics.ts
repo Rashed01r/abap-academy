@@ -9,7 +9,7 @@ export const diagnosticAdvice = {
   },
   unknown: {
     why: text("The simulator needs a declared name and type before it can read a value.", "يحتاج المحاكي إلى معرفة اسم المتغير ونوعه قبل قراءة قيمته."),
-    hint: text("Declare the variable with DATA before using it. Check for a spelling mismatch.", "عرّف المتغير باستخدام DATA قبل استخدامه، وطابق كتابة اسمه في الموضعين."), example: "DATA lv_total TYPE i.\nWRITE lv_total.",
+    hint: text("Declare the name before using it: DATA for a variable or FIELD-SYMBOLS <name> TYPE type for a field symbol. Check for a spelling mismatch.", "عرّف الاسم قبل استخدامه: DATA للمتغير، أو FIELD-SYMBOLS <name> TYPE type لرمز الحقل. وطابق كتابة الاسم في الموضعين."), example: "DATA lv_total TYPE i.\nWRITE lv_total.",
   },
   declaration: {
     why: text("A declaration describes the storage or structure type before it is used.", "يحدد تعريف البيانات المتغير أو نوع البنية قبل استخدامها في البرنامج."),
@@ -50,5 +50,10 @@ export const diagnosticAdvice = {
   limit: {
     why: text("Deterministic limits keep examples responsive and their traces readable.", "تحافظ الحدود الثابتة على استجابة المحاكي وسهولة متابعة خطوات التنفيذ."),
     hint: text("For a repeating WHILE, update the counter so its condition becomes false. Otherwise simplify the program: 100 iterations per loop, 1,000 execution steps, 100 rows per table, depth 12, 16,000 source characters, 2,000 tokens, and 150 statements.", "إذا استمرت WHILE دون توقف، فحدّث العداد داخل الحلقة حتى يصبح الشرط خاطئًا. أو بسّط المثال للالتزام بالحدود: 100 دورة لكل حلقة و1000 خطوة تنفيذ و100 صف لكل جدول وعمق 12 و16000 محرف و2000 وحدة لغوية و150 تعليمة."), example: "DATA counter TYPE i VALUE 1.\nWHILE counter <= 5.\n  WRITE counter.\n  counter = counter + 1.\nENDWHILE.",
+  },
+  unassigned: {
+    why: text("FIELD-SYMBOLS declares an alias, not a copied value. Until ASSIGN binds it to data, there is no value to access. UNASSIGN removes the binding without erasing the data.", "تعرّف FIELD-SYMBOLS اسمًا للوصول إلى بيانات، لا نسخة من قيمة. لا توجد بيانات يمكن الوصول إليها من خلاله حتى تربطه ASSIGN بكائن. وتلغي UNASSIGN الربط دون مسح البيانات."),
+    hint: text("Declare a compatible field symbol, then execute ASSIGN object TO <symbol>. before accessing it. A skipped ASSIGN does not create a binding.", "عرّف رمز حقل بنوع متوافق، ثم نفّذ ASSIGN object TO <symbol>. قبل استخدامه. لا تنشئ ASSIGN ربطًا إذا تجاوزها التنفيذ."),
+    example: "DATA lv_count TYPE i VALUE 5.\nFIELD-SYMBOLS <count> TYPE i.\nASSIGN lv_count TO <count>.\n<count> = <count> + 1.\nWRITE lv_count.",
   },
 } satisfies Record<ErrorCode, { why: ReturnType<typeof text>; hint: ReturnType<typeof text>; example: string }>;

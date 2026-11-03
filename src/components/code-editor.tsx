@@ -149,9 +149,10 @@ export function CodeEditor({
               tokenizer: {
                 root: [
                   [
-                    /\b(DATA|TYPES|BEGIN|END|OF|TYPE|VALUE|WRITE|IF|ELSEIF|ELSE|ENDIF|DO|TIMES|ENDDO|WHILE|ENDWHILE|STANDARD|TABLE|WITH|EMPTY|KEY|APPEND|TO|LOOP|AT|INTO|ENDLOOP|EXIT|CONTINUE)\b/i,
+                    /\b(FIELD-SYMBOLS|ASSIGN|UNASSIGN|DATA|TYPES|BEGIN|END|OF|TYPE|VALUE|WRITE|IF|ELSEIF|ELSE|ENDIF|DO|TIMES|ENDDO|WHILE|ENDWHILE|STANDARD|TABLE|WITH|EMPTY|KEY|APPEND|TO|LOOP|AT|INTO|ENDLOOP|EXIT|CONTINUE)\b/i,
                     "keyword",
                   ],
+                  [/<[a-z_]\w*>/i, "variable"],
                   [/'([^']|'')*'/, "string"],
                   [/\b\d+\b/, "number"],
                   [/^\*.*/, "comment"],

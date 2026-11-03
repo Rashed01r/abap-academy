@@ -1,7 +1,9 @@
-# Continue ABAP Academy development
+﻿# Continue ABAP Academy development
 
 Read [the canonical checkpoint](docs/academy-development/NEXT_STEPS.md) and [implementation progress](docs/academy-development/IMPLEMENTATION_PROGRESS.md), then inspect actual repository state.
 
-Visual Code Anatomy is VERIFIED across all 12 implemented Syntax Labs. Use meaningful code groups by default, optional syntax detail and real matching assessment. Preserve free exploration, version 2 progress and once-only XP.
+Latest verified batch: **data-work-areas-field-symbols**. It provides bilingual work-area teaching, real typed FIELD-SYMBOLS/ASSIGN/UNASSIGN execution, ten anatomy groups, a live alias diagram and two behavior-graded coding challenges. Work areas and Field symbols no longer appear as duplicate Coming Soon topics.
 
-Next curriculum task: **data-keys**, using the anatomy authoring contract in ARCHITECTURE.md. Fundamentals and the first two Data missions remain verified. Totals: 12 playable activities, 20 mission assessments, 2,455 available XP; 100 future missions/projects PLANNED.
+Next curriculum task: **data-read-table**. Add safe found/not-found lookup with typed semantics, meaningful assessment and trace row highlighting. Preserve free exploration, version 2 progress and once-only XP. Current totals: 14 playable activities, 24 assessments, 2,995 XP; Fundamentals complete; Data 4/10 verified. 99 future missions/projects remain planned, including the Inventory Management capstone newly added to the latest request's tracking scope.
+
+Preview: http://localhost:3008/?mission=data-work-areas-field-symbols (the existing root route with a validated mission query).

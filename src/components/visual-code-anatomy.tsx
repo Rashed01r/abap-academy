@@ -7,6 +7,7 @@ import { parse, simulate, type Locale } from "@/lib/engine";
 import { ui } from "@/lib/i18n";
 import { TechnicalText } from "./technical-text";
 import { LearningWorkspace } from "./learning-workspace";
+import { FieldSymbolMemory } from "./field-symbol-memory";
 
 export function VisualCodeAnatomy({doc,lang,theme,onExplore,onMatched,references=[]}: {
   doc:CodeAnatomy;lang:Locale;theme:"light"|"dark";onExplore:(refs:string[])=>void;onMatched:()=>void;references?:string[];
@@ -56,6 +57,7 @@ export function VisualCodeAnatomy({doc,lang,theme,onExplore,onMatched,references
             {snapshot.loop && <p>{t.iteration}: <b>{snapshot.loop.iteration}</b></p>}
             <div className="anatomy-memory">{Object.entries(snapshot.memory).map(([name,value])=><div key={name} className="anatomy-memory-card"><code dir="ltr">{name}</code>{doc.id === "structures" && name === "ls_employee" && <h4>{t.employeeRecord}</h4>}{Array.isArray(value) ? <pre dir="ltr">{JSON.stringify(value,null,2)}</pre> : typeof value === "object" ? <dl>{Object.entries(value).map(([key,v])=><div key={key} className={changes.has(`${name}-${key}`) ? "anatomy-field-active" : ""}><dt><code>{key}</code></dt><dd><bdi dir="ltr">{v === "" ? '""' : String(v)}</bdi></dd></div>)}</dl> : <strong dir="ltr">{value === "" ? '""' : String(value)}</strong>}</div>)}</div>
             {!!snapshot.output.length && <div className={`anatomy-output ${visits.some(e=>e.operation === "write") ? "anatomy-field-active" : ""}`}><h4>{t.output}</h4><pre dir="ltr">{snapshot.output.join("\n")}</pre></div>}
+            <FieldSymbolMemory event={snapshot} previous={events[snapshot.id - 1]} lang={lang} />
             {!Object.keys(snapshot.memory).length && !snapshot.output.length && <p>{t.noAnatomyState}</p>}
             <p className="small muted">{t.afterVisit}</p>
           </>}

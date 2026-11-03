@@ -15,14 +15,14 @@ Canonical executable definitions: `src/lib/curriculum.ts` and imported lesson mo
 | 08 loop-control | EXIT/CONTINUE | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | None |
 | 09 employees | Employee Records Processor | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | None |
 
-The following IDs are stable tracking records. data-table-model and data-table-categories are registered and VERIFIED (2026-11-02); all other rows remain PLANNED previews. Next mission: `data-keys`.
+The following IDs are stable tracking records. data-table-model, data-table-categories, data-keys and data-work-areas-field-symbols are registered and VERIFIED (latest checkpoint 2026-11-03); all other rows remain PLANNED previews. Next mission: `data-read-table`.
 
 | Mission ID | Path | Topic | Overall | Syntax lab | English | Arabic | Visualization | Challenge | Validation | Browser |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | data-table-model | data | Internal tables in depth | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED |
 | data-table-categories | data | Standard sorted and hashed tables | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED |
-| data-keys | data | Keys and uniqueness | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
-| data-work-areas-field-symbols | data | Work areas and field symbols | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
+| data-keys | data | Keys and uniqueness | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED |
+| data-work-areas-field-symbols | data | Work areas and field symbols | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED |
 | data-read-table | data | READ TABLE and key lookup | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
 | data-table-mutations | data | MODIFY DELETE INSERT APPEND | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
 | data-sorting-filtering | data | Sorting and filtering | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
@@ -118,12 +118,17 @@ The following IDs are stable tracking records. data-table-model and data-table-c
 | projects-employee-management | projects | Employee Management | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
 | projects-leave-management | projects | Leave Management | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
 | projects-sales-orders | projects | Sales Order Processing | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
+| projects-inventory-management | projects | Inventory Management | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
 | projects-data-reporting | projects | SAP Data Reporting | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
 | projects-api-integration | projects | SAP API Integration | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
 | projects-rap-application | projects | RAP Business Application | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
 
 Status vocabulary: PLANNED, IN_PROGRESS, IMPLEMENTED, TESTED, VERIFIED; BLOCKED requires a concrete unresolved blocker. VERIFIED requires all applicable quality checks, including rendered bilingual review. A successful build alone does not establish lesson quality.
 
-2026-11-02 totals: orientation + 11 registered missions = 12 VERIFIED playable activities, 20 assessments (19 code + 1 guided category assessment), 2,455 available XP. Data has 2/10 verified missions; Fundamentals remains the only complete path. 100 planned missions/projects remain. Prerequisites are recommendations only. All implemented IDs are accessible immediately. Labs and achievements are tracked independently.
+Latest 2026-11-03 totals: orientation + 13 registered missions = 14 VERIFIED playable activities, 24 assessments (22 code + 2 guided assessments), 2,995 available XP. Data has 4/10 verified missions; Fundamentals remains the only complete path. 99 planned missions/projects remain, including the newly tracked Inventory Management capstone from the latest request. Prerequisites are recommendations only. All implemented IDs are accessible immediately. Labs and achievements are tracked independently.
 
 2026-11-02 Visual Code Anatomy: VERIFIED for orientation and all 11 registered missions after 46 unit tests, source/range validation, 68 browser scenarios and rendered Arabic review. The Structure reference has 6 groups; all existing labs together have 60 groups and 38 matching descriptions. Existing mission assessment counts and XP are unchanged. Labs remain optional, and legacy completed labs are preserved. Optional detailed keyword exercises are retained.
+
+2026-11-03 data-keys: VERIFIED after 51/51 unit tests, curriculum validation (12 missions / 22 assessments), typecheck/lint/build and 76/76 production browser scenarios in 4.6 minutes. Directly reviewed Arabic desktop/light and mobile/dark rendering. Adds ten anatomy groups, four matching descriptions, key-policy field selection and before/after snapshots, the required data-key-design assessment and data-key-matches code assessment. Both plus the knowledge check gate 260 XP once. Total anatomy coverage is now 70 groups / 42 matching descriptions across 13 labs. No executable syntax or progress migration was added. Next: data-work-areas-field-symbols.
+
+Latest Work Areas and Field Symbols batch: VERIFIED after 62/62 unit tests, curriculum validation (13 missions / 24 assessments), typecheck/lint/build, 86/86 full production browser checks in 4.8 minutes, and final rebuilt-app checks (10 lesson/deep-link cases plus 2 corrected diagnostic cases). Direct Arabic desktop/light and final mobile/dark review passed. Adds ten anatomy groups, six matching descriptions, actual typed direct field-symbol execution and shared trace-driven alias diagrams. data-work-area-record and data-field-symbol-alias plus the knowledge check gate 280 XP once. Current anatomy: 80 groups / 48 descriptions across 14 labs. Progress schema and prior achievements remain unchanged. Next: data-read-table. Generic/dynamic symbols, IS ASSIGNED, LOOP ASSIGNING and table-row aliases remain unsupported.

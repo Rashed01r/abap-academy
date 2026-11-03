@@ -91,7 +91,8 @@ test("diagnostics give relevant bilingual advice and permit correction", async (
   await page.getByRole("button", { name: ui.en.playground, exact: true }).click();
   await edit(page, "WRITE missing.");
   await page.getByRole("button", { name: ui.en.run, exact: true }).click();
-  await expect(page.locator(".feedback.error")).toContainText("Declare the variable");
+  await expect(page.locator(".feedback.error")).toContainText("DATA");
+  await expect(page.locator(".feedback.error")).toContainText("FIELD-SYMBOLS");
   await page.getByRole("button", { name: "العربية", exact: true }).click();
   await page.getByText(ui.ar.explainWhy, { exact: true }).click();
   await expect(page.locator(".feedback.error")).toContainText("قبل قراءة قيمته");

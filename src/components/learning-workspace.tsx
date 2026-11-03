@@ -26,6 +26,7 @@ import { diagnosticAdvice } from "@/lib/diagnostics";
 import { TechnicalText } from "./technical-text";
 import { TableMemory } from "./table-memory";
 import { LoopVisualizer } from "./loop-visualizer";
+import { FieldSymbolMemory } from "./field-symbol-memory";
 export function LearningWorkspace({
   initialCode,
   lang,
@@ -259,6 +260,7 @@ export function LearningWorkspace({
             </select>
           </label>
           {event && <LoopVisualizer event={event} lang={lang} />}
+          {event && <FieldSymbolMemory event={event} previous={events[index - 1]} lang={lang} />}
           <div className="memory-heading">
             <h3>{t.memory}</h3>
             <span>{t.changed} ●</span>

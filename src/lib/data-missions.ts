@@ -1,6 +1,8 @@
 import type { Mission, SyntaxToken, Text } from "./curriculum";
 import { fundamentals } from "./fundamentals";
 import { tableCategoryMission } from "./table-category-mission";
+import { tableKeyMission } from "./table-key-mission";
+import { workAreaMission } from "./work-area-mission";
 
 const t = (en: string, ar: string): Text => ({ en, ar });
 const setup = `TYPES: BEGIN OF ty_product,
@@ -40,6 +42,7 @@ const challenge = {
 };
 export const dataMissions: Mission[] = [{
   id: "data-table-model", pathId: "data", prerequisite: "employees", minutes: 20, xp: 220,
+  coveredTopics: ["Internal tables"],
   difficulty: "intermediate", environment: "browser", assessment: "simulated", visualization: "table",
   references: ["https://learning.sap.com/courses/basic-abap-programming/working-with-simple-internal-tables_a4beb937-0c7b-45b9-92be-ff26a5159fad", "https://help.sap.com/docs/abap-cloud/abap-keywords/append", "https://github.com/SAP-samples/abap-cheat-sheets/blob/main/01_Internal_Tables.md"],
   title: t("Understand the internal table model", "افهم نموذج الجدول الداخلي"),
@@ -54,4 +57,4 @@ export const dataMissions: Mission[] = [{
   quiz: t("Does changing a work area after APPEND change the stored row?", "هل يؤدي تغيير منطقة العمل بعد APPEND إلى تغيير الصف المحفوظ؟"),
   options: [t("No; APPEND copied its value", "لا؛ نسخت APPEND قيمتها"), t("Yes; they are the same storage", "نعم؛ يشتركان في موضع الذاكرة نفسه")], answer: 0,
   quizExplanation: t("For the integer and string fields used here, the stored row is independent of the work area. LOOP AT INTO also copies a row; updating that copy alone does not update the table. Reference-valued components are a later topic.", "بالنسبة إلى حقول الأعداد والنصوص المستخدمة هنا، يكون الصف المحفوظ مستقلًا عن منطقة العمل. تنسخ LOOP AT INTO الصف أيضًا؛ ولا يكفي تعديل هذه النسخة لتحديث الجدول. سنتناول الحقول ذات القيم المرجعية لاحقًا."),
-}, tableCategoryMission];
+}, tableCategoryMission, tableKeyMission, workAreaMission];

@@ -1,0 +1,13 @@
+# Visual Code Anatomy
+
+The authoring contract lives in [ARCHITECTURE.md](ARCHITECTURE.md). The shared UI is `src/components/visual-code-anatomy.tsx`; reviewed source groups are in `src/lib/anatomy-content.ts`; types and source validation are in `src/lib/code-anatomy.ts`.
+
+Start with complete code and meaningful operations. Provide stable group IDs, explicit source line ranges, English/Arabic titles and short explanations, appropriate state or type-blueprint views, optional syntax/glossary references, and meaningful matching descriptions. Cover every nonblank line without overlap. Review the source, semantics, ranges and prose together before setting a fixed source fingerprint. Never regenerate fingerprints to bypass source-drift failures.
+
+Selection shows a real matching trace snapshot, or an explicitly labelled type blueprint. Skipped branches have no invented state. Repeated groups show their last executed visit; Watch Execution provides the full trace. Educational Monaco decorations and execution pointers are independent. Editing the source invalidates stale decorations and traces. Code stays LTR; Arabic labels and explanations stay RTL. Match assessment checks understanding; browsing groups earns no XP.
+
+The data-keys lesson adds ten groups: employee shape, import storage, target identity/counter, three employees, duplicate identity, traversal, two-field comparison, matching names/count, continued inspection, final count. Four matching prompts assess duplicate identity, full-key comparison, processing matches and reporting the result. The separate key-policy explorer is explicitly conceptual; its sorted-table reference declaration is not passed to the beginner interpreter.
+
+For evidence and current verification status, read [IMPLEMENTATION_PROGRESS.md](IMPLEMENTATION_PROGRESS.md). Future DDIC, SQL, OO, CDS and RAP content must use suitable specialized visuals and genuine assessments rather than fabricated runtime output.
+
+Work Areas and Field Symbols adds ten groups against its fixed 17-line source (fingerprint 7e1d85f8): define employee shape, create work area, fill fields, display information, save an independent row, declare symbol, bind symbol, change through symbol, observe the changed work area, and read the saved copy back. Six matching descriptions assess these distinct operations. Both assigned fields are highlighted from actual trace changes. FIELD-SYMBOLS shows an unassigned alias, ASSIGN shows its real target, and the update shows the target's before/after values alongside the unaffected saved row. These visuals reuse actual typed execution; they do not invent table-row alias support.

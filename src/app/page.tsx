@@ -71,6 +71,11 @@ export default function Academy() {
     } catch {
       setStorage(false);
     }
+    const requested = new URLSearchParams(window.location.search).get("mission");
+    if (requested && unlocked(requested)) {
+      setProgress(p => visitMission(p, requested));
+      setView(requested);
+    }
     setReady(true);
     const media = matchMedia("(prefers-color-scheme: dark)");
     setSystemDark(media.matches);
@@ -92,6 +97,13 @@ export default function Academy() {
       }
   }, [lang, theme, appearance, progress, ready]);
   /* eslint-enable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    if (!ready) return;
+    const url = new URL(window.location.href);
+    if (unlocked(view)) url.searchParams.set("mission", view);
+    else url.searchParams.delete("mission");
+    window.history.replaceState(null, "", url);
+  }, [view, ready]);
   function open(id: string) {
     if (!unlocked(id, progress)) return;
     setProgress((p) => visitMission(p, id));

@@ -9,6 +9,7 @@ import { SyntaxLab, Quiz } from "./syntax-lab";
 import { LearningWorkspace } from "./learning-workspace";
 import { TechnicalText } from "./technical-text";
 import { TableCategoryExplorer } from "./table-category-explorer";
+import { TableKeyExplorer } from "./table-key-explorer";
 export function MissionEngine({
   mission,
   lang,
@@ -153,6 +154,7 @@ export function MissionEngine({
             {mission.challenges.map((item, index) => <button className="secondary" key={item.id} aria-pressed={index === challengeIndex} onClick={() => {setChallengeIndex(index);setPassed(false);}}>{item.title[lang]}</button>)}
           </div>}
           {mission.activity === "table-categories" && <TableCategoryExplorer lang={lang} assessment={stage === 4} completed={progress.passedChallenges?.includes("data-category-choice")} onPass={() => onAttempt("data-category-choice", true)}/>}
+          {mission.activity === "table-keys" && <TableKeyExplorer lang={lang} assessment={stage === 4} completed={progress.passedChallenges?.includes("data-key-design")} onPass={() => onAttempt("data-key-design", true)}/>}
           <LearningWorkspace
             key={`${stage}-${challengeIndex}`}
             initialCode={

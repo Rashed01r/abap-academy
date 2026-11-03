@@ -109,7 +109,7 @@ export const ui = {
     language: "Language",
     limit: "Educational simulation · not an SAP runtime",
     limits:
-      "Supported: DATA (i, string, local structures, STANDARD TABLE OF … WITH EMPTY KEY), TYPES structures, assignments, integer addition, WRITE including WRITE: / value., IF/ELSEIF/ELSE, DO n TIMES, WHILE comparisons, APPEND, LOOP AT … INTO a work area or DATA(name), EXIT and CONTINUE inside loops. Other declarations must be outside control blocks. Limits: 16,000 characters, 2,000 tokens, 150 statements, 100 iterations per loop, 1,000 steps/trace entries, 100 rows per table, nesting depth 12; signed 32-bit integers. No database, classes, methods, sorted/hashed tables, field symbols, AND/OR/NOT, or full SAP runtime. Each WRITE adds one output line; SAP list formatting and implicit conversions are not reproduced.",
+      "Supported: DATA (i, string, local structures, STANDARD TABLE OF … WITH EMPTY KEY), TYPES structures, assignments, integer addition, WRITE including WRITE: / value., IF/ELSEIF/ELSE, DO n TIMES, WHILE comparisons, APPEND, LOOP AT … INTO a work area or DATA(name), EXIT and CONTINUE inside loops. FIELD-SYMBOLS supports matching explicit i/string/structure types, direct ASSIGN object TO <symbol>, field access and UNASSIGN. Declarations must be outside control blocks. Limits: 16,000 characters, 2,000 tokens, 150 statements, 100 iterations per loop, 1,000 steps/trace entries, 100 rows per table, nesting depth 12; signed 32-bit integers. No database, classes, methods, sorted/hashed tables, dynamic ASSIGN, IS ASSIGNED, LOOP ASSIGNING, generic field symbols, AND/OR/NOT, or full SAP runtime. Each WRITE adds one output line; SAP list formatting and implicit conversions are not reproduced.",
     saved: "Saved on this device · no account",
     storage:
       "Browser storage is unavailable. Progress lasts for this visit only.",
@@ -291,7 +291,7 @@ export const ui = {
     language: "اللغة",
     limit: "محاكاة تعليمية · ليست بيئة تشغيل SAP",
     limits:
-      "يدعم المحاكي DATA للنوعين i وstring وبُنى البيانات المحلية والجداول STANDARD TABLE OF … WITH EMPTY KEY، وتعريف البُنى باستخدام TYPES، والإسناد والجمع وWRITE بما فيها WRITE: / value. والشروط IF/ELSEIF/ELSE وحلقات DO n TIMES وWHILE وAPPEND وLOOP AT … INTO منطقة عمل أو DATA(name)، وEXIT وCONTINUE داخل الحلقات. ضع التعريفات الأخرى خارج مجموعات التحكم. الحدود: 16000 محرف و2000 وحدة لغوية و150 تعليمة و100 دورة لكل حلقة و1000 خطوة تنفيذ وعنصر تتبع و100 صف لكل جدول وعمق تداخل 12، وأعداد صحيحة ضمن نطاق 32 بت بإشارة. لا يدعم قواعد البيانات أو الأصناف أو الجداول المرتبة والمجزأة أو رموز الحقول أو AND/OR/NOT، ولا يحل محل بيئة SAP. تضيف كل WRITE سطرًا إلى المخرجات؛ لا يحاكي النموذج جميع قواعد تنسيق القوائم أو التحويل التلقائي للأنواع.",
+      "يدعم المحاكي DATA للنوعين i وstring وبُنى البيانات المحلية والجداول STANDARD TABLE OF … WITH EMPTY KEY، وتعريف البُنى باستخدام TYPES، والإسناد والجمع وWRITE بما فيها WRITE: / value. والشروط IF/ELSEIF/ELSE وحلقات DO n TIMES وWHILE وAPPEND وLOOP AT … INTO منطقة عمل أو DATA(name)، وEXIT وCONTINUE داخل الحلقات. تدعم FIELD-SYMBOLS الأنواع الصريحة المتطابقة i وstring والبُنى، والربط المباشر ASSIGN object TO <symbol> والوصول إلى الحقول وUNASSIGN. ضع التعريفات خارج مجموعات التحكم. الحدود: 16000 محرف و2000 وحدة لغوية و150 تعليمة و100 دورة لكل حلقة و1000 خطوة تنفيذ وعنصر تتبع و100 صف لكل جدول وعمق تداخل 12، وأعداد صحيحة ضمن نطاق 32 بت بإشارة. لا يدعم قواعد البيانات أو الأصناف أو الجداول المرتبة والمجزأة أو ASSIGN الديناميكية أو IS ASSIGNED أو LOOP ASSIGNING أو رموز الحقول ذات الأنواع العامة أو AND/OR/NOT، ولا يحل محل بيئة SAP. تضيف كل WRITE سطرًا إلى المخرجات؛ لا يحاكي النموذج جميع قواعد تنسيق القوائم أو التحويل التلقائي للأنواع.",
     saved: "محفوظ على هذا الجهاز · دون حساب",
     storage: "تخزين المتصفح غير متاح. يبقى تقدمك خلال هذه الزيارة فقط.",
     editor: "محرر أكواد ABAP",
@@ -364,6 +364,9 @@ export function explain(e: ExecutionEvent, lang: Locale) {
     define: `Define ${name} as a blueprint of fields. A type describes a shape; it does not create a memory record.`,
     structure: `Create ${name} from the structure blueprint. Integer fields start at 0; text fields start empty.`,
     declare: `Create ${name}, a ${type === "i" ? "whole-number" : "text"} variable, and store ${val} in it.`,
+    fieldSymbol: `Declare ${name} with type ${type}. It is unassigned and has no independent value.`,
+    bind: `Make ${name} refer to ${value}. Reading or changing it now accesses the same data object.`,
+    unbind: `Unassign ${name}. Its previous data object keeps its value. Assign it again before accessing data through it.`,
     assign: `Store ${val} in ${name}. The previous value is replaced.`,
     add: `Read the values on the right, add them, and store ${val} in ${name}.`,
     write: `Read the value and add ${val} to the output. Memory stays unchanged.`,
@@ -383,6 +386,9 @@ export function explain(e: ExecutionEvent, lang: Locale) {
     define: `جرى تعريف النوع ${name} بوصفه وصفًا لحقول البنية وأنواعها. تعريف النوع لا ينشئ سجلًا في ذاكرة البرنامج.`,
     structure: `أُنشئ المتغير ${name} وفق نوع البنية المحدد. تبدأ الحقول من نوع i بصفر، ومن نوع string بنص فارغ.`,
     declare: `أُنشئ المتغير ${name} من ${type === "i" ? "النوع i للأعداد الصحيحة" : "النوع string للنصوص"}، وخُزّنت فيه القيمة ${val}.`,
+    fieldSymbol: `جرى تعريف رمز الحقل ${name} بالنوع ${type}. لم يُربط ببيانات بعد، ولا يملك قيمة مستقلة.`,
+    bind: `أصبح رمز الحقل ${name} يشير إلى ${value}. تؤدي القراءة أو الكتابة من خلاله إلى الوصول إلى كائن البيانات نفسه.`,
+    unbind: `أُلغي ربط رمز الحقل ${name}. يحتفظ كائن البيانات السابق بقيمته. أعد الربط قبل استخدام الرمز للوصول إلى البيانات.`,
     assign: `خزّن ${val} في ${name}. تُستبدل القيمة السابقة.`,
     add: `اقرأ قيم الطرف الأيمن واجمعها، ثم خزّن ${val} في ${name}.`,
     write: `اقرأ القيمة وأضف ${val} إلى المخرجات. لا تتغير الذاكرة.`,
@@ -405,7 +411,7 @@ export const errors: Record<Locale, Record<ErrorCode, string>> = {
     period:
       "A statement is missing its ending period (.). ABAP ends statements with a period, even across line breaks.",
     unknown:
-      "This variable has not been declared. Create it with DATA before using it, and check the spelling.",
+      "This name has not been declared. Use DATA for a variable or FIELD-SYMBOLS for an alias before using it, and check the spelling.",
     declaration:
       "This declaration is not supported or is incomplete. Check the name, TYPE, and the TYPES: BEGIN OF … END OF chain.",
     assignment:
@@ -422,6 +428,7 @@ export const errors: Record<Locale, Record<ErrorCode, string>> = {
     range:
       "The integer is outside the supported signed 32-bit range (−2147483648 to 2147483647).",
     string: "This text literal is missing its closing single quote or crosses a physical line. Keep the quoted text on one line.",
+    unassigned: "This field symbol is unassigned. Use ASSIGN with a compatible existing data object before reading or changing it.",
     limit:
       "This example exceeded a simulator resource limit. Loops must terminate within 100 iterations, and traces within 1,000 steps. Check whether a counter or condition stops changing.",
   },
@@ -429,7 +436,7 @@ export const errors: Record<Locale, Record<ErrorCode, string>> = {
     period:
       "تفتقد إحدى التعليمات النقطة النهائية (.). تنتهي تعليمة ABAP بنقطة حتى لو امتدت على عدة أسطر.",
     unknown:
-      "استُخدم متغير قبل تعريفه. أنشئه باستخدام DATA قبل أول استخدام، وتحقق من تطابق اسمه في جميع المواضع.",
+      "استُخدم اسم قبل تعريفه. استخدم DATA للمتغير أو FIELD-SYMBOLS لرمز الحقل قبل أول استخدام، وتحقق من تطابق الاسم في جميع المواضع.",
     declaration:
       "تعريف البيانات غير مكتمل أو يستخدم صياغة لا يدعمها المحاكي. راجع اسم المتغير وTYPE، أو ترتيب أجزاء تعريف البنية باستخدام TYPES.",
     assignment:
@@ -444,6 +451,7 @@ export const errors: Record<Locale, Record<ErrorCode, string>> = {
       "ترتيب القرار الشرطي غير صحيح أو لم يُغلق. أغلق كل IF باستخدام ENDIF، وضع فروع ELSEIF قبل ELSE. يمكن استخدام ELSE مرة واحدة على الأكثر.",
     range: "العدد خارج نطاق 32 بت بإشارة المدعوم (−2147483648 إلى 2147483647).",
     string: "القيمة النصية غير مغلقة بعلامة اقتباس مفردة، أو تمتد على أكثر من سطر. اكتب النص بين علامتَي اقتباس على السطر نفسه.",
+    unassigned: "رمز الحقل غير مرتبط ببيانات. استخدم ASSIGN لربطه بكائن بيانات موجود ومتوافق في النوع قبل القراءة أو التعديل من خلاله.",
     limit: "تجاوز المثال أحد حدود المحاكي. يجب أن تنتهي الحلقة خلال 100 دورة والتتبع خلال 1000 خطوة. تحقق من تحديث العداد ومن أن الشرط سيصبح خاطئًا.",
   },
 };

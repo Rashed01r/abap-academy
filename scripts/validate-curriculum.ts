@@ -40,7 +40,7 @@ for (const mission of missions) {
   } catch(error) { failures.push(String(error)); }
   for (const id of mission.requiredActivities || []) {
     check(!challenges.has(id), `Duplicate activity ID ${id}`);
-    check(mission.activity === "table-categories" && id === "data-category-choice", `${mission.id}: unknown guided assessment`);
+    check(mission.activity === "table-categories" && id === "data-category-choice" || mission.activity === "table-keys" && id === "data-key-design", `${mission.id}: unknown guided assessment`);
     challenges.add(id);
   }
   for (const challenge of mission.challenges || [mission]) {

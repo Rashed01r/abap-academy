@@ -25,6 +25,7 @@ export type ErrorCode =
   | "block"
   | "range"
   | "string"
+  | "unassigned"
   | "limit";
 export class SimulationError extends Error {
   constructor(
@@ -53,6 +54,9 @@ export type Node =
   | { kind: "append"; value: Expr; table: string; range: Range }
   | { kind: "control"; action: "exit" | "continue"; range: Range }
   | { kind: "data"; name: string; type: string; initial?: Expr; range: Range }
+  | { kind: "fieldSymbol"; name: string; type: string; range: Range }
+  | { kind: "bind"; source: string; target: string; range: Range }
+  | { kind: "unbind"; target: string; range: Range }
   | {
       kind: "define";
       name: string;
@@ -76,7 +80,7 @@ export type Node =
     };
 export type ExecutionEvent = {
   id: number;
-  operation: "define" | "declare" | "assign" | "write" | "condition" | "end" | "loop" | "append" | "control";
+  operation: "define" | "declare" | "assign" | "write" | "condition" | "end" | "loop" | "append" | "control" | "bind" | "unbind";
   range: Range;
   statement: string;
   memory: Memory;
@@ -87,6 +91,7 @@ export type ExecutionEvent = {
   condition?: { expression: string; result: boolean };
   loop?: { kind: "do" | "while" | "loop"; iteration: number; count?: number; range: Range; table?: string; index?: number; row?: Primitive | StructureValue };
   tableSelection?: { name: string; index: number; row: Primitive | StructureValue };
+  aliases?: Record<string, string | null>;
 };
 export function sourceRange(source: string, start: number, end: number): Range {
   const a = source.slice(0, start).split("\n"),
@@ -198,8 +203,11 @@ export function parse(source: string): Node[] {
     p++;
     return t.text;
   };
+  const symbolName = () => {
+    take("<"); const n = name(); take(">"); return `<${n}>`;
+  };
   const ref = () => {
-    let n = name();
+    let n = at("<") ? symbolName() : name();
     if (at("-")) {
       p++;
       n += "-" + name();
@@ -265,6 +273,15 @@ export function parse(source: string): Node[] {
         }
         period(start);
         node = { kind: "data", name: n, type, initial, range: range(start) };
+      } else if (at("field") && tokens[p + 1]?.text === "-" && tokens[p + 2]?.text === "symbols") {
+        p += 3; const n = symbolName(); take("type"); const type = name(); period(start);
+        node = { kind: "fieldSymbol", name: n, type, range: range(start) };
+      } else if (at("assign")) {
+        p++; const source = ref(); take("to"); const target = symbolName(); period(start);
+        node = { kind: "bind", source, target, range: range(start) };
+      } else if (at("unassign")) {
+        p++; const target = symbolName(); period(start);
+        node = { kind: "unbind", target, range: range(start) };
       } else if (at("types")) {
         p++;
         take(":");
@@ -370,7 +387,7 @@ export function parse(source: string): Node[] {
       } else if (at("exit") || at("continue")) {
         const action = tokens[p++].text as "exit" | "continue"; period(start);
         node = { kind: "control", action, range: range(start) };
-      } else if (peek().kind === "word") {
+      } else if (peek().kind === "word" || at("<")) {
         if (
           [
             "select",
@@ -391,7 +408,7 @@ export function parse(source: string): Node[] {
         period(start);
         node = { kind: "assign", target, value, range: range(start) };
       } else fail("unsupported");
-      if (nested && (node.kind === "data" || node.kind === "define"))
+      if (nested && (node.kind === "data" || node.kind === "define" || node.kind === "fieldSymbol"))
         fail("unsupported", "conditional declaration", start);
       list.push(node);
       if (++count > 150) fail("limit");
@@ -410,6 +427,7 @@ export function execute(nodes: Node[], source: string): ExecutionEvent[] {
     > = Object.create(null),
     types: Record<string, string> = Object.create(null),
     memory: Memory = Object.create(null),
+    aliases: Record<string, string | null> = Object.create(null),
     output: string[] = [],
     events: ExecutionEvent[] = [];
   const error = (code: ErrorCode, n: Node, detail = ""): never => {
@@ -450,13 +468,19 @@ export function execute(nodes: Node[], source: string): ExecutionEvent[] {
         if (n.name in definitions || ["i", "string"].includes(n.name))
           error("declaration", n, n.name);
         definitions[n.name] = n.fields;
-      } else if (n.kind === "data") {
+      } else if (n.kind === "data" || n.kind === "fieldSymbol") {
         if (n.name in types) error("declaration", n, n.name);
         const rowType = n.type.replace(/^table:/, "");
         if (!["i", "string"].includes(rowType) && !(rowType in definitions))
           error("type", n, n.type);
         types[n.name] = n.type;
-        if (n.initial && exprType(n.initial, n) !== n.type) error("type", n);
+        if (n.kind === "data" && n.initial && exprType(n.initial, n) !== n.type) error("type", n);
+      } else if (n.kind === "bind") {
+        if (!(n.target in types)) error("unknown", n, n.target);
+        if (n.source.startsWith("<") || n.source === "sy-index") error("unsupported", n, "ASSIGN requires a direct data object in this subset");
+        if (refType(n.source, n) !== refType(n.target, n)) error("type", n);
+      } else if (n.kind === "unbind") {
+        refType(n.target, n);
       } else if (n.kind === "assign") {
         if (n.target === "sy-index") error("assignment", n);
         if (
@@ -499,6 +523,21 @@ export function execute(nodes: Node[], source: string): ExecutionEvent[] {
   const loopStack: NonNullable<ExecutionEvent["loop"]>[] = [];
   let steps = 0;
   let traceBytes = 0;
+  function resolve(name: string, n: Node) {
+    const [base, field] = name.split("-");
+    if (!base.startsWith("<")) return name;
+    const target = aliases[base];
+    if (!target) return error("unassigned", n, base);
+    return target + (field ? `-${field}` : "");
+  }
+  function readRef(name: string, n: Node): MemoryValue {
+    const [base, field] = resolve(name, n).split("-");
+    const value = memory[base];
+    if (value === undefined) return error("unknown", n, base);
+    if (!field) return value;
+    if (typeof value !== "object" || Array.isArray(value) || !(field in value)) return error("component", n, field);
+    return value[field];
+  }
   function get(e: Expr, n: Node): Primitive {
     if (e.kind === "literal") return e.value;
     if (e.kind === "add") {
@@ -509,14 +548,7 @@ export function execute(nodes: Node[], source: string): ExecutionEvent[] {
       return checked(a + b, n);
     }
     if (e.name === "sy-index") return [...loopStack].reverse().find(l => l.kind !== "loop")?.iteration ?? 0;
-    const [base, field] = e.name.split("-"),
-      v = memory[base];
-    if (v === undefined) return error("unknown", n, base);
-    if (field) {
-      if (typeof v !== "object" || Array.isArray(v) || !(field in v))
-        return error("component", n, field);
-      return v[field];
-    }
+    const v = readRef(e.name, n);
     if (typeof v === "object") return error("type", n);
     return v;
   }
@@ -554,6 +586,7 @@ export function execute(nodes: Node[], source: string): ExecutionEvent[] {
       condition,
       loop: loop ? structuredClone(loop) : undefined,
       tableSelection: tableContext?.table && tableContext.row !== undefined ? { name: tableContext.table, index: tableContext.index!, row: structuredClone(tableContext.row) } : undefined,
+      ...(Object.keys(aliases).length ? {aliases: {...aliases}} : {}),
     };
     traceBytes += JSON.stringify(event).length * 2;
     if (traceBytes > RUNTIME_LIMITS.traceBytes) error("limit", n, "trace memory");
@@ -574,6 +607,16 @@ export function execute(nodes: Node[], source: string): ExecutionEvent[] {
       if (++steps > RUNTIME_LIMITS.steps) error("limit", n, "steps");
       if (n.kind === "define") {
         emit(n, "define", { key: "define", name: n.name });
+      } else if (n.kind === "fieldSymbol") {
+        aliases[n.name] = null;
+        emit(n, "declare", {key:"fieldSymbol", name:n.name, type:n.type}, [n.name]);
+      } else if (n.kind === "bind") {
+        readRef(n.source, n);
+        aliases[n.target] = n.source;
+        emit(n, "bind", {key:"bind", name:n.target, value:n.source}, [n.target]);
+      } else if (n.kind === "unbind") {
+        aliases[n.target] = null;
+        emit(n, "unbind", {key:"unbind", name:n.target}, [n.target]);
       } else if (n.kind === "data") {
         const v = n.type.startsWith("table:") ? [] : definitions[n.type]
           ? Object.fromEntries(
@@ -601,7 +644,8 @@ export function execute(nodes: Node[], source: string): ExecutionEvent[] {
         );
       } else if (n.kind === "assign") {
         const v = checked(get(n.value, n), n),
-          [base, field] = n.target.split("-");
+          target = resolve(n.target, n),
+          [base, field] = target.split("-");
         if (field) (memory[base] as Record<string, Primitive>)[field] = v;
         else memory[base] = v;
         emit(
@@ -612,7 +656,7 @@ export function execute(nodes: Node[], source: string): ExecutionEvent[] {
             name: n.target,
             value: v,
           },
-          [n.target],
+          Array.from(new Set([n.target, target])),
         );
       } else if (n.kind === "write") {
         const v = get(n.value, n);
@@ -625,7 +669,7 @@ export function execute(nodes: Node[], source: string): ExecutionEvent[] {
         if (!Array.isArray(memory[n.table])) error("type", n);
         const rows = memory[n.table] as TableValue;
         if (rows.length >= RUNTIME_LIMITS.rows) error("limit", n, "rows");
-        const value = n.value.kind === "ref" && !n.value.name.includes("-") ? memory[n.value.name] : get(n.value,n);
+        const value = n.value.kind === "ref" && n.value.name !== "sy-index" ? readRef(n.value.name, n) : get(n.value,n);
         if (value === undefined || Array.isArray(value)) error("type",n);
         rows.push(structuredClone(value as Primitive | StructureValue));
         emit(n,"append",{ key:"append",name:n.table },[n.table]);
@@ -757,6 +801,85 @@ export function evaluate(
       correct =
         execute(probe, source).at(-1)?.output.join("\n") === "23" &&
         nodes.some((n) => n.kind === "assign" && n.value.kind === "add");
+    }
+  } else if (id === "data-work-area-record") {
+    const grade = (tree: Node[], employeeId:number, name:string, salary:number) => {
+      const end = execute(tree,source).at(-1)!;
+      const record = end.memory.ls_employee;
+      return record && typeof record === "object" && !Array.isArray(record) && record.id === employeeId && record.name === name && record.salary === salary && end.output.join("\n") === name;
+    };
+    if (grade(nodes,202,"Maha",6000)) {
+      const tree = structuredClone(nodes);
+      for (const node of tree) if (node.kind === "assign" && node.value.kind === "literal") {
+        if (node.target === "ls_employee-id") node.value.value = 303;
+        if (node.target === "ls_employee-name") node.value.value = "Reem";
+        if (node.target === "ls_employee-salary") node.value.value = 7200;
+      }
+      correct = !!grade(tree,303,"Reem",7200);
+    }
+  } else if (id === "data-field-symbol-alias") {
+    const grade = (tree:Node[], replacement:string, original:string) => {
+      const trace = execute(tree,source), end = trace.at(-1)!;
+      const rows = end.memory.lt_employees;
+      const writes = trace.filter(event => event.operation === "write");
+      const live = writes[0]?.memory.ls_employee;
+      return Array.isArray(rows) && rows.length === 1 && typeof rows[0] === "object" && rows[0].id === 101 && rows[0].name === original &&
+        live && typeof live === "object" && !Array.isArray(live) && live.id === 101 && live.name === replacement &&
+        end.output.join("\n") === `${replacement}\n${original}` &&
+        trace.some(event => event.operation === "bind" && event.aliases?.["<employee>"] === "ls_employee") &&
+        trace.some(event => event.operation === "assign" && event.changed.includes("<employee>-name") && event.changed.includes("ls_employee-name")) &&
+        writes[1]?.tableSelection?.name === "lt_employees";
+    };
+    if (grade(nodes,"Sara","Ahmed")) {
+      correct = [["Lina","Omar"],["Huda","Ali"]].every(([replacement,original]) => {
+        const tree = structuredClone(nodes);
+        for (const node of tree) {
+          if (node.kind === "data" && node.name === "lv_new_name") node.initial = {kind:"literal",value:replacement};
+          if (node.kind === "assign" && node.target === "ls_employee-name" && node.value.kind === "literal" && node.value.value === "Ahmed") node.value.value = original;
+        }
+        return !!grade(tree,replacement,original);
+      });
+    }
+  } else if (id === "data-key-matches") {
+    const rows: StructureValue[] = [
+      { department: "IT", id: 101, name: "Ahmed" },
+      { department: "HR", id: 101, name: "Sara" },
+      { department: "IT", id: 102, name: "Omar" },
+      { department: "IT", id: 101, name: "Noura" },
+    ];
+    const grade = (tree: Node[], imported: StructureValue[], department: string, key: number) => {
+      const trace = execute(tree, source);
+      const end = trace.at(-1)!;
+      const matches = imported.filter(row => row.department === department && row.id === key);
+      return JSON.stringify(end.memory.lt_employees) === JSON.stringify(imported) &&
+        end.memory.lv_matches === matches.length &&
+        end.output.join("\n") === [...matches.map(row => row.name), matches.length].join("\n") &&
+        trace.filter(event => event.operation === "write" && event.tableSelection?.name === "lt_employees").length === matches.length;
+    };
+    const query = nodes.filter((n): n is Extract<Node, { kind: "data" }> => n.kind === "data" && ["lv_department", "lv_id"].includes(n.name));
+    if (query.length === 2 && query.every(n => n.initial?.kind === "literal") &&
+        nodes.some(n => n.kind === "loop" && n.table === "lt_employees") && grade(nodes, rows, "IT", 101)) {
+      correct = [["IT", 101], ["HR", 101], ["IT", 102], ["HR", 102], ["IT", 999]].every(([department, key]) => {
+        const tree = structuredClone(nodes);
+        for (const node of tree) if (node.kind === "data") {
+          if (node.name === "lv_department") node.initial = { kind: "literal", value: department };
+          if (node.name === "lv_id") node.initial = { kind: "literal", value: key };
+        }
+        return grade(tree, rows, String(department), Number(key));
+      });
+      // Change both input identities and names, so fixed conditions/output cannot satisfy the exercise.
+      const tree = structuredClone(nodes);
+      const changed = rows.map(row => ({ department: row.department === "IT" ? "Ops" : "Finance", id: Number(row.id) + 10, name: `${row.name} revised` }));
+      for (const node of tree) {
+        if (node.kind === "data" && node.name === "lv_department") node.initial = { kind: "literal", value: "Ops" };
+        if (node.kind === "data" && node.name === "lv_id") node.initial = { kind: "literal", value: 111 };
+        if (node.kind === "assign" && node.value.kind === "literal") {
+          if (node.target === "ls_employee-department") node.value.value = node.value.value === "IT" ? "Ops" : "Finance";
+          if (node.target === "ls_employee-id") node.value.value = Number(node.value.value) + 10;
+          if (node.target === "ls_employee-name") node.value.value = `${node.value.value} revised`;
+        }
+      }
+      correct = correct && grade(tree, changed, "Ops", 111);
     }
   } else if (id === "data-category-sequence") {
     const entries = nodes.filter((n): n is Extract<Node,{kind:"append"}> => n.kind === "append" && n.table === "lt_ids");

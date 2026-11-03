@@ -636,6 +636,7 @@ export type Mission = {
   environment?: "browser" | "sap-required";
   assessment?: "simulated" | "conceptual" | "structural" | "guided";
   references?: string[];
+  coveredTopics?: string[];
   hints?: Text[];
   practice: Text;
   prerequisite: string;
@@ -658,7 +659,7 @@ export type Mission = {
   solution: string;
   expected: string;
   challenges?: Challenge[];
-  activity?: "table-categories";
+  activity?: "table-categories" | "table-keys";
   requiredActivities?: string[];
 };
 export type Challenge = Pick<Mission, "id" | "title" | "goal" | "hint" | "starter" | "starterAr" | "solution" | "expected">;
