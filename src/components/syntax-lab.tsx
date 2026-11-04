@@ -8,6 +8,7 @@ import { TechnicalText } from "./technical-text";
 import { VisualCodeAnatomy } from "./visual-code-anatomy";
 import { getAnatomy } from "@/lib/anatomy-content";
 import { missions } from "@/lib/curriculum";
+import { useTopicSession } from "@/lib/use-topic-session";
 export function Quiz({
   question,
   options,
@@ -15,6 +16,7 @@ export function Quiz({
   explanation,
   lang,
   onCorrect,
+  sessionKey,
 }: {
   question: string;
   options: string[];
@@ -22,8 +24,9 @@ export function Quiz({
   explanation: string;
   lang: Locale;
   onCorrect: () => void;
+  sessionKey?: string;
 }) {
-  const [choice, setChoice] = useState<number | null>(null);
+  const [choice, setChoice] = useTopicSession<number | null>(sessionKey, null);
   const t = ui[lang];
   return (
     <div className="quiz">

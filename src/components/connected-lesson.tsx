@@ -1,0 +1,92 @@
+"use client";
+import { type Dispatch, type SetStateAction } from "react";
+import { useTopicSession } from "@/lib/use-topic-session";
+import { missions, orientation } from "@/lib/curriculum";
+import { orientationExamples } from "@/lib/anatomy-content";
+import { type Locale } from "@/lib/engine";
+import { type Progress, allChallengesPassed, completeMission, startMission } from "@/lib/progress";
+import { ui } from "@/lib/i18n";
+import { treeCopy } from "@/lib/tree-copy";
+import { SyntaxLab, Quiz } from "./syntax-lab";
+import { LearningWorkspace } from "./learning-workspace";
+import { TableCategoryExplorer } from "./table-category-explorer";
+import { TableKeyExplorer } from "./table-key-explorer";
+import { TechnicalText } from "./technical-text";
+
+type Tab = "learn" | "visualize" | "challenge";
+const tabs: Tab[] = ["learn", "visualize", "challenge"];
+export function ConnectedLesson({id, lang, theme, progress, setProgress}: {
+  id: string; lang: Locale; theme: "light" | "dark"; progress: Progress; setProgress: Dispatch<SetStateAction<Progress>>;
+}) {
+  const [tab, setTab] = useTopicSession<Tab>(`${id}:tab`, "learn");
+  const [visited, setVisited] = useTopicSession<Tab[]>(`${id}:visited`, ["learn"]);
+  const [quiz, setQuiz] = useTopicSession(`${id}:quiz`, false);
+  const [orientationPassed, setOrientationPassed] = useTopicSession(`${id}:orientation-pass`, false);
+  const m = missions.find(m => m.id === id), t = ui[lang], c = treeCopy[lang];
+  const [challengeIndex, setChallengeIndex] = useTopicSession(`${id}:challenge-index`, 0);
+  const [openedChallenges, setOpenedChallenges] = useTopicSession(`${id}:opened-challenges`, [0]);
+  const complete = id === "orientation" ? progress.labs.includes(id) : progress.missions.includes(id);
+  const code = m?.example || orientationExamples[lang];
+  function select(next: Tab) { setTab(next); setVisited(v => Array.from(new Set([...v, next]))); }
+  function attempt(challengeId: string, passed: boolean) {
+    setProgress(p => ({...startMission(p, id),
+      passedChallenges: passed ? Array.from(new Set([...(p.passedChallenges || []), challengeId])) : p.passedChallenges,
+      results: {...p.results, [id]: {attempts: (p.results[id]?.attempts || 0) + 1, passed: passed || p.results[id]?.passed === true}},
+    }));
+  }
+  return <div className="connected-lesson" dir={lang === "ar" ? "rtl" : "ltr"}>
+    <div className="lesson-summary">
+      <span className="eyebrow">{t[m?.difficulty || "beginner"]} · {m?.minutes || 4} {t.minutes} · {m?.xp || 25} XP</span>
+      <h1><TechnicalText>{m?.title[lang] || t.orientation}</TechnicalText></h1>
+      <p>{m?.subtitle[lang] || c.orientationIntro}</p>
+      <span className="pill">{complete ? t.completed : progress.started?.includes(id) ? t.inProgress : t.available}</span>
+      <details><summary>{c.objectives}</summary><ul>{(m?.objectives.map(o => o[lang]) || [c.orientationObjective]).map(o => <li key={o}>{o}</li>)}</ul>
+        {m?.prerequisite && <p>{t.recommendedFirst}: {missions.find(p => p.id === m.prerequisite)?.title[lang] || t.orientation}</p>}
+      </details>
+    </div>
+    <div className="lesson-tabs" role="tablist" aria-label={m?.title[lang] || t.orientation}>
+      {tabs.map((name, i) => <button key={name} id={`${id}-${name}-tab`} role="tab" aria-selected={tab === name} tabIndex={tab === name ? 0 : -1} aria-controls={`${id}-${name}-panel`} onClick={() => select(name)} onKeyDown={event => {
+        const direction = lang === "ar" ? -1 : 1;
+        const offset = event.key === "ArrowRight" ? direction : event.key === "ArrowLeft" ? -direction : 0;
+        if (!offset && event.key !== "Home" && event.key !== "End") return;
+        event.preventDefault();
+        const next = tabs[event.key === "Home" ? 0 : event.key === "End" ? 2 : (i + offset + 3) % 3];
+        select(next); document.getElementById(`${id}-${next}-tab`)?.focus();
+      }}>{c[name]}</button>)}
+    </div>
+    {tabs.map(name => <section key={name} id={`${id}-${name}-panel`} role="tabpanel" aria-labelledby={`${id}-${name}-tab`} hidden={tab !== name} tabIndex={0}>
+      {visited.includes(name) && (name === "learn" ? <>
+        {m && <p className="instruction"><TechnicalText>{m.brief[lang]}</TechnicalText></p>}
+        <SyntaxLab id={id} tokens={m?.tokens || orientation} example={code} lang={lang} theme={theme} completed={progress.labs.includes(id)} onComplete={() => {
+          if (m) setProgress(p => ({...p, labs: Array.from(new Set([...p.labs, id]))}));
+          select("visualize");
+        }}/>
+        {m && <details><summary>{c.deeper}</summary><p>{m.practice[lang]}</p>{m.references?.map(ref => <p key={ref}><a href={ref} target="_blank" rel="noreferrer">{ref}</a></p>)}</details>}
+      </> : name === "visualize" ? <>
+        <p className="instruction"><TechnicalText>{m?.visual[lang] || c.orientationIntro}</TechnicalText></p>
+        <p className="pill">{t.limit}</p>
+        {m?.activity === "table-categories" && <TableCategoryExplorer sessionKey={`${id}:visual-model`} lang={lang} assessment={false} onPass={() => {}}/>}
+        {m?.activity === "table-keys" && <TableKeyExplorer sessionKey={`${id}:visual-model`} lang={lang} assessment={false} onPass={() => {}}/>}
+        <LearningWorkspace initialCode={code} lang={lang} theme={theme} storageKey={`abap2-workspace:${id}:visualize`}/>
+      </> : <>
+        <p className="instruction"><TechnicalText>{m?.goal[lang] || c.orientationGoal}</TechnicalText></p>
+        <p>{c.help} <button className="text-button" onClick={() => select("learn")}>{c.learn}</button> · <button className="text-button" onClick={() => select("visualize")}>{c.visualize}</button></p>
+        {m?.activity === "table-categories" && <TableCategoryExplorer sessionKey={`${id}:assessment-model`} lang={lang} assessment completed={progress.passedChallenges?.includes("data-category-choice")} onPass={() => attempt("data-category-choice", true)}/>}
+        {m?.activity === "table-keys" && <TableKeyExplorer sessionKey={`${id}:assessment-model`} lang={lang} assessment completed={progress.passedChallenges?.includes("data-key-design")} onPass={() => attempt("data-key-design", true)}/>}
+        {m ? <>
+          {m.challenges && <div className="explore-actions" role="group" aria-label={c.challenge}>{m.challenges.map((ch, index) => <button className="secondary" key={ch.id} aria-pressed={challengeIndex === index} onClick={() => {setChallengeIndex(index); setOpenedChallenges(v => Array.from(new Set([...v, index])));}}>{ch.title[lang]}</button>)}</div>}
+          {(m.challenges || [m]).map((ch, index) => <div key={ch.id} hidden={index !== challengeIndex}>{openedChallenges.includes(index) && <>
+            {m.challenges && <><h2>{ch.title[lang]}</h2><p>{ch.goal[lang]}</p></>}
+            <LearningWorkspace initialCode={lang === "ar" ? ch.starterAr || ch.starter : ch.starter} lang={lang} theme={theme} mission={{...m, ...ch}} storageKey={`abap2-workspace:${id}:challenge:${ch.id}`} onResult={(passed, checked) => {if (checked) attempt(ch.id, passed);}}/>
+          </>}</div>)}
+        </> : <LearningWorkspace initialCode={"WRITE 5.\n"} hintText={c.orientationHint} lang={lang} theme={theme} storageKey="abap2-workspace:orientation:challenge" checkAnswer={(_source, events) => {
+          const writes = events.filter(e => e.operation === "write");
+          return writes.length === 2 && JSON.stringify(events.at(-1)?.output) === JSON.stringify(["5", "8"]);
+        }} onResult={(correct, checked) => {setOrientationPassed(correct); if (checked) setProgress(p => startMission(p, id));}}/>}
+        <Quiz sessionKey={`${id}:quiz-choice`} lang={lang} question={m?.quiz[lang] || c.orientationQuestion} options={m?.options.map(o => o[lang]) || [c.orientationAnswer, c.orientationWrong]} answer={m?.answer || 0} explanation={m?.quizExplanation[lang] || c.orientationExplanation} onCorrect={() => setQuiz(true)}/>
+        <p>{t.assessmentRequired}</p>
+        <button className="primary" disabled={!quiz || (m ? !allChallengesPassed(progress, id) : !orientationPassed)} onClick={() => setProgress(p => m ? completeMission(p, id, true) : {...p, labs: Array.from(new Set([...p.labs, id]))})}>{complete ? t.completed : t.complete}</button>
+      </>)}
+    </section>)}
+  </div>;
+}

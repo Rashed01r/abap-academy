@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useTopicSession } from "@/lib/use-topic-session";
 import type { Locale } from "@/lib/engine";
 import { categorySnapshot } from "@/lib/table-categories";
 import { TechnicalText } from "./technical-text";
@@ -24,11 +24,11 @@ const content = {
     answers: ["STANDARD", "SORTED", "HASHED"], correct: "صحيح؛ تلائم الفئة متطلبات الترتيب والتفرّد وطريقة الوصول.", wrong: "قارن المتطلب بأوصاف الفئات أعلاه. راعِ الترتيب وتكرار المفاتيح والبحث بالمفتاح الكامل.", done: "اجتزت جميع قرارات اختيار الفئة. أكمل تحدي الشيفرة واختبار الفهم لاكتساب نقاط الخبرة.",
   },
 };
-export function TableCategoryExplorer({ lang, assessment = false, completed = false, onPass }: { lang: Locale; assessment?: boolean; completed?: boolean; onPass?: () => void }) {
+export function TableCategoryExplorer({ lang, assessment = false, completed = false, onPass, sessionKey }: { lang: Locale; assessment?: boolean; completed?: boolean; onPass?: () => void; sessionKey?: string }) {
   const t = content[lang];
-  const [category, setCategory] = useState<"standard" | "sorted" | "hashed">("standard");
-  const [count, setCount] = useState(0);
-  const [choices, setChoices] = useState<Record<number, number>>({});
+  const [category, setCategory] = useTopicSession<"standard" | "sorted" | "hashed">(sessionKey && `${sessionKey}:category`, "standard");
+  const [count, setCount] = useTopicSession(sessionKey && `${sessionKey}:count`, 0);
+  const [choices, setChoices] = useTopicSession<Record<number, number>>(sessionKey && `${sessionKey}:choices`, {});
   const snapshot = categorySnapshot(category, count);
   return <section className="learn-card category-explorer" aria-label={t.title}>
     <h2>{t.title}</h2><p>{t.limit}</p><p>{t.input}</p>

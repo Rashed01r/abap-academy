@@ -27,6 +27,8 @@ import { TechnicalText } from "./technical-text";
 import { TableMemory } from "./table-memory";
 import { LoopVisualizer } from "./loop-visualizer";
 import { FieldSymbolMemory } from "./field-symbol-memory";
+import { treeCopy } from "@/lib/tree-copy";
+const workspaceSessions = new Map<string, {code: string; events: ExecutionEvent[]; index: number; feedback: "correct" | "wrong" | ""; failure?: ChallengeFailure; error?: SimulationError; hint: boolean; field: string; speed: number}>();
 export function LearningWorkspace({
   initialCode,
   lang,
@@ -36,6 +38,9 @@ export function LearningWorkspace({
   teachingRange,
   teachingSource,
   onSourceLine,
+  storageKey,
+  checkAnswer,
+  hintText,
 }: {
   initialCode: string;
   lang: Locale;
@@ -45,20 +50,36 @@ export function LearningWorkspace({
   teachingRange?: Range;
   teachingSource?: string;
   onSourceLine?: (line: number) => void;
+  storageKey?: string;
+  checkAnswer?: (code: string, events: ExecutionEvent[]) => boolean;
+  hintText?: string;
 }) {
-  const [code, setCode] = useState(initialCode),
-    [events, setEvents] = useState<ExecutionEvent[]>([]),
-    [index, setIndex] = useState(0),
+  const [saved] = useState(() => storageKey ? workspaceSessions.get(storageKey) : undefined);
+  const [draftStorage, setDraftStorage] = useState(true);
+  const [code, setCode] = useState(() => {
+    if (saved) return saved.code;
+    if (storageKey && typeof window !== "undefined") {
+      try { return localStorage.getItem(storageKey) ?? initialCode; } catch { /* Keep the in-memory workspace usable. */ }
+    }
+    return initialCode;
+  }),
+    [events, setEvents] = useState<ExecutionEvent[]>(saved?.events || []),
+    [index, setIndex] = useState(saved?.index || 0),
     [playing, setPlaying] = useState(false),
-    [error, setError] = useState<SimulationError>(),
-    [feedback, setFeedback] = useState<"correct" | "wrong" | "">(""),
-    [failure, setFailure] = useState<ChallengeFailure>(),
-    [hint, setHint] = useState(false),
+    [error, setError] = useState<SimulationError | undefined>(saved?.error),
+    [feedback, setFeedback] = useState<"correct" | "wrong" | "">(saved?.feedback || ""),
+    [failure, setFailure] = useState<ChallengeFailure | undefined>(saved?.failure),
+    [hint, setHint] = useState(saved?.hint || false),
     [reset, setReset] = useState(false),
-    [field, setField] = useState("");
-  const [speed, setSpeed] = useState(1400);
+    [field, setField] = useState(saved?.field || "");
+  const [speed, setSpeed] = useState(saved?.speed || 1400);
   const t = ui[lang],
     event = events[index];
+  useEffect(() => {
+    if (!storageKey) return;
+    workspaceSessions.set(storageKey, {code, events, index, error, feedback, failure, hint, field, speed});
+    try { localStorage.setItem(storageKey, code); } catch { queueMicrotask(() => setDraftStorage(false)); }
+  }, [storageKey, code, events, index, error, feedback, failure, hint, field, speed]);
   useEffect(() => {
     if (!playing) return;
     const timer = setTimeout(() => {
@@ -68,6 +89,7 @@ export function LearningWorkspace({
     return () => clearTimeout(timer);
   }, [playing, index, events.length, speed]);
   function change(v: string) {
+    if (storageKey) try { localStorage.setItem(storageKey, v); } catch { setDraftStorage(false); }
     setCode(v);
     setEvents([]);
     setIndex(0);
@@ -83,7 +105,14 @@ export function LearningWorkspace({
     setError(undefined);
     setFailure(undefined);
     try {
-      if (check && mission) {
+      if (check && checkAnswer) {
+        const trace = simulate(code);
+        const correct = checkAnswer(code, trace);
+        setEvents(trace);
+        setIndex(trace.length - 1);
+        setFeedback(correct ? "correct" : "wrong");
+        onResult?.(correct, true);
+      } else if (check && mission) {
         const result = evaluate(code, mission.id);
         setEvents(result.events);
         setIndex(result.events.length - 1);
@@ -104,6 +133,7 @@ export function LearningWorkspace({
   }
   return (
     <div className="simulation-workspace">
+      {storageKey && <p className="small muted" role="status">{draftStorage ? treeCopy[lang].saved : treeCopy[lang].storage}</p>}
       <div className="workspace-grid">
         <div className="code-side">
           <CodeEditor
@@ -126,18 +156,18 @@ export function LearningWorkspace({
               <RotateCcw size={15} />
               {t.reset}
             </button>
-            {mission && (
+            {(mission || hintText) && (
               <button className="secondary" onClick={() => setHint(!hint)}>
                 <Lightbulb size={15} />
                 {t.hint}
               </button>
             )}
           </div>
-          {mission && (
+          {(mission || checkAnswer) && (
             <div className="challenge-check">
-              <span>
+              {mission && <span>
                 {t.expected}: <code dir="ltr">{mission.expected}</code>
-              </span>
+              </span>}
               <button className="primary" onClick={() => run(true)}>
                 {t.check}
                 <Check size={16} />
@@ -155,6 +185,7 @@ export function LearningWorkspace({
               </button>
             </div>
           )}
+          {hint && hintText && <div className="hint-panel"><p>{hintText}</p></div>}
           {error && (
             <div role="alert" className="feedback error">
               <strong><TechnicalText>{errors[lang][error.code]}</TechnicalText></strong>

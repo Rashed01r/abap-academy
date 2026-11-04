@@ -9,11 +9,12 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
     });
     page.on("pageerror", (error) => errors.push(error.message));
     await page.goto("/");
-    // The start button is enabled only after the page's mount effect has run.
-    await expect(page.locator(".hero .primary")).toBeEnabled();
-    await expect(page.locator(".hero-intro")).toHaveCSS("opacity", "1");
+    // Search is portaled into the header only after hydration.
+    await expect(page.getByRole("searchbox")).toBeVisible();
+    await expect(page.locator(".tree-paths>button")).toHaveCount(9);
+
     if (reducedMotion === "reduce") {
-      await expect(page.locator(".hero-intro")).toHaveCSS("animation-name", "none");
+      await expect(page.locator(".tree-node").first()).toHaveCSS("animation-name", "none");
     }
     expect(errors).toEqual([]);
   });

@@ -1,7 +1,7 @@
 ﻿"use client";
 import dynamic from "next/dynamic";
 import { loader, OnMount } from "@monaco-editor/react";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import type { editor, IDisposable } from "monaco-editor";
 import { ExecutionEvent, SimulationError, Range, Locale } from "@/lib/engine";
 import { ui, errors } from "@/lib/i18n";
@@ -36,7 +36,7 @@ export function CodeEditor({
   const sourceLineCallback=useRef(onSourceLine);
   const synchronize = useRef<() => void>(() => {});
   const t = ui[lang];
-  const apply = () => {
+  const apply = useCallback(() => {
     const ed = ref.current,
       m = monacoRef.current;
     if (!ed || !m) return;
@@ -94,12 +94,12 @@ export function CodeEditor({
             ]
           : [],
       );
-  };
+  }, [event, error, teachingRange, lang, t]);
   useEffect(() => {
     sourceLineCallback.current=onSourceLine;
     synchronize.current = apply;
     apply();
-  });
+  }, [onSourceLine, apply]);
   useEffect(
     () => () => {
       disposable.current?.dispose();
@@ -117,7 +117,7 @@ export function CodeEditor({
         <span>ABAP</span>
       </div>
       <Editor
-        height="410px"
+        height="var(--lesson-editor-height, 410px)"
         language="abap"
         theme={theme === "dark" ? "vs-dark" : "vs"}
         value={code}

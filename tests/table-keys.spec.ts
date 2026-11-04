@@ -1,3 +1,4 @@
+import {openLesson,tab} from "./academy-helpers";
 import { test, expect } from "@playwright/test";
 import { missions } from "../src/lib/curriculum";
 import { ui } from "../src/lib/i18n";
@@ -16,18 +17,17 @@ for (const lang of ["en", "ar"] as const) for (const theme of ["light", "dark"] 
     page.on("pageerror", error => errors.push(error.message));
     await page.goto("/");
     const priorXP = missions.find(m => m.id === "structures")!.xp;
-    await expect(page.locator(".xp-row")).toContainText(String(priorXP));
-    await page.getByLabel(t.searchLessons, {exact:true}).fill(m.title[lang]);
-    await page.locator(`[data-mission="${m.id}"] .node-card`).click();
-    await expect(page.locator(".mission-title h1")).toHaveText(m.title[lang]);
+    await expect(page.locator(".header-xp")).toContainText(String(priorXP));
+    await openLesson(page,m.id,lang);
+    await expect(page.locator(".lesson-summary h1")).toHaveText(m.title[lang]);
     expect(await page.evaluate(() => JSON.parse(localStorage.getItem("abap2-master-progress")!).missions)).toEqual(["structures"]);
     await matchAnatomy(page, m.id, lang);
     await expect(page.locator('.anatomy-group[data-group="output"]')).toBeVisible();
     await page.locator('.anatomy-group[data-group="duplicate"]').click();
     await expect(page.locator(".anatomy-explanation")).toContainText("Noura");
     await page.getByRole("button", {name:t.syntaxDone,exact:true}).click();
-    await page.getByRole("button", {name:t.reviewExample,exact:true}).click();
-    const explorer = page.locator(".key-explorer");
+    await tab(page,lang,"visualize");
+    const explorer = page.getByRole("tabpanel").locator(".key-explorer");
     const add = explorer.getByRole("button", {name:lang === "en" ? "Try next incoming row" : "جرّب الصف الوارد التالي",exact:true});
     const reset = explorer.getByRole("button", {name:lang === "en" ? "Restart incoming rows" : "أعد تسلسل الصفوف الواردة",exact:true});
     const department = explorer.getByRole("checkbox", {name:"department",exact:true});
@@ -57,7 +57,7 @@ for (const lang of ["en", "ar"] as const) for (const theme of ["light", "dark"] 
     await expect(explorer.getByTestId("key-declaration")).toContainText("WITH EMPTY KEY.");
     await add.click(); await add.click();
     await expect(explorer.locator("table").last().locator("tbody tr")).toHaveCount(2);
-    await page.getByRole("button", {name:t.startChallenge,exact:true}).click();
+    await tab(page,lang,"challenge");
     const checkDesign = explorer.getByRole("button", {name:lang === "en" ? "Check identity design" : "تحقق من تصميم الهوية",exact:true});
     await checkDesign.click();
     await expect(explorer.locator('.key-assessment [role="status"]')).toContainText(lang === "en" ? "Review the identity" : "راجع الهوية");
@@ -66,11 +66,11 @@ for (const lang of ["en", "ar"] as const) for (const theme of ["light", "dark"] 
     await page.keyboard.press("ControlOrMeta+A");
     await page.keyboard.insertText(m.solution);
     await page.getByRole("button", {name:t.check,exact:true}).click();
-    await expect(page.locator(".feedback.success")).toBeVisible();
-    await page.locator(".stages button").nth(5).click();
-    await page.locator(".completion-card .answer-options button").nth(m.answer).click();
+    await expect(page.locator(".feedback.success").filter({visible:true})).toBeVisible();
+    await tab(page,lang,"challenge");
+    await page.getByRole("tabpanel").locator(".quiz .answer-options button").nth(m.answer).click();
     await expect(page.getByRole("button", {name:t.complete,exact:true})).toBeDisabled();
-    await page.getByRole("button", {name:t.startChallenge,exact:true}).click();
+    await tab(page,lang,"challenge");
     await department.check(); await id.check(); await name.uncheck(); await unique.check();
     await checkDesign.click();
     await expect(explorer.locator('.key-assessment [role="status"]')).toContainText(lang === "en" ? "Predict all three" : "توقّع نتيجة الصفوف الثلاثة");
@@ -84,10 +84,10 @@ for (const lang of ["en", "ar"] as const) for (const theme of ["light", "dark"] 
     for (let i = 0; i < 4; i++) await add.click();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
     if (lang === "ar") await page.screenshot({path:test.info().outputPath(`keys-ar-${theme}.png`),fullPage:true});
-    await page.locator(".stages button").nth(5).click();
+    await tab(page,lang,"challenge");
     await expect(page.getByRole("button", {name:t.complete,exact:true})).toBeEnabled();
     await page.getByRole("button", {name:t.complete,exact:true}).click();
-    await expect(page.locator(".xp-row")).toContainText(String(priorXP + m.xp));
+    await expect(page.locator(".header-xp")).toContainText(String(priorXP + m.xp));
     const progress = await page.evaluate(() => JSON.parse(localStorage.getItem("abap2-master-progress")!));
     expect(progress.version).toBe(2);
     expect(progress.missions).toEqual(["structures", m.id]);
@@ -97,13 +97,12 @@ for (const lang of ["en", "ar"] as const) for (const theme of ["light", "dark"] 
     // A new tab has no page-scoped initialization hook and uses genuine returning-learner storage.
     await page.context().newPage().then(async returning => {
       await returning.goto("/");
-      await expect(returning.locator(".xp-row")).toContainText(String(priorXP + m.xp));
-      await returning.getByLabel(t.searchLessons,{exact:true}).fill(m.title[lang]);
-      await returning.locator(`[data-mission="${m.id}"] .node-card`).click();
-      await returning.locator(".stages button").nth(5).click();
-      await returning.locator(".completion-card .answer-options button").nth(m.answer).click();
-      await returning.getByRole("button",{name:t.complete,exact:true}).click();
-      await expect(returning.locator(".xp-row")).toContainText(String(priorXP + m.xp));
+      await expect(returning.locator(".header-xp")).toContainText(String(priorXP + m.xp));
+      await openLesson(returning,m.id,lang);
+      await tab(returning,lang,"challenge");
+      await returning.getByRole("tabpanel").locator(".quiz .answer-options button").nth(m.answer).click();
+      await returning.getByRole("button",{name:t.completed,exact:true}).click();
+      await expect(returning.locator(".header-xp")).toContainText(String(priorXP + m.xp));
       expect(await returning.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
       await returning.close();
     });

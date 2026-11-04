@@ -1,3 +1,4 @@
+import {openLesson} from "./academy-helpers";
 import {test,expect} from "@playwright/test";
 import {missions,orientation} from "../src/lib/curriculum";
 import {ui} from "../src/lib/i18n";
@@ -10,7 +11,7 @@ for(const lang of ["en","ar"] as const) for(const theme of ["light","dark"] as c
     const errors:string[]=[];page.on("pageerror",e=>errors.push(e.message));
     await page.addInitScript(({lang,theme})=>{localStorage.setItem("abap2-language",lang);localStorage.setItem("abap2-appearance",theme);},{lang,theme});
     await page.goto("/");
-    await page.locator('[data-mission="structures"] .node-card').click();
+    await openLesson(page,"structures",lang);
     const lab=page.locator(".syntax-lab"),code=lab.locator(".anatomy-code"),panel=lab.locator(".anatomy-explanation");
     const finish=lab.getByRole("button",{name:t.syntaxDone,exact:true});
     await expect(code.locator(".anatomy-group")).toHaveCount(6);
@@ -71,11 +72,11 @@ for(const lang of ["en","ar"] as const) for(const theme of ["light","dark"] as c
     await expect(finish).toBeEnabled();
     expect((await state()).labs).toEqual([]);
     await finish.click();
-    await page.getByRole("button",{name:t.back,exact:false}).click();
-    await expect(page.locator(".xp-row")).toContainText("0");
+    await page.getByRole("button",{name:t.path,exact:true}).click();
+    await expect(page.locator(".header-xp")).toContainText("0");
     expect((await state()).labs).toEqual(["structures"]);
     await page.reload();
-    await expect(page.locator(".xp-row")).toContainText("0");
+    await expect(page.locator(".header-xp")).toContainText("0");
     expect((await state()).labs).toEqual(["structures"]);
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();
     expect(errors).toEqual([]);
@@ -87,18 +88,18 @@ for(const lang of ["en","ar"] as const) test(`${lang}: grouped matching works ac
   await page.addInitScript(lang=>{localStorage.setItem("abap2-language",lang);},lang);
   await page.goto("/");
   for(const id of ["orientation",...missions.map(m=>m.id)]) {
-    await page.locator(`[data-mission="${id}"] .node-card`).click();
+    await openLesson(page,id,lang);
     const source=id === "orientation" ? orientationExamples[lang] : missions.find(m=>m.id === id)!.example;
     await expect(page.locator(".anatomy-group")).toHaveCount(getAnatomy(id,source).groups.length);
     await matchAnatomy(page,id,lang);
     await page.getByRole("button",{name:id === "orientation" ? t.finishOrientation : t.syntaxDone,exact:true}).click();
-    if(id !== "orientation") await page.getByRole("button",{name:t.back,exact:false}).click();
+    await page.getByRole("button",{name:t.path,exact:true}).click();
   }
-  await expect(page.locator(".xp-row")).toContainText("25");
+  await expect(page.locator(".header-xp")).toContainText("0");
   expect((await page.evaluate(()=>JSON.parse(localStorage.getItem("abap2-master-progress")!))).missions).toEqual([]);
 });
 test("optional keyword path and legacy lab completion remain usable",async({page})=>{
-  await page.goto("/");await page.locator('[data-mission="orientation"] .node-card').click();
+  await page.goto("/");await openLesson(page,"orientation","en");
   await page.locator('.anatomy-group[data-group="comment"]').click();
   await page.getByRole("button",{name:ui.en.exploreSyntax,exact:true}).click();
   await expect(page.locator(".token-title")).toHaveText(orientation.find(token=>token.id === "comments")!.label);
@@ -111,7 +112,7 @@ test("optional keyword path and legacy lab completion remain usable",async({page
     await page.locator(".syntax-details .answer-options button").nth(orientation[i].answer).click();
   }
   await page.getByRole("button",{name:ui.en.finishOrientation,exact:true}).click();
-  await expect(page.locator(".xp-row")).toContainText("25");
-  await page.reload();await page.locator('[data-mission="orientation"] .node-card').click();
-  await expect(page.getByRole("button",{name:ui.en.finishOrientation,exact:true})).toBeEnabled();
+  await expect(page.locator(".header-xp")).toContainText("0");
+  await page.reload();await openLesson(page,"orientation","en");
+  await expect(page.getByRole("button",{name:ui.en.finishOrientation,exact:true})).toBeDisabled();
 });

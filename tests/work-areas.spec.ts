@@ -1,3 +1,4 @@
+import {openLesson,tab} from "./academy-helpers";
 import {test,expect} from "@playwright/test";
 import {workAreaMission as m, workAreaExample} from "../src/lib/work-area-mission";
 import {missions} from "../src/lib/curriculum";
@@ -13,15 +14,16 @@ for(const lang of ["en","ar"] as const) for(const theme of ["light","dark"] as c
       if(!localStorage.getItem("abap2-master-progress")) localStorage.setItem("abap2-master-progress",JSON.stringify({version:2,missions:["data-keys"],labs:["structures"],current:"data-keys",results:{while:{attempts:4,passed:false}}}));
     },{lang,theme});
     await page.goto("/");
-    await expect(page.locator(".xp-row")).toContainText("260");
-    const path=page.locator('[data-path="data"]');
-    await expect(path.locator(".future-concepts")).not.toContainText(lang === "en" ? "Work areas" : "مناطق العمل");
-    await expect(path.locator(".future-concepts")).not.toContainText(lang === "en" ? "Field symbols" : "رموز الحقول");
-    await expect(path.locator(".future-concepts")).toContainText(lang === "en" ? "Table operations" : "عمليات الجداول");
-    await path.locator(`[data-mission="${m.id}"] .node-card`).click();
+    await expect(page.locator(".header-xp")).toContainText("260");
+    await page.locator('[data-tree-id="data"]').click();
+    const future = await page.locator('.future-topic').allTextContents();
+    expect(future.join(' ')).not.toContain(lang==='en'?'Work areas':'مناطق العمل');
+    expect(future.join(' ')).not.toContain(lang==='en'?'Field symbols':'رموز الحقول');
+    expect(future.join(' ')).toContain(lang==='en'?'Table operations':'عمليات الجداول');
+    await openLesson(page,m.id,lang);
     await expect(page).toHaveURL(new RegExp(`mission=${m.id}`));
     await page.reload();
-    await expect(page.locator(".mission-title h1")).toHaveText(m.title[lang]);
+    await expect(page.locator(".lesson-summary h1")).toHaveText(m.title[lang]);
     expect(await page.evaluate(()=>JSON.parse(localStorage.getItem("abap2-master-progress")!).missions)).toEqual(["data-keys"]);
     const code=page.locator(".anatomy-code"), panel=page.locator(".anatomy-explanation");
     await code.locator('[data-group="fill"]').click();
@@ -40,60 +42,60 @@ for(const lang of ["en","ar"] as const) for(const theme of ["light","dark"] as c
     if(lang === "ar") await page.locator(".anatomy-layout").screenshot({path:test.info().outputPath(`aliases-anatomy-ar-${theme}.png`)});
     await matchAnatomy(page,m.id,lang);
     await page.getByRole("button",{name:t.syntaxDone,exact:true}).click();
-    await page.getByRole("button",{name:t.reviewExample,exact:true}).click();
+    await tab(page,lang,"visualize");
     await page.getByRole("button",{name:t.run,exact:true}).click();
-    const timeline=page.locator(".timeline");
+    const timeline=page.getByRole("tabpanel").locator(".timeline");
     await timeline.getByRole("button").filter({hasText:"<employee>-name = 'Sara'."}).click();
-    await expect(page.locator(".alias-memory").getByTestId("alias-value")).toContainText("Sara");
-    await expect(page.locator(".execution-pointer")).toHaveCount(1);
+    await expect(page.getByRole("tabpanel").locator(".alias-memory").getByTestId("alias-value")).toContainText("Sara");
+    await expect(page.locator(".execution-pointer").filter({visible:true})).toHaveCount(1);
     await timeline.getByRole("button").filter({hasText:"ASSIGN ls_employee TO <employee>."}).click();
-    await expect(page.locator(".alias-memory").getByTestId("alias-value")).toContainText("Ahmed");
+    await expect(page.getByRole("tabpanel").locator(".alias-memory").getByTestId("alias-value")).toContainText("Ahmed");
     await timeline.getByRole("button").last().click();
-    await expect(page.getByTestId("output")).toHaveText("Ahmed\nSara\nAhmed");
+    await expect(page.getByTestId("output").filter({visible:true})).toHaveText("Ahmed\nSara\nAhmed");
     if(lang === "ar") await page.screenshot({path:test.info().outputPath(`aliases-trace-ar-${theme}.png`),fullPage:true});
     const editor=page.getByRole("textbox").first();
     async function replace(source:string) {await editor.focus();await page.keyboard.press("ControlOrMeta+A");await page.keyboard.insertText(source);}
     await replace(workAreaExample.replace("ASSIGN ls_employee TO <employee>.","* Removed ASSIGN"));
-    await expect(page.locator(".alias-memory")).toHaveCount(0);
-    await expect(page.locator(".execution-pointer")).toHaveCount(0);
+    await expect(page.getByRole("tabpanel").locator(".alias-memory")).toHaveCount(0);
+    await expect(page.locator(".execution-pointer").filter({visible:true})).toHaveCount(0);
     await page.getByRole("button",{name:t.run,exact:true}).click();
-    await expect(page.locator(".feedback.error")).toContainText(lang === "en" ? "unassigned" : "غير مرتبط");
-    await expect(page.locator(".feedback.error")).toContainText("ASSIGN");
+    await expect(page.getByRole("tabpanel").locator(".feedback.error")).toContainText(lang === "en" ? "unassigned" : "غير مرتبط");
+    await expect(page.getByRole("tabpanel").locator(".feedback.error")).toContainText("ASSIGN");
     await replace(workAreaExample.replace("FIELD-SYMBOLS <employee> TYPE ty_employee.","* Removed declaration"));
     await page.getByRole("button",{name:t.run,exact:true}).click();
-    await expect(page.locator(".feedback.error")).toContainText("FIELD-SYMBOLS");
-    await expect(page.locator(".feedback.error")).toContainText("DATA");
-    await page.getByRole("button",{name:t.startChallenge,exact:true}).click();
+    await expect(page.getByRole("tabpanel").locator(".feedback.error")).toContainText("FIELD-SYMBOLS");
+    await expect(page.getByRole("tabpanel").locator(".feedback.error")).toContainText("DATA");
+    await tab(page,lang,"challenge");
     // Browsing or completing the lab does not pass either mission assessment.
-    await page.locator(".stages button").nth(5).click();
-    await page.locator(".completion-card .answer-options button").nth(m.answer).click();
+    await tab(page,lang,"challenge");
+    await page.getByRole("tabpanel").locator(".quiz .answer-options button").nth(m.answer).click();
     await expect(page.getByRole("button",{name:t.complete,exact:true})).toBeDisabled();
-    await page.getByRole("button",{name:t.startChallenge,exact:true}).click();
+    await tab(page,lang,"challenge");
     for(const [i,challenge] of m.challenges!.entries()) {
-      await page.getByRole("group",{name:t.challenge,exact:true}).getByRole("button").nth(i).click();
+      await page.getByRole("tabpanel").getByRole("group").getByRole("button").nth(i).click();
       await replace(challenge.solution);
       await page.getByRole("button",{name:t.check,exact:true}).click();
-      await expect(page.locator(".feedback.success")).toBeVisible();
+      await expect(page.locator(".feedback.success").filter({visible:true})).toBeVisible();
       if(i === 0) {
-        await page.locator(".stages button").nth(5).click();
+        await tab(page,lang,"challenge");
         await expect(page.getByRole("button",{name:t.complete,exact:true})).toBeDisabled();
-        await page.getByRole("button",{name:t.startChallenge,exact:true}).click();
+        await tab(page,lang,"challenge");
       }
     }
-    await page.locator(".stages button").nth(5).click();
+    await tab(page,lang,"challenge");
     await page.getByRole("button",{name:t.complete,exact:true}).click();
-    await expect(page.locator(".xp-row")).toContainText("540");
-    await expect(page.locator(`[data-mission="${m.id}"] .node-status`)).toHaveText(t.completed);
+    await expect(page.locator(".header-xp")).toContainText("540");
+    await expect(page.locator(".lesson-summary .pill")).toHaveText(t.completed);
     const progress=await page.evaluate(()=>JSON.parse(localStorage.getItem("abap2-master-progress")!));
     expect(progress.version).toBe(2);expect(progress.missions).toEqual(["data-keys",m.id]);
     expect(progress.labs).toEqual(["structures",m.id]);expect(progress.results.while).toEqual({attempts:4,passed:false});
     expect(progress.passedChallenges).toEqual(expect.arrayContaining(m.challenges!.map(c=>c.id)));
     await page.goto(`/?mission=${m.id}`);
-    await expect(page.locator(".mission-title h1")).toHaveText(m.title[lang]);
-    await page.locator(".stages button").nth(5).click();
-    await page.locator(".completion-card .answer-options button").nth(m.answer).click();
-    await page.getByRole("button",{name:t.complete,exact:true}).click();
-    await expect(page.locator(".xp-row")).toContainText("540");
+    await expect(page.locator(".lesson-summary h1")).toHaveText(m.title[lang]);
+    await tab(page,lang,"challenge");
+    await page.getByRole("tabpanel").locator(".quiz .answer-options button").nth(m.answer).click();
+    await page.getByRole("button",{name:t.completed,exact:true}).click();
+    await expect(page.locator(".header-xp")).toContainText("540");
     expect(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
     expect(errors).toEqual([]);
   });
@@ -101,13 +103,13 @@ for(const lang of ["en","ar"] as const) for(const theme of ["light","dark"] as c
 test("valid lesson deep links are freely accessible; unknown and preview IDs do not fabricate lessons",async({page})=>{
   for(const id of ["data-work-areas-field-symbols","data-keys","structures"]) {
     await page.goto(`/?mission=${id}`);
-    await expect(page.locator(".mission-title h1")).toHaveText(missions.find(m=>m.id === id)!.title.en);
+    await expect(page.locator(".lesson-summary h1")).toHaveText(missions.find(m=>m.id === id)!.title.en);
     const progress=await page.evaluate(()=>JSON.parse(localStorage.getItem("abap2-master-progress")!));
     expect(progress.missions).toEqual([]);expect(progress.labs).toEqual([]);expect(progress.started).toEqual([]);expect(progress.passedChallenges).toEqual([]);
   }
   for(const id of ["data-read-table","not-a-lesson"]) {
     await page.goto(`/?mission=${id}`);
-    await expect(page.locator(".hero")).toBeVisible();
-    await expect(page.locator(".mission-engine")).toHaveCount(0);
+    await expect(page.locator("[data-tree-id=root]")).toBeVisible();
+    await expect(page.getByRole("tab")).toHaveCount(0);
   }
 });

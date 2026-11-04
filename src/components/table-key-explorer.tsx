@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useTopicSession } from "@/lib/use-topic-session";
 import type { Locale } from "@/lib/engine";
 import { gradeKeyDesign, keyCandidates, keyFields, keySamples, keySnapshot, type KeyField, type KeyRow } from "@/lib/table-keys";
 import { TechnicalText } from "./technical-text";
@@ -24,13 +24,13 @@ const content = {
     accept: "قبول", reject: "رفض", check: "تحقق من تصميم الهوية", wrongDesign: "راجع الهوية: سيرفض الرقم وحده HR 101، بينما سيسمح إدراج الاسم بإضافة IT 101 بعد تغيير اسمه. استخدم department وid معًا واشترط التفرّد.", missing: "توقّع نتيجة الصفوف الثلاثة قبل التحقق.", wrong: "راجع التوقعات: Sales 101 مجموعة جديدة؛ وIT 101 موجودة رغم اختلاف اسم Huda؛ وIT 103 مجموعة جديدة رغم وجود الاسم Ahmed من قبل.", passed: "اجتزت تصميم الهوية والتوقعات الثلاثة. أكمل تحدي الشيفرة واختبار الفهم لاكتساب نقاط الخبرة.",
   },
 };
-export function TableKeyExplorer({ lang, assessment = false, completed = false, onPass }: { lang: Locale; assessment?: boolean; completed?: boolean; onPass?: () => void }) {
+export function TableKeyExplorer({ lang, assessment = false, completed = false, onPass, sessionKey }: { lang: Locale; assessment?: boolean; completed?: boolean; onPass?: () => void; sessionKey?: string }) {
   const t = content[lang];
-  const [fields, setFields] = useState<KeyField[]>(["id"]);
-  const [unique, setUnique] = useState(true);
-  const [count, setCount] = useState(0);
-  const [predictions, setPredictions] = useState<(boolean | undefined)[]>([]);
-  const [feedback, setFeedback] = useState<"wrongDesign" | "missing" | "wrong" | "passed">();
+  const [fields, setFields] = useTopicSession<KeyField[]>(sessionKey && `${sessionKey}:fields`, ["id"]);
+  const [unique, setUnique] = useTopicSession(sessionKey && `${sessionKey}:unique`, true);
+  const [count, setCount] = useTopicSession(sessionKey && `${sessionKey}:count`, 0);
+  const [predictions, setPredictions] = useTopicSession<(boolean | undefined)[]>(sessionKey && `${sessionKey}:predictions`, []);
+  const [feedback, setFeedback] = useTopicSession<"wrongDesign" | "missing" | "wrong" | "passed" | undefined>(sessionKey && `${sessionKey}:feedback`, undefined);
   const snapshot = keySnapshot(fields, unique, count);
   const last = snapshot.steps.at(-1);
   const declaration = fields.length ? `DATA lt_keyed TYPE SORTED TABLE OF ty_employee\n  WITH ${unique ? "UNIQUE" : "NON-UNIQUE"} KEY ${fields.join(" ")}.` : "DATA lt_keyed TYPE STANDARD TABLE OF ty_employee\n  WITH EMPTY KEY.";

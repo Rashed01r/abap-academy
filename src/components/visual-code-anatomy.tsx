@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import type { CodeAnatomy } from "@/lib/code-anatomy";
 import { eventsForGroup, groupAtLine, lineRange } from "@/lib/code-anatomy";
 import { anatomyConcepts } from "@/lib/anatomy-concepts";
@@ -8,16 +8,17 @@ import { ui } from "@/lib/i18n";
 import { TechnicalText } from "./technical-text";
 import { LearningWorkspace } from "./learning-workspace";
 import { FieldSymbolMemory } from "./field-symbol-memory";
+import { useTopicSession } from "@/lib/use-topic-session";
 
 export function VisualCodeAnatomy({doc,lang,theme,onExplore,onMatched,references=[]}: {
   doc:CodeAnatomy;lang:Locale;theme:"light"|"dark";onExplore:(refs:string[])=>void;onMatched:()=>void;references?:string[];
 }) {
-  const [selectedId,setSelectedId]=useState(doc.groups[0].id);
-  const [field,setField]=useState<string>();
-  const [showTrace,setShowTrace]=useState(false);
-  const [question,setQuestion]=useState(0);
-  const [matched,setMatched]=useState<string[]>([]);
-  const [feedback,setFeedback]=useState<"right"|"wrong">();
+  const [selectedId,setSelectedId]=useTopicSession(`${doc.id}:anatomy-group`,doc.groups[0].id);
+  const [field,setField]=useTopicSession<string | undefined>(`${doc.id}:anatomy-field`,undefined);
+  const [showTrace,setShowTrace]=useTopicSession(`${doc.id}:anatomy-trace`,false);
+  const [question,setQuestion]=useTopicSession(`${doc.id}:anatomy-question`,0);
+  const [matched,setMatched]=useTopicSession<string[]>(`${doc.id}:anatomy-matched`,[]);
+  const [feedback,setFeedback]=useTopicSession<"right"|"wrong" | undefined>(`${doc.id}:anatomy-feedback`,undefined);
   const t=ui[lang];
   const group=doc.groups.find(g=>g.id === selectedId)!;
   const events=useMemo(()=>simulate(doc.source),[doc.source]);
