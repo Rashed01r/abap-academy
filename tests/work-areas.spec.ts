@@ -19,7 +19,8 @@ for(const lang of ["en","ar"] as const) for(const theme of ["light","dark"] as c
     const future = await page.locator('.future-topic').allTextContents();
     expect(future.join(' ')).not.toContain(lang==='en'?'Work areas':'مناطق العمل');
     expect(future.join(' ')).not.toContain(lang==='en'?'Field symbols':'رموز الحقول');
-    expect(future.join(' ')).toContain(lang==='en'?'Table operations':'عمليات الجداول');
+    expect(future.join(' ')).not.toContain(lang==='en'?'Table operations':'عمليات الجداول');
+    expect(future.join(' ')).toContain(lang==='en'?'Table expressions':'تعبيرات الجداول');
     await openLesson(page,m.id,lang);
     await expect(page).toHaveURL(new RegExp(`mission=${m.id}`));
     await page.reload();
@@ -101,13 +102,13 @@ for(const lang of ["en","ar"] as const) for(const theme of ["light","dark"] as c
   });
 }
 test("valid lesson deep links are freely accessible; unknown and preview IDs do not fabricate lessons",async({page})=>{
-  for(const id of ["data-work-areas-field-symbols","data-keys","structures"]) {
+  for(const id of ["data-work-areas-field-symbols","data-keys","structures","data-read-table"]) {
     await page.goto(`/?mission=${id}`);
     await expect(page.locator(".lesson-summary h1")).toHaveText(missions.find(m=>m.id === id)!.title.en);
     const progress=await page.evaluate(()=>JSON.parse(localStorage.getItem("abap2-master-progress")!));
     expect(progress.missions).toEqual([]);expect(progress.labs).toEqual([]);expect(progress.started).toEqual([]);expect(progress.passedChallenges).toEqual([]);
   }
-  for(const id of ["data-read-table","not-a-lesson"]) {
+  for(const id of ["data-conditional-loop","not-a-lesson"]) {
     await page.goto(`/?mission=${id}`);
     await expect(page.locator("[data-tree-id=root]")).toBeVisible();
     await expect(page.getByRole("tab")).toHaveCount(0);

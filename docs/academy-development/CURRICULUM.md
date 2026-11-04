@@ -1,18 +1,36 @@
 # Curriculum and milestone sequence
 
+## Authoritative execution checkpoint — 2026-11-04
+
+Current checkpoint: **2026-11-04, introductory coverage across all nine paths plus three Data missions**. The latest full-curriculum request explicitly prioritizes Pass A across unavailable paths before Pass B in curriculum order; it supersedes the earlier instruction to finish Data before touching Paths 3–9. Pass A introductory coverage is implemented. Pass B resumed with data-read-table, data-table-mutations and data-sorting-filtering. The complete academy remains unfinished.
+
+Registry totals: **9 paths, 9 with playable content, 1 fully verified path (Fundamentals), 24 playable activities (23 registered missions plus orientation), 23 verified topics/activities and 1 tested guided project foundation whose full capstone remains IN_PROGRESS**. There are **101 PLANNED/Coming Soon records**, plus that unfinished project. Twelve requested topics missing from the previous planning table were explicitly added; do not compare the remaining count with the old 99 without accounting for these additions. Current assessments: **34 (25 code + 9 guided)**; available XP: **5,315**. Anatomy: **149 groups / 98 matching descriptions across 24 labs**. Stable IDs, progress version 2, prior achievements, once-only XP, drafts and independent panel-layout storage remain intact.
+
+The user's latest two-pass sequence takes precedence: introductory playable coverage across unavailable paths first, then complete every topic/project in order. Introductory coverage has been added across all nine paths; continue Pass B at data-conditional-loop. Completing an introductory lesson is not completion of its path or of the full capstone. The updated milestone table below counts the twelve explicitly added planned records.
+
+Remaining explicit additions: Data performance; Dictionary transports, lock objects and number ranges; Database SELECT SINGLE, GROUP BY and transactions; Modern ABAP SQL and CDS annotations; Cloud Clean Core, determinations and actions. Existing combined records retain INNER/LEFT OUTER joins, static attributes/methods, object references, breakpoints, key/index access and technical settings/activation.
+
+**Exact next mission: data-conditional-loop.** Preserve its stable ID and recommended prerequisite data-sorting-filtering. Teach conditional row processing in depth, decide and document the supported LOOP WHERE subset before claiming it, distinguish selection from deletion, and grade changed rows/thresholds and empty results. Then continue data-table-expressions, data-table-performance and data-employee-manager, followed by Dictionary domains and remaining paths in sequence. Introductory availability does not finish an advanced path.
+
+The project foundation is projects-employee-management, titled Employee management: guided project design. Its browser lesson/decisions are tested; its overall capstone stays IN_PROGRESS. Missing SAP work includes behavior handlers/validations, DCL/authorization implementation, locking/concurrency, a consumer UI, activation/deployment and actual end-to-end acceptance evidence. Do not promote the complete project based on this guided design activity. On expansion, preserve this foundation achievement and XP; introduce independent stage/final assessment IDs and explicit aggregate project status. Never interpret its existing foundation completion as evidence that future capstone stages passed, including during legacy progress normalization.
+
+Relevant extension points: src/lib/engine.ts, data-missions.ts, anatomy-content.ts and new mission modules; guided-types.ts/guided-curriculum.ts and the three guided definition files for advanced lessons; ConnectedLesson and the shared visualizers. No half-written source file or known application blocker remains. Dictionary/SQL introductory coveredTopics intentionally leave dedicated planned topic previews visible. Independent lesson examples are not a shared SAP object activation sequence.
+
+## Current milestone table and historical delivery notes
+
 All nine paths below are required by the full-platform request. Only registered, functional missions are playable. A topic list is planning, not implemented educational content.
 
 | Milestone | Path ID | Target | Status at checkpoint |
 | --- | --- | --- | --- |
 | 1 | fundamentals | Orientation + Missions 01–09 | VERIFIED: all 10 activities; 1,995 XP |
-| 2 | data | 10 missions | IN_PROGRESS: first four missions VERIFIED; 6 planned |
-| 3 | dictionary | 12 missions | PLANNED |
-| 4 | database | 12 missions | PLANNED |
-| 5 | oop | 13 missions | PLANNED |
-| 6 | applications | 14 missions | PLANNED |
-| 7 | modern | 17 missions | PLANNED |
-| 8 | cloud | 18 missions | PLANNED |
-| 9 | projects | 7 projects | PLANNED |
+| 2 | data | 11 missions | IN_PROGRESS: 7 VERIFIED; 4 planned |
+| 3 | dictionary | 15 missions | IN_PROGRESS: introduction VERIFIED; 14 planned |
+| 4 | database | 15 missions | IN_PROGRESS: fundamentals VERIFIED; 14 planned |
+| 5 | oop | 13 missions | IN_PROGRESS: introduction VERIFIED; 12 planned |
+| 6 | applications | 14 missions | IN_PROGRESS: reports VERIFIED; 13 planned |
+| 7 | modern | 19 missions | IN_PROGRESS: syntax introduction VERIFIED; 18 planned |
+| 8 | cloud | 21 missions | IN_PROGRESS: introduction VERIFIED; 20 planned |
+| 9 | projects | 7 projects | IN_PROGRESS: tested employee design foundation; 6 planned projects; full employee capstone unfinished |
 | 10 | all | Complete platform regression | PLANNED |
 
 Fundamentals sequence: syntax orientation; variables/addition; structures; IF/ELSE/ELSEIF; DO/TIMES/sy-index; WHILE/termination; standard internal tables/APPEND; LOOP AT/work areas; EXIT/CONTINUE; Employee Records Processor. Mission 09 combines prior concepts through implementation checkpoints and assessment.

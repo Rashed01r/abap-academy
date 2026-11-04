@@ -1,12 +1,18 @@
 import { missions, type Text } from "./curriculum";
-import { defineAnatomy, type AnatomyGroupSpec, type CodeAnatomy } from "./code-anatomy";
+import { defineAnatomy, sourceFingerprint, type AnatomyGroupSpec, type CodeAnatomy } from "./code-anatomy";
 import { anatomyConcepts } from "./anatomy-concepts";
+import { readTableAnatomy } from "./read-table-mission";
+import { tableMutationsAnatomy } from "./table-mutations-mission";
+import { sortingFilteringAnatomy } from "./sorting-filtering-mission";
 
 const t=(en:string,ar:string):Text=>({en,ar});
 function g(id:string,lines:[number,number],title:Text,explanation:Text,concept:string,extra:Partial<AnatomyGroupSpec>={}):AnatomyGroupSpec {
   return {id,lines,title,explanation,glossaryRefs:[concept],visualizer:{kind:"snapshot",line:lines[1]},practice:t(`Find the section: ${explanation.en}`,`اختر الجزء الذي يقوم بما يلي: ${explanation.ar}`),...extra};
 }
 const definitions: Record<string,{fingerprint:string;groups:AnatomyGroupSpec[];checks?:string[]}> = {
+  "data-read-table": readTableAnatomy,
+  "data-table-mutations": tableMutationsAnatomy,
+  "data-sorting-filtering": sortingFilteringAnatomy,
   "data-work-areas-field-symbols":{fingerprint:"7e1d85f8",checks:["create","fill","save","bind","change","read"],groups:[
     g("shape",[1,4],t("Define the Employee Structure","تعريف بنية الموظف"),t("Describe an employee with an integer ID and a text name. This is the shape, not an employee record yet.","صف الموظف برقم صحيح واسم نصي. هذا وصف للشكل، وليس سجل موظف بعد."),"type",{visualizer:{kind:"type",line:4}}),
     g("create",[5,5],t("Create the Work Area","إنشاء منطقة العمل"),t("Create ls_employee with that structure. Its ID starts at 0 and its name starts empty.","أنشئ ls_employee وفق هذه البنية. يبدأ الرقم بصفر والاسم بنص فارغ."),"variable"),
@@ -122,6 +128,16 @@ function orientationDoc(lang:"en"|"ar") {
 }
 const documents = new Map<string,CodeAnatomy>();
 for(const mission of missions) {
+  if (mission.guided) {
+    const d = mission.guided;
+    const groups = d.groups.map(group => ({
+      id: group.id, lines: [group.start, group.end] as [number, number], title: group.title,
+      explanation: group.explanation, detail: group.detail,
+      practice: t(`Find the section: ${group.explanation.en}`, `اختر الجزء الذي يقوم بما يلي: ${group.explanation.ar}`),
+    }));
+    documents.set(mission.id, {...defineAnatomy(mission.id, d.code, sourceFingerprint(d.code), groups, groups.map(g => g.id)), referenceOnly: true});
+    continue;
+  }
   const spec=definitions[mission.id];
   if(!spec) throw new Error(`${mission.id}: add reviewed Code Anatomy before registering this lesson`);
   for(const group of spec.groups) for(const ref of group.glossaryRefs || []) if(!anatomyConcepts[ref]) throw new Error(`Unknown anatomy concept: ${ref}`);

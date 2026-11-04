@@ -166,7 +166,7 @@ test("root, nine paths, expansion, search, geometry, zoom, history and honest pr
   await expect(page.getByRole('tab')).toHaveCount(0);
   await page.locator('.tree-viewport').evaluate(el => {el.scrollLeft = el.scrollWidth;});
   await page.getByPlaceholder(treeCopy.en.search).fill('ABAP Dictionary');
-  await page.locator('.tree-search-results').getByRole('button', {name:'ABAP Dictionary · Coming Soon', exact:true}).click();
+  await page.locator('.tree-search-results .tree-path-result').filter({has:page.getByText('ABAP Dictionary', {exact:true})}).click();
   await expect(page.locator('[data-tree-id="dictionary"]')).toHaveAttribute('aria-expanded','true');
   await expect.poll(() => page.locator('[data-tree-id="dictionary"]').evaluate(el => {
     const node = el.getBoundingClientRect(), viewport = document.querySelector('.tree-viewport')!.getBoundingClientRect();

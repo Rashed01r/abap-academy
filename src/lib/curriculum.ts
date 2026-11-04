@@ -2,6 +2,8 @@
 export type Text = { en: string; ar: string };
 import { fundamentals } from "./fundamentals";
 import { dataMissions } from "./data-missions";
+import { guidedMissions } from "./guided-curriculum";
+import type { GuidedDefinition } from "./guided-types";
 export const text = (en: string, ar: string): Text => ({ en, ar });
 export type SyntaxToken = {
   id: string;
@@ -628,6 +630,7 @@ ELSE.
   WRITE 'Review'.
 ENDIF.`;
 export type Mission = {
+  guided?: GuidedDefinition;
   id: string;
   pathId: string;
   objectives: Text[];
@@ -914,7 +917,7 @@ const originalMissions: Mission[] = [
     challenges: conditionChallenges,
   },
 ];
-export const missions: Mission[] = [...originalMissions, ...fundamentals, ...dataMissions].map(mission => ({
+export const missions: Mission[] = [...originalMissions, ...fundamentals, ...dataMissions, ...guidedMissions].map(mission => ({
   difficulty: "beginner",
   environment: "browser",
   assessment: "simulated",
@@ -935,8 +938,8 @@ export const paths = [
     id: "data",
     title: text("Working with Data", "العمل مع البيانات"),
     concepts: text(
-      "Internal tables · Work areas · Field symbols · Table operations · Sorting and searching",
-      "الجداول الداخلية · مناطق العمل · رموز الحقول · عمليات الجداول · الترتيب والبحث",
+      "Internal tables · Work areas · Field symbols · Table operations · Sorting and searching · Conditional LOOP AT · Table expressions · Employee Data Manager · Internal table performance",
+      "الجداول الداخلية · مناطق العمل · رموز الحقول · عمليات الجداول · الترتيب والبحث · LOOP AT المشروطة · تعبيرات الجداول · مدير بيانات الموظفين · أداء الجداول الداخلية",
     ),
     time: 50,
   },

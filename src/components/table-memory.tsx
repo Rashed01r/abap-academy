@@ -16,7 +16,7 @@ export function TableMemory({ name, rows, event, lang }: {
     <div className="table-scroll">
       <table>
         <caption className="sr-only">{name} · {t.rows}: {rows.length}</caption>
-        <thead><tr><th scope="col">{t.row}</th>{fields.map(field => <th scope="col" key={field}><code dir="ltr">{field}</code></th>)}</tr></thead>
+        <thead><tr><th scope="col">{t.row}</th>{fields.map(field => <th scope="col" key={field} className={event.lookup?.table === name && field in (event.lookup.keys || {}) ? "lookup-key" : undefined}><code dir="ltr">{field}</code></th>)}</tr></thead>
         <tbody>{rows.map((row, index) => <tr key={index}
           className={`${active === index ? "active-row" : ""} ${event.operation === "append" && event.changed.includes(name) && index === rows.length - 1 ? "new-row" : ""}`}
           aria-current={active === index ? "true" : undefined}>

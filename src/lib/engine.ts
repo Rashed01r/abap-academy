@@ -52,6 +52,11 @@ export type Node =
   | { kind: "while"; left: Expr; op: string; right: Expr; body: Node[]; range: Range; endRange: Range }
   | { kind: "loop"; table: string; into: string; inline: boolean; body: Node[]; range: Range; endRange: Range }
   | { kind: "append"; value: Expr; table: string; range: Range }
+  | { kind: "read"; table: string; into: string; index?: Expr; keys?: { field: string; value: Expr }[]; range: Range }
+  | { kind: "insert"; table: string; value: Expr; index: Expr; range: Range }
+  | { kind: "modify"; table: string; value: Expr; index: Expr; range: Range }
+  | { kind: "delete"; table: string; index: Expr; range: Range }
+  | { kind: "sort"; table: string; fields: { field: string; direction: "ascending" | "descending" }[]; range: Range }
   | { kind: "control"; action: "exit" | "continue"; range: Range }
   | { kind: "data"; name: string; type: string; initial?: Expr; range: Range }
   | { kind: "fieldSymbol"; name: string; type: string; range: Range }
@@ -80,7 +85,7 @@ export type Node =
     };
 export type ExecutionEvent = {
   id: number;
-  operation: "define" | "declare" | "assign" | "write" | "condition" | "end" | "loop" | "append" | "control" | "bind" | "unbind";
+  operation: "define" | "declare" | "assign" | "write" | "condition" | "end" | "loop" | "append" | "read" | "insert" | "modify" | "delete" | "sort" | "control" | "bind" | "unbind";
   range: Range;
   statement: string;
   memory: Memory;
@@ -91,6 +96,10 @@ export type ExecutionEvent = {
   condition?: { expression: string; result: boolean };
   loop?: { kind: "do" | "while" | "loop"; iteration: number; count?: number; range: Range; table?: string; index?: number; row?: Primitive | StructureValue };
   tableSelection?: { name: string; index: number; row: Primitive | StructureValue };
+  /** Lookup index is one-based (0 on a miss); tableSelection indexes are zero-based. */
+  lookup?: { table: string; target: string; found: boolean; index: number; keys?: Record<string, Primitive>; requestedIndex?: number };
+  /** Mutation index is one-based; before/after are independent snapshots, including misses. */
+  mutation?: { table: string; kind: "insert" | "modify" | "delete" | "sort"; index?: number; applied: boolean; before: TableValue; after: TableValue; fields?: { field: string; direction: "ascending" | "descending" }[] };
   aliases?: Record<string, string | null>;
 };
 export function sourceRange(source: string, start: number, end: number): Range {
@@ -381,6 +390,45 @@ export function parse(source: string): Node[] {
         node = kind === "do" ? { kind, count: count!, body, range: opening, endRange: range(ending) }
           : kind === "while" ? { kind, left: left!, op, right: right!, body, range: opening, endRange: range(ending) }
           : { kind: "loop", table, into, inline, body, range: opening, endRange: range(ending) };
+      } else if (at("insert") || at("modify") || at("delete")) {
+        const kind = tokens[p++].text as "insert" | "modify" | "delete";
+        let value: Expr | undefined;
+        let table: string;
+        if (kind === "insert") { value = expr(); take("into"); table = name(); }
+        else {
+          table = name();
+          if (kind === "modify") { take("from"); value = expr(); }
+        }
+        take("index"); const index = expr(); period(start);
+        node = kind === "delete" ? {kind, table, index, range:range(start)} : {kind, table, value:value!, index, range:range(start)};
+      } else if (at("sort")) {
+        p++; const table = name(); take("by");
+        const fields: Extract<Node,{kind:"sort"}>["fields"] = [];
+        while (peek() && !at(".")) {
+          const field = name();
+          if (fields.some(item => item.field === field)) fail("component", field);
+          let direction: "ascending" | "descending" = "ascending";
+          if (at("ascending") || at("descending")) direction = tokens[p++].text as typeof direction;
+          fields.push({field,direction});
+        }
+        if (!fields.length) fail("declaration");
+        period(start); node = {kind:"sort", table, fields, range:range(start)};
+      } else if (at("read")) {
+        p++; take("table"); const table = name(); take("into"); const into = name();
+        let index: Expr | undefined;
+        let keys: { field: string; value: Expr }[] | undefined;
+        if (at("index")) { p++; index = expr(); }
+        else {
+          take("with"); take("key"); keys = [];
+          while (peek() && !at(".")) {
+            const field = name();
+            if (keys.some(key => key.field === field)) fail("component", field);
+            take("=", "assignment"); keys.push({field, value: expr()});
+          }
+          if (!keys.length) fail("declaration");
+        }
+        period(start);
+        node = {kind:"read", table, into, index, keys, range:range(start)};
       } else if (at("append")) {
         p++; const value = expr(); take("to"); const table = name(); period(start);
         node = { kind: "append", value, table, range: range(start) };
@@ -434,7 +482,7 @@ export function execute(nodes: Node[], source: string): ExecutionEvent[] {
     throw new SimulationError(code, n.range, detail);
   };
   function refType(name: string, n: Node): string {
-    if (name === "sy-index") return "i";
+    if (["sy-index", "sy-subrc", "sy-tabix"].includes(name)) return "i";
     const [base, field, ...rest] = name.split("-");
     if (!(base in types)) return error("unknown", n, base);
     const type = types[base];
@@ -477,12 +525,12 @@ export function execute(nodes: Node[], source: string): ExecutionEvent[] {
         if (n.kind === "data" && n.initial && exprType(n.initial, n) !== n.type) error("type", n);
       } else if (n.kind === "bind") {
         if (!(n.target in types)) error("unknown", n, n.target);
-        if (n.source.startsWith("<") || n.source === "sy-index") error("unsupported", n, "ASSIGN requires a direct data object in this subset");
+        if (n.source.startsWith("<") || n.source.startsWith("sy-")) error("unsupported", n, "ASSIGN requires a direct data object in this subset");
         if (refType(n.source, n) !== refType(n.target, n)) error("type", n);
       } else if (n.kind === "unbind") {
         refType(n.target, n);
       } else if (n.kind === "assign") {
-        if (n.target === "sy-index") error("assignment", n);
+        if (n.target.startsWith("sy-")) error("assignment", n);
         if (
           exprType(n.value, n) !== refType(n.target, n) ||
           !["i", "string"].includes(refType(n.target, n))
@@ -494,6 +542,30 @@ export function execute(nodes: Node[], source: string): ExecutionEvent[] {
         if (!loops) error("block", n);
       } else if (n.kind === "append") {
         if (refType(n.table, n) !== "table:" + exprType(n.value, n)) error("type", n);
+      } else if (n.kind === "insert" || n.kind === "modify" || n.kind === "delete" || n.kind === "sort") {
+        const tableType = refType(n.table,n);
+        if (!tableType.startsWith("table:")) error("type",n);
+        const rowType = tableType.slice(6);
+        if (n.kind === "sort") {
+          for (const item of n.fields) {
+            if (item.field === "table_line" && !definitions[rowType]) continue;
+            if (!definitions[rowType]?.[item.field]) error("component",n,item.field);
+          }
+        } else {
+          if (exprType(n.index,n) !== "i") error("type",n);
+          if (n.kind !== "delete" && exprType(n.value,n) !== rowType) error("type",n);
+        }
+      } else if (n.kind === "read") {
+        const tableType = refType(n.table, n);
+        if (!tableType.startsWith("table:")) error("type", n);
+        const rowType = tableType.slice(6);
+        if (refType(n.into, n) !== rowType) error("type", n);
+        if (n.index && exprType(n.index, n) !== "i") error("type", n);
+        for (const key of n.keys || []) {
+          const keyType = key.field === "table_line" && !definitions[rowType] ? rowType : definitions[rowType]?.[key.field];
+          if (!keyType) error("component", n, key.field);
+          if (exprType(key.value, n) !== keyType) error("type", n);
+        }
       } else if (n.kind === "do" || n.kind === "while" || n.kind === "loop") {
         if (n.kind === "do" && exprType(n.count, n) !== "i") error("type", n);
         if (n.kind === "while" && (exprType(n.left, n) !== exprType(n.right, n) || !["i", "string"].includes(exprType(n.left,n)))) error("type", n);
@@ -523,6 +595,7 @@ export function execute(nodes: Node[], source: string): ExecutionEvent[] {
   const loopStack: NonNullable<ExecutionEvent["loop"]>[] = [];
   let steps = 0;
   let traceBytes = 0;
+  let subrc = 0, tabix = 0;
   function resolve(name: string, n: Node) {
     const [base, field] = name.split("-");
     if (!base.startsWith("<")) return name;
@@ -548,6 +621,8 @@ export function execute(nodes: Node[], source: string): ExecutionEvent[] {
       return checked(a + b, n);
     }
     if (e.name === "sy-index") return [...loopStack].reverse().find(l => l.kind !== "loop")?.iteration ?? 0;
+    if (e.name === "sy-subrc") return subrc;
+    if (e.name === "sy-tabix") return tabix;
     const v = readRef(e.name, n);
     if (typeof v === "object") return error("type", n);
     return v;
@@ -568,6 +643,8 @@ export function execute(nodes: Node[], source: string): ExecutionEvent[] {
     skippedRanges: Range[] = [],
     condition?: ExecutionEvent["condition"],
     r = n.range,
+    lookup?: ExecutionEvent["lookup"],
+    mutation?: ExecutionEvent["mutation"],
   ) {
     if (events.length >= RUNTIME_LIMITS.trace) error("limit", n, "trace");
     if ((JSON.stringify(memory).length + JSON.stringify(output).length) * 2 > RUNTIME_LIMITS.memoryBytes) error("limit", n, "memory");
@@ -585,7 +662,9 @@ export function execute(nodes: Node[], source: string): ExecutionEvent[] {
       explanation,
       condition,
       loop: loop ? structuredClone(loop) : undefined,
-      tableSelection: tableContext?.table && tableContext.row !== undefined ? { name: tableContext.table, index: tableContext.index!, row: structuredClone(tableContext.row) } : undefined,
+      tableSelection: mutation ? (mutation.applied && mutation.index && ["insert","modify"].includes(mutation.kind) ? {name:mutation.table,index:mutation.index-1,row:structuredClone(mutation.after[mutation.index-1])} : undefined) : lookup ? (lookup.found ? {name:lookup.table, index:lookup.index - 1, row:structuredClone((memory[lookup.table] as TableValue)[lookup.index - 1])} : undefined) : tableContext?.table && tableContext.row !== undefined ? { name: tableContext.table, index: tableContext.index!, row: structuredClone(tableContext.row) } : undefined,
+      ...(lookup ? {lookup:structuredClone(lookup)} : {}),
+      ...(mutation ? {mutation:structuredClone(mutation)} : {}),
       ...(Object.keys(aliases).length ? {aliases: {...aliases}} : {}),
     };
     traceBytes += JSON.stringify(event).length * 2;
@@ -669,10 +748,61 @@ export function execute(nodes: Node[], source: string): ExecutionEvent[] {
         if (!Array.isArray(memory[n.table])) error("type", n);
         const rows = memory[n.table] as TableValue;
         if (rows.length >= RUNTIME_LIMITS.rows) error("limit", n, "rows");
-        const value = n.value.kind === "ref" && n.value.name !== "sy-index" ? readRef(n.value.name, n) : get(n.value,n);
+        const value = n.value.kind === "ref" && !n.value.name.startsWith("sy-") ? readRef(n.value.name, n) : get(n.value,n);
         if (value === undefined || Array.isArray(value)) error("type",n);
         rows.push(structuredClone(value as Primitive | StructureValue));
         emit(n,"append",{ key:"append",name:n.table },[n.table]);
+      } else if (n.kind === "insert" || n.kind === "modify" || n.kind === "delete" || n.kind === "sort") {
+        if (loopStack.some(context => context.table === n.table)) error("unsupported",n,"Changing an actively looped table is outside this subset");
+        const rows = memory[n.table] as TableValue;
+        const before = structuredClone(rows);
+        let index: number | undefined, applied = true;
+        if (n.kind === "sort") {
+          // Deterministic binary comparisons, without SAP locale-aware AS TEXT support.
+          rows.sort((a,b) => {
+            for (const item of n.fields) {
+              const left = typeof a === "object" ? a[item.field] : a;
+              const right = typeof b === "object" ? b[item.field] : b;
+              const order = left < right ? -1 : left > right ? 1 : 0;
+              if (order) return item.direction === "descending" ? -order : order;
+            }
+            return 0;
+          });
+        } else {
+          index = get(n.index,n) as number;
+          if (index <= 0) error("range",n,"Mutation INDEX must be positive");
+          // Read the source before changing the table, even for an out-of-range index.
+          const value = n.kind === "delete" ? undefined : n.value.kind === "ref" && !n.value.name.startsWith("sy-") ? readRef(n.value.name,n) : get(n.value,n);
+          applied = index <= rows.length + (n.kind === "insert" ? 1 : 0);
+          if (applied) {
+            if (n.kind === "insert") {
+              if (rows.length >= RUNTIME_LIMITS.rows) error("limit",n,"rows");
+              rows.splice(index-1,0,structuredClone(value as Primitive | StructureValue));
+            } else if (n.kind === "modify") rows[index-1] = structuredClone(value as Primitive | StructureValue);
+            else rows.splice(index-1,1);
+          }
+          subrc = applied ? 0 : 4;
+          memory["sy-subrc"] = subrc;
+        }
+        const mutation: NonNullable<ExecutionEvent["mutation"]> = {table:n.table,kind:n.kind,applied,before,after:structuredClone(rows),...(index !== undefined ? {index} : {}),...(n.kind === "sort" ? {fields:n.fields} : {})};
+        emit(n,n.kind,{key:n.kind === "sort" ? "sort" : applied ? `${n.kind}Found` : `${n.kind}Missing`,name:n.table},
+          [...(applied ? [n.table] : []),...(n.kind === "sort" ? [] : ["sy-subrc"])],[],undefined,n.range,undefined,mutation);
+      } else if (n.kind === "read") {
+        const rows = memory[n.table] as TableValue;
+        const keys = n.keys ? Object.fromEntries(n.keys.map(key => [key.field, get(key.value, n)])) : undefined;
+        const requestedIndex = n.index ? get(n.index, n) as number : undefined;
+        const index = requestedIndex !== undefined ? (requestedIndex > 0 && requestedIndex <= rows.length ? requestedIndex - 1 : -1)
+          : rows.findIndex(row => Object.entries(keys!).every(([field,value]) => (typeof row === "object" ? row[field] : row) === value));
+        const found = index >= 0;
+        subrc = found ? 0 : 4;
+        tabix = found ? index + 1 : 0;
+        // INTO copies a row; misses intentionally preserve the prior work-area value.
+        if (found) memory[n.into] = structuredClone(rows[index]);
+        memory["sy-subrc"] = subrc;
+        memory["sy-tabix"] = tabix;
+        emit(n, "read", {key:found ? "readFound" : "readMissing", name:n.into},
+          [...(found ? [n.into] : []), "sy-subrc", "sy-tabix"], [], undefined, n.range,
+          {table:n.table, target:n.into, found, index:tabix, ...(keys ? {keys} : {}), ...(requestedIndex !== undefined ? {requestedIndex} : {})});
       } else if (n.kind === "control") {
         const rest = list.slice(list.indexOf(n) + 1);
         emit(n,"control",{key:n.action},[],rest.map(skippedRange));
@@ -801,6 +931,123 @@ export function evaluate(
       correct =
         execute(probe, source).at(-1)?.output.join("\n") === "23" &&
         nodes.some((n) => n.kind === "assign" && n.value.kind === "add");
+    }
+  } else if (id === "data-mutation-workflow" || id === "data-sort-report") {
+    const walk = (list: Node[]): Node[] => list.flatMap(n => n.kind === "if" ? [n, ...walk(n.yes), ...walk(n.no), ...(n.elseifs || []).flatMap(branch => walk(branch.body))] : "body" in n ? [n, ...walk(n.body)] : [n]);
+    const all = walk(nodes);
+    const rowsEqual = (value: MemoryValue | undefined, expected: StructureValue[]) => Array.isArray(value) && value.length === expected.length && value.every((row,index) => typeof row === "object" && Object.keys(row).length === Object.keys(expected[index]).length && Object.entries(expected[index]).every(([key,item]) => row[key] === item));
+    const writesFromRows = all.some(n => n.kind === "loop" && n.table === "lt_employees" && n.into === "ls_employee" && walk(n.body).some(item => item.kind === "write" && item.value.kind === "ref" && item.value.name === "ls_employee-name"));
+    const runProbe = (tree: Node[], grade: (trace: ExecutionEvent[]) => boolean) => {
+      try { return grade(execute(tree,source)); }
+      catch (error) { if (!(error instanceof SimulationError)) throw error; return false; }
+    };
+    if (id === "data-mutation-workflow") {
+      const inputs: Record<string,Primitive> = {lv_insert_id:102,lv_insert_name:"Sara",lv_new_name:"Sarah"};
+      const inputDeclarations = Object.entries(inputs).every(([name,value]) => nodes.some(n => n.kind === "data" && n.name === name && n.initial?.kind === "literal" && n.initial.value === value));
+      const untouchedInputs = !all.some(n => n.kind === "assign" && n.target in inputs);
+      const probe = (insertId:number, insertName:string, replacement:string, seedIds:number[], seedNames:string[]) => {
+        const tree = structuredClone(nodes);
+        for (const n of walk(tree)) {
+          if (n.kind === "data" && n.name in inputs) n.initial = {kind:"literal",value:n.name === "lv_insert_id" ? insertId : n.name === "lv_insert_name" ? insertName : replacement};
+          if (n.kind === "assign" && n.value.kind === "literal") {
+            if (n.target === "ls_employee-id" && [101,103].includes(Number(n.value.value))) n.value.value = seedIds[Number(n.value.value) === 101 ? 0 : 1];
+            if (n.target === "ls_employee-name" && ["Ahmed","Omar"].includes(String(n.value.value))) n.value.value = seedNames[n.value.value === "Ahmed" ? 0 : 1];
+          }
+        }
+        return runProbe(tree,trace => {
+          const mutations = trace.filter(event => event.mutation).map(event => event.mutation!);
+          const initial = [{id:seedIds[0],name:seedNames[0]},{id:seedIds[1],name:seedNames[1]}];
+          const inserted = [initial[0],{id:insertId,name:insertName},initial[1]];
+          const modified = [initial[0],{id:insertId,name:replacement},initial[1]];
+          const final = modified.slice(1);
+          const writes = trace.filter(event => event.operation === "write");
+          return mutations.length === 3 && mutations.every(item => item.table === "lt_employees" && item.applied) &&
+            mutations[0].kind === "insert" && mutations[0].index === 2 && rowsEqual(mutations[0].before,initial) && rowsEqual(mutations[0].after,inserted) &&
+            mutations[1].kind === "modify" && mutations[1].index === 2 && rowsEqual(mutations[1].before,inserted) && rowsEqual(mutations[1].after,modified) &&
+            mutations[2].kind === "delete" && mutations[2].index === 1 && rowsEqual(mutations[2].before,modified) && rowsEqual(mutations[2].after,final) &&
+            trace.filter(event => event.operation === "append").length === 2 && rowsEqual(trace.at(-1)!.memory.lt_employees,final) &&
+            trace.at(-1)!.output.join("\n") === `${replacement}\n${seedNames[1]}` && writes.length === 2 && writes.every(event => event.tableSelection?.name === "lt_employees");
+        });
+      };
+      correct = inputDeclarations && untouchedInputs && writesFromRows &&
+        probe(102,"Sara","Sarah",[101,103],["Ahmed","Omar"]) &&
+        probe(212,"Lina","Lina revised",[211,213],["Ali","Huda"]) &&
+        probe(302,"Reem","Reem corrected",[301,303],["Noura","Maha"]);
+    } else {
+      const input = nodes.find(n => n.kind === "data" && n.name === "lv_min_salary" && n.initial?.kind === "literal" && n.initial.value === 6000);
+      const sort = all.find(n => n.kind === "sort" && n.table === "lt_employees" && n.fields.length === 1 && n.fields[0].field === "salary" && n.fields[0].direction === "descending");
+      const probe = (salaries:number[], minimum:number, names:string[], ids:number[]) => {
+        const tree = structuredClone(nodes);
+        let salaryIndex = 0;
+        for (const n of walk(tree)) {
+          if (n.kind === "data" && n.name === "lv_min_salary") n.initial = {kind:"literal",value:minimum};
+          if (n.kind === "assign" && n.value.kind === "literal") {
+            if (n.target === "ls_employee-salary") n.value.value = salaries[salaryIndex++ % salaries.length];
+            if (n.target === "ls_employee-name" && ["Ahmed","Sara","Omar"].includes(String(n.value.value))) n.value.value = names[["Ahmed","Sara","Omar"].indexOf(String(n.value.value))];
+            if (n.target === "ls_employee-id" && [101,102,103].includes(Number(n.value.value))) n.value.value = ids[Number(n.value.value)-101];
+          }
+        }
+        const sorted = salaries.map((salary,index) => ({id:ids[index],name:names[index],salary})).sort((a,b) => b.salary-a.salary);
+        return runProbe(tree,trace => {
+          const sorts = trace.filter(event => event.operation === "sort");
+          const expected = sorted.filter(row => row.salary >= minimum).map(row => row.name).join("\n");
+          const writes = trace.filter(event => event.operation === "write");
+          return sorts.length === 1 && rowsEqual(sorts[0].mutation!.after,sorted) &&
+            trace.filter(event => event.operation === "append").length === 3 && trace.filter(event => event.mutation).length === 1 &&
+            trace.slice(sorts[0].id).every(event => rowsEqual(event.memory.lt_employees,sorted)) &&
+            trace.at(-1)!.output.join("\n") === expected && writes.every(event => event.tableSelection?.name === "lt_employees");
+        });
+      };
+      correct = !!input && !!sort && writesFromRows && !all.some(n => n.kind === "assign" && n.target === "lv_min_salary") &&
+        [0,5000,6000,8000,9000].every(minimum => probe([5000,8000,6000],minimum,["Ahmed","Sara","Omar"],[101,102,103])) &&
+        probe([9500,2500,7000],7000,["Lina","Reem","Huda"],[211,212,213]) &&
+        probe([4000,10000,2000],4000,["Maha","Ali","Noura"],[301,302,303]);
+    }
+  } else if (id === "data-read-lookup") {
+    const walk = (list: Node[]): Node[] => list.flatMap(n => n.kind === "if" ? [n, ...walk(n.yes), ...walk(n.no), ...(n.elseifs || []).flatMap(b => walk(b.body))] : "body" in n ? [n, ...walk(n.body)] : [n]);
+    const all = walk(nodes);
+    const query = nodes.find(n => n.kind === "data" && n.name === "lv_id" && n.type === "i" && n.initial?.kind === "literal" && n.initial.value === 102);
+    const read = all.find(n => n.kind === "read" && n.table === "lt_employees" && n.into === "ls_employee" && n.keys?.length === 1 && n.keys[0].field === "id" && n.keys[0].value.kind === "ref" && n.keys[0].value.name === "lv_id");
+    const grade = (tree: Node[], imported: StructureValue[], key: number) => {
+      try {
+        const trace = execute(tree, source), end = trace.at(-1)!;
+        const foundIndex = imported.findIndex(row => row.id === key);
+        const expected = foundIndex >= 0 ? String(imported[foundIndex].name) : "Not found";
+        const actual = end.output.join("\n");
+        if (actual !== expected) failure = {name:"lv_id", input:key, expected, actual};
+        const reads = trace.filter(event => event.operation === "read");
+        const lookup = reads[0]?.lookup;
+        const sameRows = (value: MemoryValue | undefined) => Array.isArray(value) && value.length === imported.length && value.every((row,index) => typeof row === "object" && row.id === imported[index].id && row.name === imported[index].name);
+        return actual === expected && reads.length === 1 && lookup?.table === "lt_employees" && lookup.target === "ls_employee" && lookup.found === (foundIndex >= 0) && lookup.index === foundIndex + 1 &&
+          trace.filter(event => event.operation === "append").length === 2 &&
+          trace.slice(reads[0].id).every(event => sameRows(event.memory.lt_employees)) &&
+          end.memory["sy-subrc"] === (foundIndex >= 0 ? 0 : 4);
+      } catch (error) {
+        if (!(error instanceof SimulationError)) throw error;
+        failure = {name:"lv_id", input:key, expected:"safe lookup", actual:error.code};
+        return false;
+      }
+    };
+    const imported = [{id:101,name:"Ahmed"}, {id:102,name:"Sara"}];
+    if (query && read && !all.some(n => n.kind === "assign" && n.target === "lv_id") && grade(nodes, imported, 102)) {
+      correct = [101,102,999,0].every(key => {
+        const tree = structuredClone(nodes);
+        const input = tree.find(n => n.kind === "data" && n.name === "lv_id") as Extract<Node,{kind:"data"}>;
+        input.initial = {kind:"literal",value:key};
+        return grade(tree, imported, key);
+      });
+      // Vary identities and names together to reject key constants and memorized outputs.
+      for (const key of [211,212,999]) {
+        const tree = structuredClone(nodes);
+        for (const node of walk(tree)) {
+          if (node.kind === "data" && node.name === "lv_id") node.initial = {kind:"literal",value:key};
+          if (node.kind === "assign" && node.value.kind === "literal") {
+            if (node.target === "ls_employee-id" && [101,102].includes(Number(node.value.value))) node.value.value = Number(node.value.value) + 110;
+            if (node.target === "ls_employee-name" && ["Ahmed","Sara"].includes(String(node.value.value))) node.value.value = node.value.value === "Ahmed" ? "Omar" : "Lina";
+          }
+        }
+        correct = grade(tree, [{id:211,name:"Omar"},{id:212,name:"Lina"}], key) && correct;
+      }
     }
   } else if (id === "data-work-area-record") {
     const grade = (tree: Node[], employeeId:number, name:string, salary:number) => {

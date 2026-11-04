@@ -27,6 +27,8 @@ import { TechnicalText } from "./technical-text";
 import { TableMemory } from "./table-memory";
 import { LoopVisualizer } from "./loop-visualizer";
 import { FieldSymbolMemory } from "./field-symbol-memory";
+import { LookupSummary } from "./lookup-summary";
+import { TableChangeSummary } from "./table-change-summary";
 import { treeCopy } from "@/lib/tree-copy";
 const workspaceSessions = new Map<string, {code: string; events: ExecutionEvent[]; index: number; feedback: "correct" | "wrong" | ""; failure?: ChallengeFailure; error?: SimulationError; hint: boolean; field: string; speed: number}>();
 export function LearningWorkspace({
@@ -292,6 +294,8 @@ export function LearningWorkspace({
           </label>
           {event && <LoopVisualizer event={event} lang={lang} />}
           {event && <FieldSymbolMemory event={event} previous={events[index - 1]} lang={lang} />}
+          {event && <LookupSummary event={event} previous={events[index - 1]} lang={lang} />}
+          {event && <TableChangeSummary event={event} lang={lang} />}
           <div className="memory-heading">
             <h3>{t.memory}</h3>
             <span>{t.changed} ●</span>

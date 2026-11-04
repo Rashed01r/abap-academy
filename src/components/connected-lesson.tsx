@@ -2,7 +2,7 @@
 import { type Dispatch, type SetStateAction } from "react";
 import { useTopicSession } from "@/lib/use-topic-session";
 import { missions, orientation } from "@/lib/curriculum";
-import { orientationExamples } from "@/lib/anatomy-content";
+import { getAnatomy, orientationExamples } from "@/lib/anatomy-content";
 import { type Locale } from "@/lib/engine";
 import { type Progress, allChallengesPassed, completeMission, startMission } from "@/lib/progress";
 import { ui } from "@/lib/i18n";
@@ -12,6 +12,8 @@ import { LearningWorkspace } from "./learning-workspace";
 import { TableCategoryExplorer } from "./table-category-explorer";
 import { TableKeyExplorer } from "./table-key-explorer";
 import { TechnicalText } from "./technical-text";
+import { GuidedAssessment, GuidedExplorer } from "./guided-activity";
+import { VisualCodeAnatomy } from "./visual-code-anatomy";
 
 type Tab = "learn" | "visualize" | "challenge";
 const tabs: Tab[] = ["learn", "visualize", "challenge"];
@@ -39,7 +41,7 @@ export function ConnectedLesson({id, lang, theme, progress, setProgress}: {
       <span className="eyebrow">{t[m?.difficulty || "beginner"]} · {m?.minutes || 4} {t.minutes} · {m?.xp || 25} XP</span>
       <h1><TechnicalText>{m?.title[lang] || t.orientation}</TechnicalText></h1>
       <p>{m?.subtitle[lang] || c.orientationIntro}</p>
-      <span className="pill">{complete ? t.completed : progress.started?.includes(id) ? t.inProgress : t.available}</span>
+      {(complete || progress.started?.includes(id)) && <span className="pill">{complete ? t.completed : t.inProgress}</span>}
       <details><summary>{c.objectives}</summary><ul>{(m?.objectives.map(o => o[lang]) || [c.orientationObjective]).map(o => <li key={o}>{o}</li>)}</ul>
         {m?.prerequisite && <p>{t.recommendedFirst}: {missions.find(p => p.id === m.prerequisite)?.title[lang] || t.orientation}</p>}
       </details>
@@ -57,23 +59,30 @@ export function ConnectedLesson({id, lang, theme, progress, setProgress}: {
     {tabs.map(name => <section key={name} id={`${id}-${name}-panel`} role="tabpanel" aria-labelledby={`${id}-${name}-tab`} hidden={tab !== name} tabIndex={0}>
       {visited.includes(name) && (name === "learn" ? <>
         {m && <p className="instruction"><TechnicalText>{m.brief[lang]}</TechnicalText></p>}
-        <SyntaxLab id={id} tokens={m?.tokens || orientation} example={code} lang={lang} theme={theme} completed={progress.labs.includes(id)} onComplete={() => {
+        {m?.guided ? <>
+          <p className="pill guided-boundary"><TechnicalText>{m.guided.boundary[lang]}</TechnicalText></p>
+          <p className="muted">{lang === "en" ? "Examples are independent lesson fixtures. Repeated names do not imply a shared SAP data model or an activation sequence." : "أمثلة الدروس مستقلة. لا يعني تكرار الأسماء وجود نموذج بيانات SAP مشترك أو تسلسل لتفعيل الكائنات."}</p>
+          <VisualCodeAnatomy doc={getAnatomy(id, code)} lang={lang} theme={theme} onExplore={() => {}} onMatched={() => setProgress(p => ({...p, labs: Array.from(new Set([...p.labs, id]))}))} references={m.references}/>
+        </> : <SyntaxLab id={id} tokens={m?.tokens || orientation} example={code} lang={lang} theme={theme} completed={progress.labs.includes(id)} onComplete={() => {
           if (m) setProgress(p => ({...p, labs: Array.from(new Set([...p.labs, id]))}));
           select("visualize");
-        }}/>
+        }}/>}
         {m && <details><summary>{c.deeper}</summary><p>{m.practice[lang]}</p>{m.references?.map(ref => <p key={ref}><a href={ref} target="_blank" rel="noreferrer">{ref}</a></p>)}</details>}
       </> : name === "visualize" ? <>
         <p className="instruction"><TechnicalText>{m?.visual[lang] || c.orientationIntro}</TechnicalText></p>
-        <p className="pill">{t.limit}</p>
+        <p className="pill">{m?.guided ? m.guided.boundary[lang] : t.limit}</p>
         {m?.activity === "table-categories" && <TableCategoryExplorer sessionKey={`${id}:visual-model`} lang={lang} assessment={false} onPass={() => {}}/>}
         {m?.activity === "table-keys" && <TableKeyExplorer sessionKey={`${id}:visual-model`} lang={lang} assessment={false} onPass={() => {}}/>}
-        <LearningWorkspace initialCode={code} lang={lang} theme={theme} storageKey={`abap2-workspace:${id}:visualize`}/>
+        {m?.guided ? <GuidedExplorer definition={m.guided} lang={lang}/> : <LearningWorkspace initialCode={code} lang={lang} theme={theme} storageKey={`abap2-workspace:${id}:visualize`}/>}
       </> : <>
         <p className="instruction"><TechnicalText>{m?.goal[lang] || c.orientationGoal}</TechnicalText></p>
         <p>{c.help} <button className="text-button" onClick={() => select("learn")}>{c.learn}</button> · <button className="text-button" onClick={() => select("visualize")}>{c.visualize}</button></p>
         {m?.activity === "table-categories" && <TableCategoryExplorer sessionKey={`${id}:assessment-model`} lang={lang} assessment completed={progress.passedChallenges?.includes("data-category-choice")} onPass={() => attempt("data-category-choice", true)}/>}
         {m?.activity === "table-keys" && <TableKeyExplorer sessionKey={`${id}:assessment-model`} lang={lang} assessment completed={progress.passedChallenges?.includes("data-key-design")} onPass={() => attempt("data-key-design", true)}/>}
-        {m ? <>
+        {m?.guided ? <>
+          <p className="pill guided-boundary">{m.guided.boundary[lang]}</p>
+          <GuidedAssessment definition={m.guided} lang={lang} completed={progress.passedChallenges?.includes(`${id}-assessment`) || false} onResult={passed => attempt(`${id}-assessment`, passed)}/>
+        </> : m ? <>
           {m.challenges && <div className="explore-actions" role="group" aria-label={c.challenge}>{m.challenges.map((ch, index) => <button className="secondary" key={ch.id} aria-pressed={challengeIndex === index} onClick={() => {setChallengeIndex(index); setOpenedChallenges(v => Array.from(new Set([...v, index])));}}>{ch.title[lang]}</button>)}</div>}
           {(m.challenges || [m]).map((ch, index) => <div key={ch.id} hidden={index !== challengeIndex}>{openedChallenges.includes(index) && <>
             {m.challenges && <><h2>{ch.title[lang]}</h2><p>{ch.goal[lang]}</p></>}

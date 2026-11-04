@@ -1,4 +1,4 @@
-﻿import { ExecutionEvent, ErrorCode, Locale } from "./engine";
+import { ExecutionEvent, ErrorCode, Locale } from "./engine";
 export type { Locale };
 export const ui = {
   en: {
@@ -109,7 +109,7 @@ export const ui = {
     language: "Language",
     limit: "Educational simulation · not an SAP runtime",
     limits:
-      "Supported: DATA (i, string, local structures, STANDARD TABLE OF … WITH EMPTY KEY), TYPES structures, assignments, integer addition, WRITE including WRITE: / value., IF/ELSEIF/ELSE, DO n TIMES, WHILE comparisons, APPEND, LOOP AT … INTO a work area or DATA(name), EXIT and CONTINUE inside loops. FIELD-SYMBOLS supports matching explicit i/string/structure types, direct ASSIGN object TO <symbol>, field access and UNASSIGN. Declarations must be outside control blocks. Limits: 16,000 characters, 2,000 tokens, 150 statements, 100 iterations per loop, 1,000 steps/trace entries, 100 rows per table, nesting depth 12; signed 32-bit integers. No database, classes, methods, sorted/hashed tables, dynamic ASSIGN, IS ASSIGNED, LOOP ASSIGNING, generic field symbols, AND/OR/NOT, or full SAP runtime. Each WRITE adds one output line; SAP list formatting and implicit conversions are not reproduced.",
+      "Supported: DATA (i, string, local structures, STANDARD TABLE OF … WITH EMPTY KEY), TYPES structures, assignments, integer addition, WRITE including WRITE: / value., IF/ELSEIF/ELSE, DO n TIMES, WHILE comparisons, APPEND, READ TABLE … INTO … WITH KEY/INDEX, INSERT value INTO table INDEX n, MODIFY table FROM value INDEX n, DELETE table INDEX n, and SORT table BY component [ASCENDING|DESCENDING] with one or more components. Elementary SORT supports table_line. Mutation indexes must be positive; changing an actively looped table is unsupported. READ sets read-only sy-subrc/sy-tabix; indexed mutations set sy-subrc; SORT preserves both. Equal sort values retain their order in this deterministic model, without a SAP STABLE guarantee or locale-aware AS TEXT. LOOP AT … INTO a work area or DATA(name), EXIT and CONTINUE inside loops are supported. FIELD-SYMBOLS supports matching explicit i/string/structure types, direct ASSIGN object TO <symbol>, field access and UNASSIGN. Declarations must be outside control blocks. Limits: 16,000 characters, 2,000 tokens, 150 statements, 100 iterations per loop, 1,000 steps/trace entries, 100 rows per table, nesting depth 12; signed 32-bit integers. No database, classes, methods, sorted/hashed tables, dynamic ASSIGN, IS ASSIGNED, LOOP ASSIGNING, generic field symbols, AND/OR/NOT, or full SAP runtime. Each WRITE adds one output line; SAP list formatting and implicit conversions are not reproduced.",
     saved: "Saved on this device · no account",
     storage:
       "Browser storage is unavailable. Progress lasts for this visit only.",
@@ -171,7 +171,7 @@ export const ui = {
     fast: "Fast",
     inProgress: "In progress",
     fundamentalsComplete: "ABAP Fundamentals complete",
-    fundamentalsCompleteSub: "You can now combine decisions, loops, structures, and internal tables in a small business program. Advanced paths remain previews.",
+    fundamentalsCompleteSub: "You can now combine decisions, loops, structures, and internal tables in a small business program. Explore the available introductory lessons across all nine paths.",
     skillsLearned: "Skills you have practiced",
     failedInput: "A test input that needs attention",
     actualOutput: "Your program produced",
@@ -291,7 +291,7 @@ export const ui = {
     language: "اللغة",
     limit: "محاكاة تعليمية · ليست بيئة تشغيل SAP",
     limits:
-      "يدعم المحاكي DATA للنوعين i وstring وبُنى البيانات المحلية والجداول STANDARD TABLE OF … WITH EMPTY KEY، وتعريف البُنى باستخدام TYPES، والإسناد والجمع وWRITE بما فيها WRITE: / value. والشروط IF/ELSEIF/ELSE وحلقات DO n TIMES وWHILE وAPPEND وLOOP AT … INTO منطقة عمل أو DATA(name)، وEXIT وCONTINUE داخل الحلقات. تدعم FIELD-SYMBOLS الأنواع الصريحة المتطابقة i وstring والبُنى، والربط المباشر ASSIGN object TO <symbol> والوصول إلى الحقول وUNASSIGN. ضع التعريفات خارج مجموعات التحكم. الحدود: 16000 محرف و2000 وحدة لغوية و150 تعليمة و100 دورة لكل حلقة و1000 خطوة تنفيذ وعنصر تتبع و100 صف لكل جدول وعمق تداخل 12، وأعداد صحيحة ضمن نطاق 32 بت بإشارة. لا يدعم قواعد البيانات أو الأصناف أو الجداول المرتبة والمجزأة أو ASSIGN الديناميكية أو IS ASSIGNED أو LOOP ASSIGNING أو رموز الحقول ذات الأنواع العامة أو AND/OR/NOT، ولا يحل محل بيئة SAP. تضيف كل WRITE سطرًا إلى المخرجات؛ لا يحاكي النموذج جميع قواعد تنسيق القوائم أو التحويل التلقائي للأنواع.",
+      "يدعم المحاكي DATA للنوعين i وstring وبُنى البيانات المحلية والجداول STANDARD TABLE OF … WITH EMPTY KEY، وتعريف البُنى باستخدام TYPES، والإسناد والجمع وWRITE بما فيها WRITE: / value. والشروط IF/ELSEIF/ELSE وحلقات DO n TIMES وWHILE وAPPEND وREAD TABLE … INTO … WITH KEY/INDEX وINSERT value INTO table INDEX n وMODIFY table FROM value INDEX n وDELETE table INDEX n وSORT table BY component [ASCENDING|DESCENDING] بمكوّن واحد أو أكثر. يدعم الترتيب البسيط table_line. يجب أن تكون فهارس التعديل موجبة؛ ولا يُدعم تغيير جدول أثناء المرور النشط عليه. تضبط READ قيمتي sy-subrc وsy-tabix للقراءة فقط، وتضبط تعديلات الفهرس sy-subrc، وتحافظ SORT على القيمتين. يحتفظ النموذج الحتمي بترتيب القيم المتساوية دون ضمان SAP STABLE أو ترتيب AS TEXT المحلي. تُدعم LOOP AT … INTO منطقة عمل أو DATA(name)، وEXIT وCONTINUE داخل الحلقات. تدعم FIELD-SYMBOLS الأنواع الصريحة المتطابقة i وstring والبُنى، والربط المباشر ASSIGN object TO <symbol> والوصول إلى الحقول وUNASSIGN. ضع التعريفات خارج مجموعات التحكم. الحدود: 16000 محرف و2000 وحدة لغوية و150 تعليمة و100 دورة لكل حلقة و1000 خطوة تنفيذ وعنصر تتبع و100 صف لكل جدول وعمق تداخل 12، وأعداد صحيحة ضمن نطاق 32 بت بإشارة. لا يدعم قواعد البيانات أو الأصناف أو الجداول المرتبة والمجزأة أو ASSIGN الديناميكية أو IS ASSIGNED أو LOOP ASSIGNING أو رموز الحقول ذات الأنواع العامة أو AND/OR/NOT، ولا يحل محل بيئة SAP. تضيف كل WRITE سطرًا إلى المخرجات؛ لا يحاكي النموذج جميع قواعد تنسيق القوائم أو التحويل التلقائي للأنواع.",
     saved: "محفوظ على هذا الجهاز · دون حساب",
     storage: "تخزين المتصفح غير متاح. يبقى تقدمك خلال هذه الزيارة فقط.",
     editor: "محرر أكواد ABAP",
@@ -344,7 +344,7 @@ export const ui = {
     fast: "سريعة",
     inProgress: "قيد التعلّم",
     fundamentalsComplete: "اكتمل مسار أساسيات ABAP",
-    fundamentalsCompleteSub: "أصبحت قادرًا على الجمع بين الشروط والحلقات وبُنى البيانات والجداول الداخلية في برنامج أعمال صغير. تظل المسارات المتقدمة معاينات مستقبلية.",
+    fundamentalsCompleteSub: "أصبحت قادرًا على الجمع بين الشروط والحلقات وبُنى البيانات والجداول الداخلية في برنامج أعمال صغير. استكشف الدروس التمهيدية المتاحة في المسارات التسعة.",
     skillsLearned: "المهارات التي طبّقتها",
     failedInput: "قيمة إدخال لم تحقق المطلوب",
     actualOutput: "مخرجات برنامجك",
@@ -376,6 +376,15 @@ export function explain(e: ExecutionEvent, lang: Locale) {
     end: "The conditional block has ended.",
     table: `Create ${name} as an empty internal table in program memory. Its rows must match the declared line type.`,
     append: `Add a copy of the value to ${name}. Later changes to the source variable do not change the appended row.`,
+    readFound: `Found row ${e.lookup?.index} in ${e.lookup?.table} and copied it into ${name}. sy-subrc is 0; sy-tabix is the one-based row position. The table stays unchanged.`,
+    readMissing: `No matching row in ${e.lookup?.table}. sy-subrc is 4. ${name} keeps its previous value; check sy-subrc before using it. This simulator displays sy-tabix as 0 on a miss; SAP does not guarantee that value for a failed linear search.`,
+    insertFound: `Insert a copy at position ${e.mutation?.index} in ${name}; following rows shift right. sy-subrc is 0. The source work area and sy-tabix are unchanged.`,
+    insertMissing: `Position ${e.mutation?.index} exceeds the row count plus one in ${name}. No row is inserted; sy-subrc is 4.`,
+    modifyFound: `Replace row ${e.mutation?.index} in ${name} with a copy of the source. The row count is unchanged; sy-subrc is 0.`,
+    modifyMissing: `No row exists at position ${e.mutation?.index} in ${name}. The table is unchanged; sy-subrc is 4.`,
+    deleteFound: `Delete row ${e.mutation?.index} from ${name}. Later rows shift left; sy-subrc is 0.`,
+    deleteMissing: `No row exists at position ${e.mutation?.index} in ${name}. Nothing is deleted; sy-subrc is 4.`,
+    sort: `Reorder ${name} by ${e.mutation?.fields?.map(item => `${item.field} ${item.direction}`).join(", ")}. The rows and row count are preserved. SORT does not set sy-subrc or sy-tabix.`,
     loop: e.loop?.kind === "loop" ? `Read row ${(e.loop.index ?? 0) + 1} from ${e.loop.table} and copy it into ${name || "the receiving variable"}. The table itself is unchanged.` : `Loop iteration ${e.loop?.iteration ?? 0}. ${e.condition ? `The condition ${e.condition.expression} is ${e.condition.result ? "TRUE: enter the body" : "FALSE: leave the loop"}.` : "The loop body runs again while counted iterations remain."}`,
     loopEnd: "The loop test is false. There are no more iterations or rows to process; execution continues after the loop.",
     loopIteration: "This iteration has finished. Unless EXIT ended the loop, execution returns to the next condition test or row.",
@@ -398,6 +407,15 @@ export function explain(e: ExecutionEvent, lang: Locale) {
     end: "انتهى القرار الشرطي، ويتابع البرنامج بعد ENDIF.",
     table: `أُنشئ ${name} بوصفه جدولًا داخليًا فارغًا في ذاكرة البرنامج. يجب أن تتوافق الصفوف المضافة مع نوع السطر المحدد.`,
     append: `أُضيفت نسخة من القيمة إلى الجدول ${name}. أي تغيير لاحق في المتغير الأصلي لا يغيّر الصف الذي أُضيف إلى الجدول.`,
+    readFound: `وُجد الصف ${e.lookup?.index} في ${e.lookup?.table} ونُسخ إلى ${name}. أصبحت sy-subrc تساوي 0 وsy-tabix موضع الصف ابتداءً من 1. لا يتغير الجدول.`,
+    readMissing: `لم يوجد صف مطابق في ${e.lookup?.table}. أصبحت sy-subrc تساوي 4. يحتفظ ${name} بقيمته السابقة؛ افحص sy-subrc قبل استخدامه. يعرض المحاكي sy-tabix بصفر عند الإخفاق، لكن SAP لا يضمن هذه القيمة عند فشل البحث الخطي.`,
+    insertFound: `أُدرجت نسخة في الموضع ${e.mutation?.index} من ${name} وانتقلت الصفوف اللاحقة يميناً. أصبحت sy-subrc تساوي 0. لا تتغير منطقة العمل الأصلية أو sy-tabix.`,
+    insertMissing: `يتجاوز الموضع ${e.mutation?.index} عدد صفوف ${name} زائد واحد. لم يُدرج صف وأصبحت sy-subrc تساوي 4.`,
+    modifyFound: `استُبدل الصف ${e.mutation?.index} في ${name} بنسخة من المصدر. لم يتغير عدد الصفوف وأصبحت sy-subrc تساوي 0.`,
+    modifyMissing: `لا يوجد صف في الموضع ${e.mutation?.index} من ${name}. لم يتغير الجدول وأصبحت sy-subrc تساوي 4.`,
+    deleteFound: `حُذف الصف ${e.mutation?.index} من ${name} وانتقلت الصفوف اللاحقة يساراً. أصبحت sy-subrc تساوي 0.`,
+    deleteMissing: `لا يوجد صف في الموضع ${e.mutation?.index} من ${name}. لم يُحذف شيء وأصبحت sy-subrc تساوي 4.`,
+    sort: `أُعيد ترتيب ${name} حسب ${e.mutation?.fields?.map(item => `${item.field} ${item.direction === "descending" ? "تنازلياً" : "تصاعدياً"}`).join("، ")}. بقيت الصفوف وعددها كما هي. لا تضبط SORT قيمتي sy-subrc أو sy-tabix.`,
     loop: e.loop?.kind === "loop" ? `قرأ البرنامج الصف ${(e.loop.index ?? 0) + 1} من ${e.loop.table} ونسخ قيمته إلى ${name || "المتغير المستقبِل"}. لا تتغير بيانات الجدول نفسه.` : `دورة التكرار ${e.loop?.iteration ?? 0}. ${e.condition ? `نتيجة الشرط ${e.condition.expression} ${e.condition.result ? "صحيحة؛ يبدأ البرنامج تنفيذ تعليمات الحلقة." : "خاطئة؛ تنتهي الحلقة ويتابع البرنامج بعدها."}` : "يكرر البرنامج تعليمات الحلقة ما دامت هناك دورات متبقية من العدد المحدد."}`,
     loopEnd: "لم يعد شرط استمرار الحلقة متحققًا. انتهت الدورات أو الصفوف المطلوبة، ويتابع البرنامج بعد نهاية الحلقة.",
     loopIteration: "انتهت دورة التكرار الحالية. إذا لم تُنهِ EXIT الحلقة، ينتقل البرنامج إلى فحص الشرط مجددًا أو قراءة الصف التالي.",
@@ -426,7 +444,7 @@ export const errors: Record<Locale, Record<ErrorCode, string>> = {
     block:
       "This conditional block is incomplete or misplaced. Pair IF with ENDIF. Put ELSEIF branches before the single optional ELSE.",
     range:
-      "The integer is outside the supported signed 32-bit range (−2147483648 to 2147483647).",
+      "Use a signed 32-bit integer (−2147483648 to 2147483647). INSERT, MODIFY and DELETE indexes must be greater than zero.",
     string: "This text literal is missing its closing single quote or crosses a physical line. Keep the quoted text on one line.",
     unassigned: "This field symbol is unassigned. Use ASSIGN with a compatible existing data object before reading or changing it.",
     limit:
@@ -449,7 +467,7 @@ export const errors: Record<Locale, Record<ErrorCode, string>> = {
     type: "نوع القيمة لا يتوافق مع نوع البيانات المطلوب. استخدم عددًا صحيحًا مع i ونصًا مع string. عرّف نوع البنية قبل إنشاء متغير منها، وقارن قيمتين من النوع نفسه في هذا المحاكي.",
     block:
       "ترتيب القرار الشرطي غير صحيح أو لم يُغلق. أغلق كل IF باستخدام ENDIF، وضع فروع ELSEIF قبل ELSE. يمكن استخدام ELSE مرة واحدة على الأكثر.",
-    range: "العدد خارج نطاق 32 بت بإشارة المدعوم (−2147483648 إلى 2147483647).",
+    range: "استخدم عدداً صحيحاً ضمن نطاق 32 بت بإشارة (−2147483648 إلى 2147483647). يجب أن تكون فهارس INSERT وMODIFY وDELETE أكبر من صفر.",
     string: "القيمة النصية غير مغلقة بعلامة اقتباس مفردة، أو تمتد على أكثر من سطر. اكتب النص بين علامتَي اقتباس على السطر نفسه.",
     unassigned: "رمز الحقل غير مرتبط ببيانات. استخدم ASSIGN لربطه بكائن بيانات موجود ومتوافق في النوع قبل القراءة أو التعديل من خلاله.",
     limit: "تجاوز المثال أحد حدود المحاكي. يجب أن تنتهي الحلقة خلال 100 دورة والتتبع خلال 1000 خطوة. تحقق من تحديث العداد ومن أن الشرط سيصبح خاطئًا.",

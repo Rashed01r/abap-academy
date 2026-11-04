@@ -10,7 +10,7 @@
     "predev": "node scripts/prepare-monaco.mjs",
     "prebuild": "node scripts/prepare-monaco.mjs",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test tests/engine.test.ts tests/fundamentals.test.ts tests/exploration.test.ts tests/anatomy.test.ts tests/table-keys.test.ts tests/field-symbols.test.ts",
+    "test": "tsx --test tests/engine.test.ts tests/fundamentals.test.ts tests/exploration.test.ts tests/anatomy.test.ts tests/table-keys.test.ts tests/field-symbols.test.ts tests/guided.test.ts tests/guided-data.test.ts tests/read-table.test.ts tests/table-operations.test.ts",
     "validate:curriculum": "tsx scripts/validate-curriculum.ts",
     "test:e2e": "playwright test"
   },

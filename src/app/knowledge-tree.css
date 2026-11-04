@@ -17,6 +17,9 @@
 .tree-paths,.tree-topics {display:flex;flex-direction:column;gap:14px;width:240px;flex-shrink:0}
 .tree-node {position:relative;z-index:1;display:flex;flex-direction:column;justify-content:center;text-align:start;gap:5px;width:240px;min-height:76px;padding:14px 18px;border:1px solid var(--line);border-radius:12px;background:var(--surface);box-shadow:var(--shadow);font-size:14px;white-space:normal}
 .tree-node small {color:var(--muted);font-size:12px}
+.tree-node .tree-learning-summary {line-height:1.55;font-weight:400}
+.tree-path-result {display:flex;flex-direction:column;align-items:flex-start;text-align:start;gap:5px}
+.tree-path-result small {color:var(--muted);font-weight:400;line-height:1.5}
 .tree-node[aria-expanded=true],.tree-node[aria-pressed=true] {border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 2px var(--accent)}
 .tree-node.tree-root {width:170px;min-height:100px;background:var(--code);color:var(--code-ink);font-size:24px;font-weight:700}
 .tree-node.tree-root small {color:var(--code-ink);font-weight:400}

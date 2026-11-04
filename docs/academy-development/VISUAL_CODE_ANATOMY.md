@@ -1,5 +1,11 @@
 # Visual Code Anatomy
 
+## 2026-11-04 curriculum extension
+
+Reference-only documents now reuse the same grouped-source selection, bilingual explanation, technical detail, matching activity and reference links for guided OOP/report/modern/CDS/RAP lessons. `referenceOnly` prevents all interpreter calls, runtime snapshots and Watch Execution controls for unsupported source. Guided groups explicitly define reviewed inclusive line ranges; validation requires full nonblank source coverage, ordered nonoverlapping groups and bilingual descriptions. The guided cloud/project authoring helper derives ranges from its authored code sections. This helper's fingerprint follows the authored source; executable Data examples retain fixed reviewed fingerprints so edits fail until their groups are reviewed.
+
+The three new executable Data lessons add real lookup and before/after mutation/sort visual state. LookupSummary identifies matching/no-match state, unchanged targets on a miss and modeled status limits. TableChangeSummary identifies inserted/modified/deleted/moved rows from independent execution snapshots. These displays work in anatomy and the execution workspace and disappear when edited source invalidates its trace. The latest registry contains 24 labs, 149 anatomy groups and 98 matching descriptions; project foundation coverage does not mean its full SAP capstone is complete. Final verification is recorded in IMPLEMENTATION_PROGRESS.md.
+
 The authoring contract lives in [ARCHITECTURE.md](ARCHITECTURE.md). The shared UI is `src/components/visual-code-anatomy.tsx`; reviewed source groups are in `src/lib/anatomy-content.ts`; types and source validation are in `src/lib/code-anatomy.ts`.
 
 Start with complete code and meaningful operations. Provide stable group IDs, explicit source line ranges, English/Arabic titles and short explanations, appropriate state or type-blueprint views, optional syntax/glossary references, and meaningful matching descriptions. Cover every nonblank line without overlap. Review the source, semantics, ranges and prose together before setting a fixed source fingerprint. Never regenerate fingerprints to bypass source-drift failures.

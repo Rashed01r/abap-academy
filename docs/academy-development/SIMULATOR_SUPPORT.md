@@ -1,5 +1,19 @@
 # Simulator support
 
+## 2026-11-04: typed lookup, indexed changes and sorting
+
+The executable subset now includes `READ TABLE table INTO target WITH KEY component = expression ...` and `READ TABLE table INTO target INDEX expression` for typed standard tables. Key comparisons use all supplied components and select the first match; elementary rows use `table_line`. `INTO` copies the complete row. A miss returns `sy-subrc = 4` and leaves the target unchanged; success returns 0. Successful `sy-tabix` is the one-based position. The model resets `sy-tabix` to 0 on a miss; SAP leaves it undefined for a failed linear search, so this value is explicitly identified as a model convention. Check `sy-subrc`, never a retained work-area name, for success. Current SAP keyword documentation returns 4 for READ indexes outside the table, including nonpositive values; older documentation differs. Source checks reject unknown fields, wrong operand types, duplicate predicates, inline INTO, ASSIGNING, secondary keys and BINARY SEARCH.
+
+`INSERT value INTO table INDEX i`, `MODIFY table FROM value INDEX i`, and `DELETE table INDEX i` operate on standard tables in program memory. INSERT accepts 1 through count+1; MODIFY/DELETE require an existing row. A positive index above the permitted range returns 4 without changing the table; a nonpositive mutation index is a source-local range error. Successful changes return 0. Values are copied, following indexes shift on insertion/deletion, and direct work-area edits do not update a saved row. These operations update the modeled `sy-subrc`; `SORT` preserves the current status fields. Status emulation remains limited to documented operations, rather than every ABAP statement.
+
+`SORT table BY field [ASCENDING|DESCENDING] ...` compares complete typed rows, with numeric comparison for i and deterministic character comparison for string. Each field may specify its direction; omitted directions are ascending. Elementary `table_line`, multiple fields, duplicates and empty tables are supported. Equal-key order is deterministic in JavaScript but is not a promise of SAP STABLE behavior. AS TEXT, STABLE, locale collation and changing/sorting the same table during an active LOOP are excluded. Key-based mutations, SQL mutations, WHERE in LOOP, expressions/exceptions and sorted/hashed execution remain unsupported.
+
+Trace `lookup` metadata records requested keys/index, found state and destination, with a row selection only for a successful read. `mutation` metadata records independent before/after row copies, applied state, one-based index and sort fields. Existing zero-based `tableSelection` drives current-row highlighting for successful INSERT/MODIFY. Shared LookupSummary/TableChangeSummary render those real snapshots in anatomy and the workspace; editing invalidates them. Graders for `data-read-lookup`, `data-mutation-workflow` and `data-sort-report` execute changed IDs, names, input values, salaries and thresholds and reject canned output, hardcoded inputs, omitted/wrong operations, data loss and incorrect boundaries.
+
+Advanced guided lessons intentionally bypass this interpreter. DictionaryDesigner checks a local domain policy and identity design; SqlFoundationLab derives projection/filter results from fixed employees/departments; ObjectExplorer models independent instance state. Reference OOP/report/modern/CDS/RAP code is displayed and explained without claiming compilation, SAP activation, SQL parsing, deployment or network execution. See the latest IMPLEMENTATION_PROGRESS.md section for quality gates.
+
+## Earlier support descriptions (historical; superseded above)
+
 This is a deterministic browser teaching engine, not an SAP backend or a full ABAP interpreter. Changes in this checkpoint extend beginner loops and standard internal tables. Final verification evidence belongs in IMPLEMENTATION_PROGRESS.md.
 
 | Capability | Intended supported scope |

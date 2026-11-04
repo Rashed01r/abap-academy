@@ -1,5 +1,13 @@
 # English and Arabic authoring
 
+## 2026-11-04 curriculum review
+
+New content distinguishes نتيجة البحث and الصف المطابق from بيانات منطقة العمل القديمة: a retained name after a failed READ is not success. Use فهرس/موضع الصف for the one-based position, مفتاح البحث for compared row fields, إدراج/تعديل/حذف for internal-table changes, and ترتيب تصاعدي/تنازلي for row ordering. Explain that filtering processing does not delete stored rows. The before/after panels read قبل then بعد in RTL layout; identifiers and values remain LTR.
+
+Guided DDIC, SQL, OOP, report, modern syntax, Cloud and project lessons contain equivalent English/Arabic explanations, artifact purposes, progressive hints, decisions and feedback. Distinguish a local model from SAP activation/execution, a class from an object, a service definition from a binding, and a completed design foundation from the unfinished capstone. Do not translate object names or imply that reference examples share a deployed SAP data model. The glossary's existing Domain/Data element/Object/Method entries remain available in the unified header.
+
+Scoped visual review inspected Arabic dark desktop/mobile lesson and model panels, plus English light desktop. Reference/source code stays LTR, tables scroll inside their panels and document geometry checks pass. Final viewport artifacts are in ignored build/curriculum-review. This is semantic and rendered-layout review; no SAP compilation or complete accessibility certification is claimed. Exact unit/browser evidence is in IMPLEMENTATION_PROGRESS.md.
+
 Preserve the improved existing Arabic. New lessons need equivalent educational substance in both languages, not literal sentence mapping. Use natural Modern Standard Arabic, direct explanations and business examples. Keep ABAP identifiers, keywords and code unchanged. Technical tokens need LTR isolation inside RTL prose; the editor, source statements and expressions remain LTR.
 
 | English | Preferred Arabic |

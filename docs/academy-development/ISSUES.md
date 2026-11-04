@@ -1,5 +1,23 @@
 # Issues and scope boundaries
 
+## Current scope and limits — 2026-11-04
+
+All nine paths now have introductory playable content; Fundamentals remains the only complete path. Data has 7/11 completed missions after adding explicit performance tracking. There are 101 planned topics/projects and one unfinished Employee Management capstone with a tested design foundation. The full academy is not complete.
+
+No known application blocker remains after the recorded verification. Full production browser regression: 160/162 passed in 6.4 minutes. The two failures were the desktop/mobile obsolete preview-ID case; after replacing READ TABLE with the still-planned conditional-loop ID and adding READ to valid-link checks, both passed on rerun (2/2 in 3.1 seconds). Thus all 162 cases passed across the full run and targeted correction on the same application build; no application source changed after the full run.
+
+Browser SQL is a fixed-data projection/filter model, not an arbitrary SQL evaluator. DDIC checks create no repository object or database constraint. Object changes are a conceptual JavaScript model, not class execution. RAP/service reference code activates or publishes nothing. No SAP runtime, compiler, database, account system or deployment was added.
+
+Table runtime excludes sorted/hashed execution, key-based mutations, TRANSPORTING, READ ASSIGNING/BINARY SEARCH, LOOP WHERE/ASSIGNING, table expressions, exceptions and same-table indexed mutation/sorting during LOOP. Status fields are modeled only for documented supported operations. A missed linear READ displays model sy-tabix0 while SAP leaves it undefined; equal SORT key order is deterministic without an SAP STABLE promise. See SIMULATOR_SUPPORT.md. Registry metadata remains bundled; only heavy visual/editor components and the selected lesson mount lazily.
+
+**Exact next mission: data-conditional-loop.** Preserve its stable ID and recommended prerequisite data-sorting-filtering. Teach conditional row processing in depth, decide and document the supported LOOP WHERE subset before claiming it, distinguish selection from deletion, and grade changed rows/thresholds and empty results. Then continue data-table-expressions, data-table-performance and data-employee-manager, followed by Dictionary domains and remaining paths in sequence. Introductory availability does not finish an advanced path.
+
+The project foundation is projects-employee-management, titled Employee management: guided project design. Its browser lesson/decisions are tested; its overall capstone stays IN_PROGRESS. Missing SAP work includes behavior handlers/validations, DCL/authorization implementation, locking/concurrency, a consumer UI, activation/deployment and actual end-to-end acceptance evidence. Do not promote the complete project based on this guided design activity. On expansion, preserve this foundation achievement and XP; introduce independent stage/final assessment IDs and explicit aggregate project status. Never interpret its existing foundation completion as evidence that future capstone stages passed, including during legacy progress normalization.
+
+Relevant extension points: src/lib/engine.ts, data-missions.ts, anatomy-content.ts and new mission modules; guided-types.ts/guided-curriculum.ts and the three guided definition files for advanced lessons; ConnectedLesson and the shared visualizers. No half-written source file or known application blocker remains. Dictionary/SQL introductory coveredTopics intentionally leave dedicated planned topic previews visible. Independent lesson examples are not a shared SAP object activation sequence.
+
+## Earlier checkpoints (historical; superseded by the section above)
+
 Updated 2026-11-03.
 
 1. The complete nine-path academy remains unfinished. Milestone 1 is VERIFIED. Path 2 has four VERIFIED missions; 99 future missions/projects remain PLANNED, including the newly tracked Inventory Management project. OOP and Cloud/RAP currently contain previews only. Free navigation must not imply those lessons are implemented.

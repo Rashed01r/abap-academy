@@ -6,6 +6,7 @@ import { type Locale } from "@/lib/engine";
 import { type Progress } from "@/lib/progress";
 import { ui } from "@/lib/i18n";
 import { treeCopy } from "@/lib/tree-copy";
+import { pathSummaries } from "@/lib/path-summaries";
 import { ConnectedLesson } from "./connected-lesson";
 import { ResizableLessonPanel } from "./resizable-lesson-panel";
 
@@ -24,7 +25,7 @@ export function KnowledgeTree({selected, open, lang, theme, progress, setProgres
   const toolbar = useRef<HTMLDivElement>(null);
   const previousView = useRef<{zoom: number; left: number; top: number} | undefined>(undefined);
   const drag = useRef<{x: number; y: number; left: number; top: number} | undefined>(undefined);
-  const activity = [{id: "orientation", pathId: "fundamentals", title: {en: ui.en.orientation, ar: ui.ar.orientation}, subtitle: {en: ui.en.orientationGoal, ar: ui.ar.orientationGoal}, objectives: [], example: "WRITE DATA TYPE statement syntax period", coveredTopics: []}, ...missions];
+  const activity = [{id: "orientation", pathId: "fundamentals", title: {en: ui.en.orientation, ar: ui.ar.orientation}, subtitle: {en: treeCopy.en.orientationObjective, ar: treeCopy.ar.orientationObjective}, objectives: [], example: "WRITE DATA TYPE statement syntax period", coveredTopics: []}, ...missions];
   const selectedPath = activity.find(m => m.id === selected)?.pathId;
   // URL selection wins on direct links and browser history changes.
   const activePath = selectedPath || pathId;
@@ -134,7 +135,7 @@ export function KnowledgeTree({selected, open, lang, theme, progress, setProgres
     {ready && !!search.trim() && document.getElementById("academy-header-search") && createPortal(<div className="tree-search-results" aria-label={c.search}>
       {results.map(m => <button className="secondary" key={m.id} onClick={() => {choose(m.id);setSearch("");}}>{m.title[lang]}</button>)}
       {futureResults.map(p => <button className="secondary" key={`${p.pathId}:${p.en}`} onClick={() => {open("home");setPathId(p.pathId);setPreview(p);setSearch("");}}>{p[lang]} · {t.comingSoon}</button>)}
-      {paths.filter(p => `${p.title.en} ${p.title.ar} ${p.concepts.en} ${p.concepts.ar}`.toLowerCase().includes(search.trim().toLowerCase())).map(p => <button className="secondary" key={p.id} onClick={() => {open("home");setPathId(p.id);setPreview(undefined);setSearch("");}}>{p.title[lang]} · {activity.some(m => m.pathId === p.id) ? t.available : t.comingSoon}</button>)}
+      {paths.filter(p => `${p.title.en} ${p.title.ar} ${p.concepts.en} ${p.concepts.ar}`.toLowerCase().includes(search.trim().toLowerCase())).map(p => <button className="secondary tree-path-result" key={p.id} onClick={() => {open("home");setPathId(p.id);setPreview(undefined);setSearch("");}}><strong>{p.title[lang]}</strong><small>{pathSummaries[p.id][lang]}</small></button>)}
       {!results.length && !futureResults.length && !paths.some(p => `${p.title.en} ${p.title.ar} ${p.concepts.en} ${p.concepts.ar}`.toLowerCase().includes(search.trim().toLowerCase())) && <p role="status">{c.noResults}</p>}
     </div>, document.getElementById("academy-header-search")!)}
     <nav className="tree-position" aria-label={c.position}>SAP ABAP {path && <> → {path.title[lang]}</>} {selected && <> → {activity.find(m => m.id === selected)?.title[lang]}</>}</nav>
@@ -154,8 +155,8 @@ export function KnowledgeTree({selected, open, lang, theme, progress, setProgres
         {!focus && <>
           <svg className="tree-connectors" aria-hidden="true">{lines.map(line => <path key={line.id} data-connector={line.id} d={line.d} className={line.selected ? "selected" : ""}/>)}</svg>
           <div className="tree-root-column"><button className="tree-node tree-root" data-tree-id="root" onClick={() => {open("home");setPathId(undefined);setPreview(undefined);}}>SAP ABAP<small>{c.progress}: {activity.length}</small></button></div>
-          <div className="tree-paths" role="group" aria-label={t.allPaths}>{paths.map((p, i) => <button className="tree-node" key={p.id} data-tree-id={p.id} aria-expanded={activePath === p.id} onClick={() => {open("home");setPreview(undefined);setPathId(activePath === p.id ? undefined : p.id);}}><small>{String(i+1).padStart(2,"0")} · {activity.filter(m => m.pathId === p.id).length || t.comingSoon}</small><strong>{p.title[lang]}</strong></button>)}</div>
-          {path && <div className="tree-topics" role="group" aria-label={path.title[lang]}>{activeTopics.map(m => <button className="tree-node" data-tree-id={m.id} data-topic-node key={m.id} aria-pressed={m.id === selected} disabled={!ready} onClick={() => choose(m.id)}><strong>{m.title[lang]}</strong><small>{(m.id === "orientation" ? progress.labs.includes(m.id) : progress.missions.includes(m.id)) ? t.completed : progress.started?.includes(m.id) ? t.inProgress : t.available}</small></button>)}
+          <div className="tree-paths" role="group" aria-label={t.allPaths}>{paths.map(p => <button className="tree-node" key={p.id} data-tree-id={p.id} aria-expanded={activePath === p.id} onClick={() => {open("home");setPreview(undefined);setPathId(activePath === p.id ? undefined : p.id);}}><strong>{p.title[lang]}</strong><small className="tree-learning-summary">{pathSummaries[p.id][lang]}</small></button>)}</div>
+          {path && <div className="tree-topics" role="group" aria-label={path.title[lang]}>{activeTopics.map(m => <button className="tree-node" data-tree-id={m.id} data-topic-node key={m.id} aria-pressed={m.id === selected} disabled={!ready} onClick={() => choose(m.id)}><strong>{m.title[lang]}</strong><small className="tree-learning-summary">{m.subtitle[lang]}</small>{(m.id === "orientation" ? progress.labs.includes(m.id) : progress.missions.includes(m.id)) ? <small>{t.completed}</small> : progress.started?.includes(m.id) ? <small>{t.inProgress}</small> : null}</button>)}
             {previews.map((p, i) => <button className="tree-node future-topic" data-tree-id={`future-${i}`} key={p.en} aria-pressed={preview?.en === p.en} onClick={() => {open("home");setPathId(path.id);setPreview(p);}}><strong>{p[lang]}</strong><small>{t.comingSoon}</small></button>)}
           </div>}
         </>}

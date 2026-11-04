@@ -92,7 +92,9 @@ for(const lang of ["en","ar"] as const) test(`${lang}: grouped matching works ac
     const source=id === "orientation" ? orientationExamples[lang] : missions.find(m=>m.id === id)!.example;
     await expect(page.locator(".anatomy-group")).toHaveCount(getAnatomy(id,source).groups.length);
     await matchAnatomy(page,id,lang);
-    await page.getByRole("button",{name:id === "orientation" ? t.finishOrientation : t.syntaxDone,exact:true}).click();
+    if (missions.find(m => m.id === id)?.guided) {
+      await expect.poll(() => page.evaluate(id => JSON.parse(localStorage.getItem("abap2-master-progress")!).labs.includes(id), id)).toBe(true);
+    } else await page.getByRole("button",{name:id === "orientation" ? t.finishOrientation : t.syntaxDone,exact:true}).click();
     await page.getByRole("button",{name:t.path,exact:true}).click();
   }
   await expect(page.locator(".header-xp")).toContainText("0");

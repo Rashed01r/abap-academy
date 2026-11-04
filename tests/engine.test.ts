@@ -267,7 +267,7 @@ test("curriculum prerequisites are ordered and Conditions teaches each assessed 
     assert.ok(!seen.has(mission.id), "mission IDs are unique");
     seen.add(mission.id);
     assert.ok(mission.objectives.length && mission.practice.en && mission.practice.ar);
-    simulate(mission.example);
+    if (!mission.guided) simulate(mission.example);
   }
   const conditions = missions.find(m => m.id === "conditions")!;
   const taught = new Set(conditions.tokens.map(t => t.id));

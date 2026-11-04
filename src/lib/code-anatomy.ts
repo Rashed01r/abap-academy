@@ -13,7 +13,7 @@ export type AnatomyGroup = {
   fields?: { name: string; explanation: Text; line: number }[];
   practice?: Text;
 };
-export type CodeAnatomy = { id: string; source: string; fingerprint: string; groups: AnatomyGroup[]; checks: string[] };
+export type CodeAnatomy = { id: string; source: string; fingerprint: string; groups: AnatomyGroup[]; checks: string[]; referenceOnly?: boolean };
 export type AnatomyGroupSpec = Omit<AnatomyGroup,"range"> & { lines: [number,number] };
 
 // A content-review guard, not a security hash. Source edits require reviewing ranges and prose.
