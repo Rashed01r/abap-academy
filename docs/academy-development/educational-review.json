@@ -1,0 +1,102 @@
+{
+  "reviewedOn": "2026-11-05",
+  "scope": "Source-level alignment review and new bilingual explanations. Not SAP compilation, learner research or independent linguistic certification.",
+  "lessons": {
+    "orientation": {
+      "fingerprint": "2c1ecdfe",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS"
+    },
+    "addition": {
+      "fingerprint": "b260f804",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS"
+    },
+    "structures": {
+      "fingerprint": "9fe259d2",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS"
+    },
+    "conditions": {
+      "fingerprint": "268a37d0",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS"
+    },
+    "do": {
+      "fingerprint": "7179dcc4",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS"
+    },
+    "while": {
+      "fingerprint": "3e81fcde",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS"
+    },
+    "tables": {
+      "fingerprint": "b4835eef",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS"
+    },
+    "loop-at": {
+      "fingerprint": "f1f55e5b",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS"
+    },
+    "loop-control": {
+      "fingerprint": "5bf8cf56",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS"
+    },
+    "employees": {
+      "fingerprint": "1c42af5d",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS"
+    },
+    "data-table-model": {
+      "fingerprint": "8a24e21d",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS"
+    },
+    "data-table-categories": {
+      "fingerprint": "ffeda1a0",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS"
+    },
+    "data-keys": {
+      "fingerprint": "04188562",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS"
+    },
+    "data-work-areas-field-symbols": {
+      "fingerprint": "3d190786",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS"
+    },
+    "data-read-table": {
+      "fingerprint": "35a388cb",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS"
+    },
+    "data-table-mutations": {
+      "fingerprint": "d53e7d9d",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS"
+    },
+    "data-sorting-filtering": {
+      "fingerprint": "960f62e7",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS"
+    },
+    "dictionary-introduction": {
+      "fingerprint": "cdd6941e",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS"
+    },
+    "database-fundamentals": {
+      "fingerprint": "1a16d556",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS"
+    },
+    "oop-introduction": {
+      "fingerprint": "3fda5285",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS"
+    },
+    "applications-reports": {
+      "fingerprint": "c26dd23d",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS"
+    },
+    "modern-syntax": {
+      "fingerprint": "b0544bab",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS"
+    },
+    "cloud-introduction": {
+      "fingerprint": "fac498a7",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS"
+    },
+    "projects-employee-management": {
+      "fingerprint": "f5dba082",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS"
+    }
+  }
+}

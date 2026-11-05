@@ -27,12 +27,13 @@ export function GuidedExplorer({definition: d, lang}: {definition: GuidedDefinit
       <article id={`${d.id}-artifact-detail`} className="artifact-detail" aria-live="polite">
         <h3>{artifact.title[lang]}</h3><p><TechnicalText>{artifact.description[lang]}</TechnicalText></p>
         <pre dir="ltr"><code>{artifact.example}</code></pre>
-        <ul className="artifact-relations">{related.map((r, index) => <li key={index}>
-          <button className="text-button" onClick={() => setSelected(r.from)}>{d.artifacts.find(a => a.id === r.from)!.title[lang]}</button>
-          <span aria-hidden="true"> {lang === "ar" ? "←" : "→"} </span><span>{r.label[lang]}</span>
-          <span aria-hidden="true"> {lang === "ar" ? "←" : "→"} </span>
-          <button className="text-button" onClick={() => setSelected(r.to)}>{d.artifacts.find(a => a.id === r.to)!.title[lang]}</button>
-        </li>)}</ul>
+        <div className="artifact-relationship-map" role="group" aria-label={lang === "en" ? "Relationships for the selected artifact" : "علاقات الكائن المحدد"}>
+          {related.map((r, index) => <div className="artifact-edge" key={index}>
+            <button className="secondary" aria-pressed={selected === r.from} onClick={() => setSelected(r.from)}>{d.artifacts.find(a => a.id === r.from)!.title[lang]}</button>
+            <div className="artifact-edge-label"><span>{r.label[lang]}</span><span className="artifact-arrow" aria-hidden="true">{lang === "ar" ? "←" : "→"}</span></div>
+            <button className="secondary" aria-pressed={selected === r.to} onClick={() => setSelected(r.to)}>{d.artifacts.find(a => a.id === r.to)!.title[lang]}</button>
+          </div>)}
+        </div>
       </article>
     </section>
   </div>;

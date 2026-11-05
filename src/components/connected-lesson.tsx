@@ -14,11 +14,17 @@ import { TableKeyExplorer } from "./table-key-explorer";
 import { TechnicalText } from "./technical-text";
 import { GuidedAssessment, GuidedExplorer } from "./guided-activity";
 import { VisualCodeAnatomy } from "./visual-code-anatomy";
+import { LessonConcepts, LessonAlternatives } from "./lesson-concepts";
+import { ControlFlowExplorer } from "./control-flow-explorer";
+import { recommendedLesson } from "@/lib/education-quality";
+import { ObjectStorageDiagram, ReportFlowDiagram } from "./guided-concept-diagrams";
+import { VisualClassroom } from "./visual-classroom";
+import type { ClassroomSelection } from "./trace-classroom";
 
 type Tab = "learn" | "visualize" | "challenge";
 const tabs: Tab[] = ["learn", "visualize", "challenge"];
-export function ConnectedLesson({id, lang, theme, progress, setProgress}: {
-  id: string; lang: Locale; theme: "light" | "dark"; progress: Progress; setProgress: Dispatch<SetStateAction<Progress>>;
+export function ConnectedLesson({id, lang, theme, progress, setProgress, onNavigate}: {
+  id: string; lang: Locale; theme: "light" | "dark"; progress: Progress; setProgress: Dispatch<SetStateAction<Progress>>; onNavigate?: (id: string) => void;
 }) {
   const [tab, setTab] = useTopicSession<Tab>(`${id}:tab`, "learn");
   const [visited, setVisited] = useTopicSession<Tab[]>(`${id}:visited`, ["learn"]);
@@ -29,6 +35,9 @@ export function ConnectedLesson({id, lang, theme, progress, setProgress}: {
   const [openedChallenges, setOpenedChallenges] = useTopicSession(`${id}:opened-challenges`, [0]);
   const complete = id === "orientation" ? progress.labs.includes(id) : progress.missions.includes(id);
   const code = m?.example || orientationExamples[lang];
+  const next = recommendedLesson(id, progress.missions, progress.labs);
+  const [classroomSelection,setClassroomSelection] = useTopicSession<ClassroomSelection>(`${id}:classroom-selection`,{});
+  function selectGroup(group:string){setClassroomSelection({group});}
   function select(next: Tab) { setTab(next); setVisited(v => Array.from(new Set([...v, next]))); }
   function attempt(challengeId: string, passed: boolean) {
     setProgress(p => ({...startMission(p, id),
@@ -58,22 +67,30 @@ export function ConnectedLesson({id, lang, theme, progress, setProgress}: {
     </div>
     {tabs.map(name => <section key={name} id={`${id}-${name}-panel`} role="tabpanel" aria-labelledby={`${id}-${name}-tab`} hidden={tab !== name} tabIndex={0}>
       {visited.includes(name) && (name === "learn" ? <>
-        {m && <p className="instruction"><TechnicalText>{m.brief[lang]}</TechnicalText></p>}
+        {tab === "learn" && <VisualClassroom id={id} lang={lang} theme={theme} selection={classroomSelection} onSelect={setClassroomSelection}/>}
+        <h2 className="classroom-code-heading">{lang === "en" ? m?.activity === "table-categories" || id === "data-work-areas-field-symbols" ? "Browser practice: the executable subset" : "Understand the code" : m?.activity === "table-categories" || id === "data-work-areas-field-symbols" ? "تدريب المتصفح: المجموعة التنفيذية المدعومة" : "افهم الأكواد"}</h2>
         {m?.guided ? <>
           <p className="pill guided-boundary"><TechnicalText>{m.guided.boundary[lang]}</TechnicalText></p>
           <p className="muted">{lang === "en" ? "Examples are independent lesson fixtures. Repeated names do not imply a shared SAP data model or an activation sequence." : "أمثلة الدروس مستقلة. لا يعني تكرار الأسماء وجود نموذج بيانات SAP مشترك أو تسلسل لتفعيل الكائنات."}</p>
-          <VisualCodeAnatomy doc={getAnatomy(id, code)} lang={lang} theme={theme} onExplore={() => {}} onMatched={() => setProgress(p => ({...p, labs: Array.from(new Set([...p.labs, id]))}))} references={m.references}/>
-        </> : <SyntaxLab id={id} tokens={m?.tokens || orientation} example={code} lang={lang} theme={theme} completed={progress.labs.includes(id)} onComplete={() => {
+          <div className="primary-code-anatomy"><VisualCodeAnatomy doc={getAnatomy(id, code)} lang={lang} theme={theme} selectedGroup={classroomSelection.group} onGroupSelect={selectGroup} onMatched={() => setProgress(p => ({...p, labs: Array.from(new Set([...p.labs, id]))}))} references={m.references}/></div>
+        </> : <SyntaxLab id={id} tokens={m?.tokens || orientation} example={code} lang={lang} theme={theme} selectedGroup={classroomSelection.group} onGroupSelect={selectGroup} completed={progress.labs.includes(id)} onComplete={() => {
           if (m) setProgress(p => ({...p, labs: Array.from(new Set([...p.labs, id]))}));
           select("visualize");
         }}/>}
-        {m && <details><summary>{c.deeper}</summary><p>{m.practice[lang]}</p>{m.references?.map(ref => <p key={ref}><a href={ref} target="_blank" rel="noreferrer">{ref}</a></p>)}</details>}
+        {tab === "learn" && <LessonAlternatives id={id} lang={lang} theme={theme}/>}
+        <LessonConcepts id={id} lang={lang} onConceptSelect={ref=>{const [kind,key]=ref.split(":");if(kind === "group") selectGroup(key);else if(kind === "artifact") setClassroomSelection({artifact:key});}}/>
+        {m && <details><summary>{c.deeper}</summary><p>{m.brief[lang]}</p><p>{m.practice[lang]}</p>{m.references?.map(ref => <p key={ref}><a href={ref} target="_blank" rel="noreferrer">{ref}</a></p>)}</details>}
       </> : name === "visualize" ? <>
         <p className="instruction"><TechnicalText>{m?.visual[lang] || c.orientationIntro}</TechnicalText></p>
         <p className="pill">{m?.guided ? m.guided.boundary[lang] : t.limit}</p>
+        {tab === "visualize" && (id === "data-table-categories" || id === "data-work-areas-field-symbols") && <VisualClassroom id={id} lang={lang} theme={theme} selection={classroomSelection} onSelect={setClassroomSelection}/>}
+        {tab === "visualize" && id === "oop-introduction" && <ObjectStorageDiagram lang={lang}/>}
+        {tab === "visualize" && id === "applications-reports" && <ReportFlowDiagram lang={lang}/>}
+        {tab === "visualize" && (id === "conditions" || id === "loop-control") && <ControlFlowExplorer id={id} lang={lang}/>}
+        {tab === "visualize" && <LessonAlternatives id={id} lang={lang} theme={theme}/>}
         {m?.activity === "table-categories" && <TableCategoryExplorer sessionKey={`${id}:visual-model`} lang={lang} assessment={false} onPass={() => {}}/>}
         {m?.activity === "table-keys" && <TableKeyExplorer sessionKey={`${id}:visual-model`} lang={lang} assessment={false} onPass={() => {}}/>}
-        {m?.guided ? <GuidedExplorer definition={m.guided} lang={lang}/> : <LearningWorkspace initialCode={code} lang={lang} theme={theme} storageKey={`abap2-workspace:${id}:visualize`}/>}
+        {m?.guided ? tab === "visualize" && <GuidedExplorer definition={m.guided} lang={lang}/> : <LearningWorkspace initialCode={code} lang={lang} theme={theme} storageKey={`abap2-workspace:${id}:visualize`}/>}
       </> : <>
         <p className="instruction"><TechnicalText>{m?.goal[lang] || c.orientationGoal}</TechnicalText></p>
         <p>{c.help} <button className="text-button" onClick={() => select("learn")}>{c.learn}</button> · <button className="text-button" onClick={() => select("visualize")}>{c.visualize}</button></p>
@@ -97,5 +114,6 @@ export function ConnectedLesson({id, lang, theme, progress, setProgress}: {
         <button className="primary" disabled={!quiz || (m ? !allChallengesPassed(progress, id) : !orientationPassed)} onClick={() => setProgress(p => m ? completeMission(p, id, true) : {...p, labs: Array.from(new Set([...p.labs, id]))})}>{complete ? t.completed : t.complete}</button>
       </>)}
     </section>)}
+    {complete && next && onNavigate && <aside className="lesson-recommendation"><p>{lang === "en" ? "Suggested next step: build on this topic. Every implemented lesson remains open." : "الخطوة التالية المقترحة: ابنِ على هذا الموضوع. تظل جميع الدروس المنفّذة متاحة."}</p><button className="secondary" onClick={() => onNavigate(next.id)}>{lang === "en" ? "Explore next: " : "استكشف التالي: "}{next.title[lang]}</button></aside>}
   </div>;
 }

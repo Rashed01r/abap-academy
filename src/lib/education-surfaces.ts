@@ -1,0 +1,29 @@
+/** Independently declared concepts introduced by visualizers and knowledge checks.
+ * When adding a control or question, update its requirements as part of authoring.
+ * These IDs must resolve to explicit teaching, not merely a substring in prose. */
+export const educationSurfaces: Record<string, {visualize: string[]; knowledge: string[]}> = Object.fromEntries(([
+  ["orientation", "statements readable-source simulation", "statements"],
+  ["addition", "integer-storage sum-output", "integer-storage"],
+  ["structures", "structure-type record-access", "structure-type record-access"],
+  ["conditions", "if-else elseif boundaries", "elseif"],
+  ["do", "loop-index fixed-repetition accumulator", "accumulator"],
+  ["while", "precondition termination", "precondition"],
+  ["tables", "standard-rows structured-copy", "structured-copy"],
+  ["loop-at", "row-copy aggregate-fields", "row-copy"],
+  ["loop-control", "continue exit", "continue exit"],
+  ["employees", "register eligible-total", "eligible-total"],
+  ["data-table-model", "containers copy-duplicates", "copy-duplicates"],
+  ["data-table-categories", "standard sorted hashed", "hashed"],
+  ["data-keys", "identity-position composite all-matches", "composite"],
+  ["data-work-areas-field-symbols", "work-area copy-alias binding", "copy-alias"],
+  ["data-read-table", "key-copy index read-status", "read-status"],
+  ["data-table-mutations", "append-insert modify delete-status memory-boundary", "modify"],
+  ["data-sorting-filtering", "sort-field sort-direction filter-retains identity-after-sort", "filter-retains"],
+  ["dictionary-introduction", "domain data-element structure-table domain-policy table-identity", "domain data-element"],
+  ["database-fundamentals", "sql-source-host persistence-copy projection where-empty ordered-result", "ordered-result"],
+  ["oop-introduction", "class object attribute method reference static-attribute", "static-attribute"],
+  ["applications-reports", "input-default validate event-output normal-end", "normal-end"],
+  ["modern-syntax", "inline-data value-context expression-absence templates-release", "value-context"],
+  ["cloud-introduction", "contract persistence cds behavior projection service binding-environment", "persistence cds behavior projection service binding-environment"],
+  ["projects-employee-management", "identity root-behavior projection-operations authorization acceptance", "acceptance"],
+] as const).map(([id, visualize, knowledge]) => [id, {visualize: visualize.split(" "), knowledge: knowledge.split(" ")}]));

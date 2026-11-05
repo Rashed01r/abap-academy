@@ -6,7 +6,7 @@ import {ui, type Locale} from "../src/lib/i18n";
 export async function matchAnatomy(page:Page,id:string,lang:Locale) {
   const source=id === "orientation" ? orientationExamples[lang] : missions.find(m=>m.id === id)!.example;
   const doc=getAnatomy(id,source),t=ui[lang];
-  const lab=page.locator(".visual-code-anatomy"),match=lab.locator(".anatomy-match");
+  const lab=page.locator(".syntax-lab > .visual-code-anatomy, .primary-code-anatomy > .visual-code-anatomy"),match=lab.locator(".anatomy-match");
   for(let index=0;index<doc.checks.length;index++) {
     await lab.locator(`.anatomy-group[data-group="${doc.checks[index]}"]`).click();
     await match.getByRole("button",{name:t.checkGroup,exact:true}).click();

@@ -9,6 +9,7 @@ import { treeCopy } from "@/lib/tree-copy";
 import { pathSummaries } from "@/lib/path-summaries";
 import { ConnectedLesson } from "./connected-lesson";
 import { ResizableLessonPanel } from "./resizable-lesson-panel";
+import { pathLevels } from "@/lib/education-quality";
 
 export function KnowledgeTree({selected, open, lang, theme, progress, setProgress, ready}: {
   selected?: string; open: (id: string) => void; lang: Locale; theme: "light" | "dark";
@@ -132,6 +133,13 @@ export function KnowledgeTree({selected, open, lang, theme, progress, setProgres
       {selected && !focus && <button className="secondary" onClick={() => canvas.current?.querySelector<HTMLElement>('[data-topic-node][aria-pressed=true]')?.scrollIntoView({block:"center", inline:"center", behavior:"instant"})}>{c.center}</button>}
       <button className="secondary" disabled={focus} onClick={() => {setZoom(1);if(canvas.current){canvas.current.style.minWidth="";canvas.current.style.minHeight="";}viewport.current?.scrollTo(0,0);}}>{c.reset}</button>
     </div>
+    <details className="tree-learning-guide"><summary>{lang === "en" ? "Recommended learning journey · explore freely" : "مسار التعلّم المقترح · استكشف بحرية"}</summary><div dir={lang === "ar" ? "rtl" : "ltr"}>
+      <button className="secondary" onClick={() => choose("orientation")}>{lang === "en" ? "Start with syntax basics" : "ابدأ بأساسيات الصياغة"}</button>
+      <p>{lang === "en" ? "Beginner: Fundamentals → Working with Data → Dictionary" : "مبتدئ: الأساسيات ← العمل مع البيانات ← القاموس"}</p>
+      <p>{lang === "en" ? "Intermediate: Database → Objects → SAP Applications" : "متوسط: قواعد البيانات ← الكائنات ← تطبيقات SAP"}</p>
+      <p>{lang === "en" ? "Advanced: Modern ABAP → Cloud and RAP → Projects" : "متقدم: ABAP الحديثة ← Cloud وRAP ← المشاريع"}</p>
+      <p>{lang === "en" ? "These recommendations build from program memory to persistent data, application behavior and complete architectures. Modern syntax can be explored earlier; project prerequisites vary. No completion is required to open any implemented lesson." : "تنتقل هذه التوصيات من ذاكرة البرنامج إلى البيانات الدائمة وسلوك التطبيقات والمعمارية المتكاملة. يمكنك استكشاف الصياغة الحديثة مبكراً، وتختلف متطلبات المشاريع. لا يشترط إكمال أي درس لفتح درس منفّذ."}</p>
+    </div></details>
     {ready && !!search.trim() && document.getElementById("academy-header-search") && createPortal(<div className="tree-search-results" aria-label={c.search}>
       {results.map(m => <button className="secondary" key={m.id} onClick={() => {choose(m.id);setSearch("");}}>{m.title[lang]}</button>)}
       {futureResults.map(p => <button className="secondary" key={`${p.pathId}:${p.en}`} onClick={() => {open("home");setPathId(p.pathId);setPreview(p);setSearch("");}}>{p[lang]} · {t.comingSoon}</button>)}
@@ -155,13 +163,13 @@ export function KnowledgeTree({selected, open, lang, theme, progress, setProgres
         {!focus && <>
           <svg className="tree-connectors" aria-hidden="true">{lines.map(line => <path key={line.id} data-connector={line.id} d={line.d} className={line.selected ? "selected" : ""}/>)}</svg>
           <div className="tree-root-column"><button className="tree-node tree-root" data-tree-id="root" onClick={() => {open("home");setPathId(undefined);setPreview(undefined);}}>SAP ABAP<small>{c.progress}: {activity.length}</small></button></div>
-          <div className="tree-paths" role="group" aria-label={t.allPaths}>{paths.map(p => <button className="tree-node" key={p.id} data-tree-id={p.id} aria-expanded={activePath === p.id} onClick={() => {open("home");setPreview(undefined);setPathId(activePath === p.id ? undefined : p.id);}}><strong>{p.title[lang]}</strong><small className="tree-learning-summary">{pathSummaries[p.id][lang]}</small></button>)}</div>
+          <div className="tree-paths" role="group" aria-label={t.allPaths}>{paths.map(p => <button className="tree-node" key={p.id} data-tree-id={p.id} aria-expanded={activePath === p.id} onClick={() => {open("home");setPreview(undefined);setPathId(activePath === p.id ? undefined : p.id);}}><strong>{p.title[lang]}</strong><small className="tree-learning-summary">{pathSummaries[p.id][lang]}</small><small className="tree-level">{pathLevels[p.id][lang]}</small></button>)}</div>
           {path && <div className="tree-topics" role="group" aria-label={path.title[lang]}>{activeTopics.map(m => <button className="tree-node" data-tree-id={m.id} data-topic-node key={m.id} aria-pressed={m.id === selected} disabled={!ready} onClick={() => choose(m.id)}><strong>{m.title[lang]}</strong><small className="tree-learning-summary">{m.subtitle[lang]}</small>{(m.id === "orientation" ? progress.labs.includes(m.id) : progress.missions.includes(m.id)) ? <small>{t.completed}</small> : progress.started?.includes(m.id) ? <small>{t.inProgress}</small> : null}</button>)}
             {previews.map((p, i) => <button className="tree-node future-topic" data-tree-id={`future-${i}`} key={p.en} aria-pressed={preview?.en === p.en} onClick={() => {open("home");setPathId(path.id);setPreview(p);}}><strong>{p[lang]}</strong><small>{t.comingSoon}</small></button>)}
           </div>}
         </>}
         {(selected || preview) && <ResizableLessonPanel title={activity.find(m=>m.id===selected)?.title[lang] || preview?.[lang] || c.tree} selection={selected || preview?.en || ""} lang={lang} focused={focus} onFocus={toggleFocus} viewport={viewport} ready={ready} zoom={zoom} onResizeStart={reserveGraphSpace}>
-          {ready && selected ? <ConnectedLesson key={selected} id={selected} lang={lang} theme={theme} progress={progress} setProgress={setProgress}/> : preview ? <><span className="pill">{t.comingSoon}</span><h2>{preview[lang]}</h2><p>{c.preview}</p><p>{path?.concepts[lang]}</p></> : <p>{c.loading}</p>}
+          {ready && selected ? <ConnectedLesson key={selected} id={selected} lang={lang} theme={theme} progress={progress} setProgress={setProgress} onNavigate={choose}/> : preview ? <><span className="pill">{t.comingSoon}</span><h2>{preview[lang]}</h2><p>{c.preview}</p><p>{path?.concepts[lang]}</p></> : <p>{c.loading}</p>}
         </ResizableLessonPanel>}
       </div>
     </div>

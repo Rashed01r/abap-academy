@@ -5,8 +5,9 @@ import { evaluate, simulate } from "../src/lib/engine";
 import { getAnatomy, orientationExamples } from "../src/lib/anatomy-content";
 import { validateAnatomy } from "../src/lib/code-anatomy";
 import { gradeGuided, validateGuided } from "../src/lib/guided-curriculum";
+import { validateEducation } from "../src/lib/education-quality";
 
-const failures: string[] = [];
+const failures: string[] = validateEducation();
 const check = (condition: unknown, message: string) => { if (!condition) failures.push(message); };
 const seen = new Set(["orientation"]);
 const challenges = new Set<string>();

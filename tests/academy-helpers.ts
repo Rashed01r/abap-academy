@@ -9,7 +9,9 @@ export async function openLesson(page: Page, id: string, lang: Locale = "en") {
     await page.locator('.tree-search-results').getByRole('button', { name: title, exact: true }).click();
     await expect(page.locator('.lesson-summary h1')).toHaveText(title);
     const expand = page.getByRole('button', { name: treeCopy[lang].expandWorkspace, exact: true });
-    if (await expand.count())
+    // Mobile enters focus automatically; its initial Expand control can disappear
+    // between counting and clicking as the responsive effect finishes.
+    if ((page.viewportSize()?.width || 0) > 760 && await expand.count())
         await expand.click();
     await tab(page, lang, 'learn');
 }

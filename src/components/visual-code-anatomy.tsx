@@ -12,8 +12,8 @@ import { LookupSummary } from "./lookup-summary";
 import { TableChangeSummary } from "./table-change-summary";
 import { useTopicSession } from "@/lib/use-topic-session";
 
-export function VisualCodeAnatomy({doc,lang,theme,onExplore,onMatched,references=[]}: {
-  doc:CodeAnatomy;lang:Locale;theme:"light"|"dark";onExplore:(refs:string[])=>void;onMatched:()=>void;references?:string[];
+export function VisualCodeAnatomy({doc,lang,theme,onExplore,onMatched,references=[],selectedGroup,onGroupSelect}: {
+  doc:CodeAnatomy;lang:Locale;theme:"light"|"dark";onExplore?:(refs:string[])=>void;onMatched:()=>void;references?:string[];selectedGroup?:string;onGroupSelect?:(id:string)=>void;
 }) {
   const [selectedId,setSelectedId]=useTopicSession(`${doc.id}:anatomy-group`,doc.groups[0].id);
   const [field,setField]=useTopicSession<string | undefined>(`${doc.id}:anatomy-field`,undefined);
@@ -22,7 +22,8 @@ export function VisualCodeAnatomy({doc,lang,theme,onExplore,onMatched,references
   const [matched,setMatched]=useTopicSession<string[]>(`${doc.id}:anatomy-matched`,[]);
   const [feedback,setFeedback]=useTopicSession<"right"|"wrong" | undefined>(`${doc.id}:anatomy-feedback`,undefined);
   const t=ui[lang];
-  const group=doc.groups.find(g=>g.id === selectedId)!;
+  const group=doc.groups.find(g=>g.id === (selectedGroup || selectedId)) || doc.groups[0];
+  const activeId=group.id;
   const events=useMemo(()=>doc.referenceOnly ? [] : simulate(doc.source),[doc.source, doc.referenceOnly]);
   const definition=useMemo(()=>doc.referenceOnly ? undefined : parse(doc.source).find(n=>n.kind === "define"),[doc.source, doc.referenceOnly]);
   const visits=eventsForGroup(group,events);
@@ -32,7 +33,7 @@ export function VisualCodeAnatomy({doc,lang,theme,onExplore,onMatched,references
   const learningRange=selectedField ? lineRange(doc.source,selectedField.line,selectedField.line) : group.range;
   const lines=doc.source.split("\n");
   const prompt=doc.groups.find(g=>g.id === doc.checks[question])!;
-  function select(id:string) {setSelectedId(id);setField(undefined);setFeedback(undefined);}
+  function select(id:string) {setSelectedId(id);onGroupSelect?.(id);setField(undefined);setFeedback(undefined);}
   return <div className="visual-code-anatomy">
     <div className="anatomy-layout">
       <div className="anatomy-code" dir="ltr" aria-label={t.anatomy}>
@@ -40,11 +41,11 @@ export function VisualCodeAnatomy({doc,lang,theme,onExplore,onMatched,references
           const gapStart=index ? doc.groups[index-1].range.endLine : 0;
           return <div key={item.id}>
             {lines.slice(gapStart,item.range.startLine-1).map((line,i)=><div className="anatomy-gap" key={i}>{line || "\u00a0"}</div>)}
-            <button type="button" className={`anatomy-group ${item.id === selectedId ? "selected" : ""}`} data-group={item.id} aria-pressed={item.id === selectedId} aria-controls={`${doc.id}-anatomy-explanation`} onClick={()=>select(item.id)}>
+            <button type="button" className={`anatomy-group ${item.id === activeId ? "selected" : ""}`} data-group={item.id} aria-pressed={item.id === activeId} aria-controls={`${doc.id}-anatomy-explanation`} onClick={()=>select(item.id)}>
               <span className="anatomy-group-label" dir={lang === "ar" ? "rtl" : "ltr"}><span>{index+1}</span> {item.title[lang]}</span>
               <code>{lines.slice(item.range.startLine-1,item.range.endLine).map((line,i)=>{
                 const lineNumber=item.range.startLine+i;
-                return <span key={lineNumber} data-source-line={lineNumber} className={`anatomy-source-line ${item.id === selectedId && (!selectedField || lineNumber === selectedField.line) ? "anatomy-selected-line" : ""}`}><span className="anatomy-line-number" aria-hidden="true">{lineNumber}</span><span>{line || "\u00a0"}</span></span>;
+                return <span key={lineNumber} data-source-line={lineNumber} className={`anatomy-source-line ${item.id === activeId && (!selectedField || lineNumber === selectedField.line) ? "anatomy-selected-line" : ""}`}><span className="anatomy-line-number" aria-hidden="true">{lineNumber}</span><span>{line || "\u00a0"}</span></span>;
               })}</code>
             </button>
           </div>;
@@ -67,7 +68,7 @@ export function VisualCodeAnatomy({doc,lang,theme,onExplore,onMatched,references
             <p className="small muted">{t.afterVisit}</p>
           </>}
         </section>}
-        {!doc.referenceOnly && <button className="secondary" onClick={()=>onExplore(group.syntaxRefs || [])}>{t.exploreSyntax}</button>}
+        {!doc.referenceOnly && onExplore && <button className="secondary" onClick={()=>onExplore(group.syntaxRefs || [])}>{t.exploreSyntax}</button>}
         <details className="anatomy-more"><summary>{t.learnMore}</summary>{group.detail && <p><TechnicalText>{group.detail[lang]}</TechnicalText></p>}{group.glossaryRefs?.map(ref=>{
           const concept=anatomyConcepts[ref];
           return <div key={ref}><dl><dt>{t.meaning}</dt><dd><TechnicalText>{concept.meaning[lang]}</TechnicalText></dd><dt>{t.whenUsed}</dt><dd><TechnicalText>{concept.when[lang]}</TechnicalText></dd></dl><pre dir="ltr">{concept.example}</pre><p><strong>{t.mistake}: </strong><TechnicalText>{concept.mistake[lang]}</TechnicalText></p><p><TechnicalText>{concept.detail[lang]}</TechnicalText></p></div>;
@@ -78,7 +79,7 @@ export function VisualCodeAnatomy({doc,lang,theme,onExplore,onMatched,references
       <h3>{t.matchCode}</h3><p className="anatomy-prompt"><TechnicalText>{prompt.practice![lang]}</TechnicalText></p>
       <p>{matched.length} / {doc.checks.length} {t.matchProgress}</p>
       <div className="explore-actions"><button className="secondary" onClick={()=>{
-        const correct=selectedId === prompt.id;setFeedback(correct ? "right" : "wrong");
+        const correct=activeId === prompt.id;setFeedback(correct ? "right" : "wrong");
         if(correct) {const next=Array.from(new Set([...matched,prompt.id]));setMatched(next);if(next.length === doc.checks.length) onMatched();}
       }}>{t.checkGroup}</button><button className="secondary" onClick={()=>{setQuestion(i=>(i+1)%doc.checks.length);setFeedback(undefined);}}>{t.nextMatch}</button></div>
       {feedback && <p role="status" className={feedback === "right" ? "success-text" : "error-text"}>{feedback === "right" ? t.matchRight : t.matchWrong}</p>}

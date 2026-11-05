@@ -26,7 +26,7 @@ for(const lang of ["en","ar"] as const) for(const theme of ["light","dark"] as c
     await page.reload();
     await expect(page.locator(".lesson-summary h1")).toHaveText(m.title[lang]);
     expect(await page.evaluate(()=>JSON.parse(localStorage.getItem("abap2-master-progress")!).missions)).toEqual(["data-keys"]);
-    const code=page.locator(".anatomy-code"), panel=page.locator(".anatomy-explanation");
+    const code=page.locator(".syntax-lab .anatomy-code"), panel=page.locator(".syntax-lab .anatomy-explanation");
     await code.locator('[data-group="fill"]').click();
     await expect(code.locator(".anatomy-selected-line")).toHaveCount(2);
     await expect(panel.locator(".anatomy-field-active")).toHaveCount(2);
@@ -40,7 +40,7 @@ for(const lang of ["en","ar"] as const) for(const theme of ["light","dark"] as c
     await expect(panel.locator(".anatomy-memory-card").filter({hasText:"lt_employees"})).toContainText("Ahmed");
     await expect(panel.locator(".alias-values")).toContainText("Ahmed");
     expect(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
-    if(lang === "ar") await page.locator(".anatomy-layout").screenshot({path:test.info().outputPath(`aliases-anatomy-ar-${theme}.png`)});
+    if(lang === "ar") await page.locator(".syntax-lab .anatomy-layout").screenshot({path:test.info().outputPath(`aliases-anatomy-ar-${theme}.png`)});
     await matchAnatomy(page,m.id,lang);
     await page.getByRole("button",{name:t.syntaxDone,exact:true}).click();
     await tab(page,lang,"visualize");
@@ -54,7 +54,7 @@ for(const lang of ["en","ar"] as const) for(const theme of ["light","dark"] as c
     await timeline.getByRole("button").last().click();
     await expect(page.getByTestId("output").filter({visible:true})).toHaveText("Ahmed\nSara\nAhmed");
     if(lang === "ar") await page.screenshot({path:test.info().outputPath(`aliases-trace-ar-${theme}.png`),fullPage:true});
-    const editor=page.getByRole("textbox").first();
+    const editor=page.locator(".monaco-editor").filter({visible:true}).first().getByRole("textbox");
     async function replace(source:string) {await editor.focus();await page.keyboard.press("ControlOrMeta+A");await page.keyboard.insertText(source);}
     await replace(workAreaExample.replace("ASSIGN ls_employee TO <employee>.","* Removed ASSIGN"));
     await expect(page.getByRole("tabpanel").locator(".alias-memory")).toHaveCount(0);

@@ -157,3 +157,7 @@
   .panel-chrome {gap:6px}
   .panel-body {padding:14px}
 }
+.tree-learning-guide { flex: 0 0 auto; padding: .5rem 1rem; border-bottom: 1px solid var(--line); font-size: .85rem; }
+.tree-learning-guide > div { max-height: 14rem; overflow: auto; padding-block: .5rem; }
+.tree-learning-guide p { margin-block: .5rem; }
+.tree-level { width: fit-content; border: 1px solid var(--line); border-radius: 6px; padding: .1rem .4rem; margin-block-start: .4rem; }
