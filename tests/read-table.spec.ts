@@ -1,9 +1,11 @@
+import { enabledLocales } from "../src/lib/language-policy";
+import { localizedText } from "../src/lib/language-policy";
 import { test, expect } from "@playwright/test";
 import { readTableMission as m } from "../src/lib/read-table-mission";
 import { ui } from "../src/lib/i18n";
 import { openLesson, tab, edit, answerQuiz, completion } from "./academy-helpers";
 
-for (const lang of ["en", "ar"] as const) test(`${lang}: typed READ TABLE found/missing trace and safe behavioral challenge`, async ({page}) => {
+for (const lang of enabledLocales) test(`${lang}: typed READ TABLE found/missing trace and safe behavioral challenge`, async ({page}) => {
   const t = ui[lang], errors: string[] = []; page.on("pageerror", error => errors.push(error.message));
   await page.addInitScript(lang => {
     localStorage.setItem("abap2-language", lang); localStorage.setItem("abap2-appearance", lang === "ar" ? "dark" : "light");
@@ -43,7 +45,7 @@ for (const lang of ["en", "ar"] as const) test(`${lang}: typed READ TABLE found/
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem("abap2-master-progress")!));
   expect(saved.passedChallenges).toContain("data-read-lookup"); expect(saved.missions).toContain("structures");
   expect(saved.results.structures).toEqual({attempts:2,passed:true});
-  await page.reload(); await expect(page.locator(".lesson-summary h1")).toHaveText(m.title[lang]);
+  await page.reload(); await expect(page.locator(".lesson-summary h1")).toHaveText(localizedText(m.title, lang));
   expect(errors).toEqual([]);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });

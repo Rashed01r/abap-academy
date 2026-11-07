@@ -1,5 +1,8 @@
 # Connected knowledge tree — 2026-11-03
 
+> **Current development language: English only (2026-11-07).** Arabic support is temporarily deferred, not removed. Preserve all existing Arabic resources and RTL support; do not create or review Arabic translations or run Arabic-specific UI checks while `ENABLE_ARABIC` is false. New playable content requires complete English teaching only. This policy supersedes bilingual authoring/review requirements in the historical sections below. See [the language-phase policy](LANGUAGE_PHASE.md).
+
+
 ## Sole learning layout — 2026-11-04
 
 The user requested one style: the new Knowledge Tree. Removed the List view control, layout state/query switch, old homepage, alternate roadmap and staged mission renderer. Deleted `src/components/roadmap.tsx` and `src/components/mission-engine.tsx`; their educational registry content and shared lesson components remain. The playground continues to work. Old `?layout=list` links load this same tree and remove the obsolete parameter, preserving valid `mission` and unrelated query values through refresh and history. Focus resets when selection clears, fixing a previously blank Home return from a focused lesson. Safety checkpoint: `checkpoint/before-tree-only-2026-11-04` at `7531fb9`, preserving earlier uncommitted work.

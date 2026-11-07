@@ -50,7 +50,7 @@ export type Expr =
 export type Node =
   | { kind: "do"; count: Expr; body: Node[]; range: Range; endRange: Range }
   | { kind: "while"; left: Expr; op: string; right: Expr; body: Node[]; range: Range; endRange: Range }
-  | { kind: "loop"; table: string; into: string; inline: boolean; body: Node[]; range: Range; endRange: Range }
+  | { kind: "loop"; table: string; into: string; inline: boolean; where?: { field: string; op: string; value: Expr }; body: Node[]; range: Range; endRange: Range }
   | { kind: "append"; value: Expr; table: string; range: Range }
   | { kind: "read"; table: string; into: string; index?: Expr; keys?: { field: string; value: Expr }[]; range: Range }
   | { kind: "insert"; table: string; value: Expr; index: Expr; range: Range }
@@ -100,6 +100,7 @@ export type ExecutionEvent = {
   lookup?: { table: string; target: string; found: boolean; index: number; keys?: Record<string, Primitive>; requestedIndex?: number };
   /** Mutation index is one-based; before/after are independent snapshots, including misses. */
   mutation?: { table: string; kind: "insert" | "modify" | "delete" | "sort"; index?: number; applied: boolean; before: TableValue; after: TableValue; fields?: { field: string; direction: "ascending" | "descending" }[] };
+  filter?: { table: string; index: number; field: string; value: Primitive; operand: Primitive; matched: boolean };
   aliases?: Record<string, string | null>;
 };
 export function sourceRange(source: string, start: number, end: number): Range {
@@ -374,6 +375,7 @@ export function parse(source: string): Node[] {
       } else if (at("do") || at("while") || at("loop")) {
         const kind = tokens[p++].text;
         let count: Expr | undefined, left: Expr | undefined, right: Expr | undefined, op = "", table = "", into = "", inline = false;
+        let where: Extract<Node,{kind:"loop"}>["where"];
         if (kind === "do") { count = expr(); take("times", "block"); }
         else if (kind === "while") {
           left = expr(); op = peek()?.text;
@@ -383,13 +385,20 @@ export function parse(source: string): Node[] {
           take("at"); table = name(); take("into");
           if (at("data")) { p++; take("("); into = name(); take(")"); inline = true; }
           else into = name();
+          if (at("where")) {
+            p++; const field = name(), op = peek()?.text;
+            if (!["=", "<>", ">=", "<=", ">", "<"].includes(op)) fail("unsupported");
+            p++; const value = expr();
+            if (value.kind === "add" || at("and") || at("or")) fail("unsupported");
+            where = {field, op, value};
+          }
         }
         period(start); const opening = range(start), body = nodes(true, depth + 1);
         take(kind === "do" ? "enddo" : kind === "while" ? "endwhile" : "endloop", "block");
         const ending = p - 1; period(ending);
         node = kind === "do" ? { kind, count: count!, body, range: opening, endRange: range(ending) }
           : kind === "while" ? { kind, left: left!, op, right: right!, body, range: opening, endRange: range(ending) }
-          : { kind: "loop", table, into, inline, body, range: opening, endRange: range(ending) };
+          : { kind: "loop", table, into, inline, ...(where ? {where} : {}), body, range: opening, endRange: range(ending) };
       } else if (at("insert") || at("modify") || at("delete")) {
         const kind = tokens[p++].text as "insert" | "modify" | "delete";
         let value: Expr | undefined;
@@ -572,6 +581,12 @@ export function execute(nodes: Node[], source: string): ExecutionEvent[] {
         if (n.kind === "loop") {
           const tableType = refType(n.table, n);
           if (!tableType.startsWith("table:")) error("type", n);
+          if (n.where) {
+            const rowType = tableType.slice(6);
+            const fieldType = n.where.field === "table_line" && !definitions[rowType] ? rowType : definitions[rowType]?.[n.where.field];
+            if (!fieldType) error("component", n, n.where.field);
+            if (exprType(n.where.value, n) !== fieldType) error("type", n);
+          }
           if (n.inline) {
             if (n.into in types) error("declaration", n, n.into);
             types[n.into] = tableType.slice(6);
@@ -645,6 +660,7 @@ export function execute(nodes: Node[], source: string): ExecutionEvent[] {
     r = n.range,
     lookup?: ExecutionEvent["lookup"],
     mutation?: ExecutionEvent["mutation"],
+    filter?: ExecutionEvent["filter"],
   ) {
     if (events.length >= RUNTIME_LIMITS.trace) error("limit", n, "trace");
     if ((JSON.stringify(memory).length + JSON.stringify(output).length) * 2 > RUNTIME_LIMITS.memoryBytes) error("limit", n, "memory");
@@ -661,8 +677,9 @@ export function execute(nodes: Node[], source: string): ExecutionEvent[] {
       skippedRanges,
       explanation,
       condition,
+      ...(filter ? {filter:structuredClone(filter)} : {}),
       loop: loop ? structuredClone(loop) : undefined,
-      tableSelection: mutation ? (mutation.applied && mutation.index && ["insert","modify"].includes(mutation.kind) ? {name:mutation.table,index:mutation.index-1,row:structuredClone(mutation.after[mutation.index-1])} : undefined) : lookup ? (lookup.found ? {name:lookup.table, index:lookup.index - 1, row:structuredClone((memory[lookup.table] as TableValue)[lookup.index - 1])} : undefined) : tableContext?.table && tableContext.row !== undefined ? { name: tableContext.table, index: tableContext.index!, row: structuredClone(tableContext.row) } : undefined,
+      tableSelection: filter ? { name:filter.table, index:filter.index-1, row:structuredClone((memory[filter.table] as TableValue)[filter.index-1]) } : mutation ? (mutation.applied && mutation.index && ["insert","modify"].includes(mutation.kind) ? {name:mutation.table,index:mutation.index-1,row:structuredClone(mutation.after[mutation.index-1])} : undefined) : lookup ? (lookup.found ? {name:lookup.table, index:lookup.index - 1, row:structuredClone((memory[lookup.table] as TableValue)[lookup.index - 1])} : undefined) : tableContext?.table && tableContext.row !== undefined ? { name: tableContext.table, index: tableContext.index!, row: structuredClone(tableContext.row) } : undefined,
       ...(lookup ? {lookup:structuredClone(lookup)} : {}),
       ...(mutation ? {mutation:structuredClone(mutation)} : {}),
       ...(Object.keys(aliases).length ? {aliases: {...aliases}} : {}),
@@ -745,6 +762,7 @@ export function execute(nodes: Node[], source: string): ExecutionEvent[] {
         output.push(String(v));
         emit(n, "write", { key: "write", value: v }, ["output"]);
       } else if (n.kind === "append") {
+        if (loopStack.some(context => context.table === n.table)) error("unsupported",n,"Changing an actively looped table is outside this subset");
         if (!Array.isArray(memory[n.table])) error("type", n);
         const rows = memory[n.table] as TableValue;
         if (rows.length >= RUNTIME_LIMITS.rows) error("limit", n, "rows");
@@ -813,27 +831,45 @@ export function execute(nodes: Node[], source: string): ExecutionEvent[] {
         if (n.kind === "loop" && !Array.isArray(rows)) error("type",n);
         const initial = (type: string): Primitive | StructureValue => definitions[type] ? Object.fromEntries(Object.entries(definitions[type]).map(([key,t])=>[key,t === "i" ? 0 : ""])) : type === "i" ? 0 : "";
         if (n.kind === "loop" && n.inline) memory[n.into] = initial(types[n.into]);
-        let iteration = 0;
+        const savedTabix = tabix;
+        let iteration = 0, candidate = 0, matched = 0;
         const context: NonNullable<ExecutionEvent["loop"]> = { kind:n.kind, iteration:0, count, range:n.range, ...(n.kind === "loop" ? {table:n.table} : {}) };
         loopStack.push(context);
         while (true) {
-          const result = n.kind === "do" ? iteration < Math.max(0,count!) : n.kind === "while" ? compare(n) : iteration < (rows as TableValue).length;
-          const expression = n.kind === "while" ? `${get(n.left,n)} ${n.op} ${get(n.right,n)}` : n.kind === "do" ? `${iteration+1} <= ${count}` : `${iteration+1} <= ${(rows as TableValue).length}`;
+          const result = n.kind === "do" ? iteration < Math.max(0,count!) : n.kind === "while" ? compare(n) : candidate < (rows as TableValue).length;
+          const expression = n.kind === "while" ? `${get(n.left,n)} ${n.op} ${get(n.right,n)}` : n.kind === "do" ? `${iteration+1} <= ${count}` : `${candidate+1} <= ${(rows as TableValue).length}`;
           if (!result) {
             delete context.row;
             delete context.index;
             emit(n,"loop",{key:"loopEnd"},[],[],{expression,result:false});
             break;
           }
+          if (n.kind === "loop") {
+            candidate++;
+            const row = (rows as TableValue)[candidate-1];
+            if (n.where) {
+              const value = typeof row === "object" ? row[n.where.field] : row;
+              const operand = get(n.where.value,n), op = n.where.op;
+              const accepted = op === "=" ? value === operand : op === "<>" ? value !== operand : op === ">=" ? value >= operand : op === "<=" ? value <= operand : op === ">" ? value > operand : value < operand;
+              delete context.row; delete context.index;
+              emit(n,"condition",{key:"condition"},[],accepted ? [] : n.body.map(skippedRange),{expression:String(value)+" "+op+" "+String(operand),result:accepted},n.range,undefined,undefined,{table:n.table,index:candidate,field:n.where.field,value,operand,matched:accepted});
+              if (!accepted) continue;
+            }
+            matched++; tabix = candidate;
+          }
           if (iteration >= RUNTIME_LIMITS.iterations) error("limit",n,"iterations");
           context.iteration = ++iteration;
-          if (n.kind === "loop") { context.index = iteration - 1; context.row = structuredClone((rows as TableValue)[iteration-1]); memory[n.into] = structuredClone(context.row); }
+          if (n.kind === "loop") { context.index = candidate - 1; context.row = structuredClone((rows as TableValue)[candidate-1]); memory[n.into] = structuredClone(context.row); }
           emit(n,"loop",{key:"loop",name:n.kind === "loop" ? n.into : undefined},n.kind === "loop" ? [n.into] : [],[],{expression,result:true});
           const control = run(n.body);
           emit(n,"end",{key:"loopIteration"},[],[],undefined,n.endRange);
           if (control === "exit") break;
         }
         loopStack.pop();
+        if (n.kind === "loop") {
+          tabix = savedTabix; subrc = matched ? 0 : 4;
+          emit(n,"end",{key:"end"},[],[],undefined,n.endRange);
+        }
       } else {
         const branches = [{ left: n.left, op: n.op, right: n.right, body: n.yes, range: n.range, bodyRange: n.yesRange }, ...(n.elseifs || [])];
         let selected = -1;
@@ -902,7 +938,35 @@ export function evaluate(
     last = events.at(-1)!;
   let correct = false;
   let failure: ChallengeFailure | undefined;
-  if (id === "addition") {
+  if (id === "data-conditional-report") {
+    const walk = (list:Node[]):Node[] => list.flatMap(n=>[n,...("body" in n ? walk(n.body) : n.kind === "if" ? [...walk(n.yes),...walk(n.no),...(n.elseifs || []).flatMap(b=>walk(b.body))] : [])]);
+    const all = walk(nodes), loops = all.filter((n):n is Extract<Node,{kind:"loop"}>=>n.kind === "loop");
+    const loop = loops[0];
+    const shape = loops.length === 1 && loop.table === "lt_employees" && loop.into === "ls_employee" && loop.where?.field === "salary" && loop.where.op === ">=" && loop.where.value.kind === "ref" && loop.where.value.name === "lv_min_salary" &&
+      !all.some(n=>["delete","modify","insert","sort"].includes(n.kind) || n.kind === "assign" && n.target === "lv_min_salary");
+    const probes: [number,number[],string[]][] = [[6000,[5000,8000,6000],["Ahmed","Sara","Omar"]],[8000,[5000,8000,6000],["Ahmed","Sara","Omar"]],[9000,[5000,8000,6000],["Ahmed","Sara","Omar"]],[0,[0,1,0],["Ava","Ben","Chen"]],[7500,[9000,7000,7500],["Eli","Faye","Gus"]],[10000,[2,3,4],["Hana","Ivo","Jin"]]];
+    correct = !!shape && probes.every(([minimum,salaries,names])=>{
+      const tree = structuredClone(nodes); let salaryIndex = 0, nameIndex = 0;
+      for (const n of walk(tree)) {
+        if(n.kind === "data" && n.name === "lv_min_salary") n.initial={kind:"literal",value:minimum};
+        if(n.kind === "assign" && n.target === "ls_employee-salary" && n.value.kind === "literal" && salaryIndex<3) n.value.value=salaries[salaryIndex++];
+        if(n.kind === "assign" && n.target === "ls_employee-name" && n.value.kind === "literal" && nameIndex<3) n.value.value=names[nameIndex++];
+      }
+      if(salaryIndex!==3 || nameIndex!==3) return false;
+      try {
+        const trace=execute(tree,source), final=trace.at(-1)!;
+        const rows=salaries.map((salary,i)=>({id:101+i,name:names[i],salary})), selected=rows.filter(r=>r.salary>=minimum);
+        const total=selected.reduce((sum,r)=>sum+r.salary,0);
+        const writes=trace.filter(e=>e.operation === "write");
+        const actual=final.output.join("\n"), expected=[...selected.map(r=>r.name),String(selected.length),String(total)].join("\n");
+        const ok=actual===expected && JSON.stringify(final.memory.lt_employees)===JSON.stringify(rows) && final.memory.lv_count===selected.length && final.memory.lv_total===total &&
+          trace.filter(e=>e.filter?.matched).length===selected.length && writes.length===selected.length+2 &&
+          writes.slice(0,selected.length).every(e=>e.statement.includes("ls_employee-name"));
+        if(!ok) failure={name:"lv_min_salary",input:minimum,expected,actual};
+        return ok;
+      } catch(error) { if(!(error instanceof SimulationError)) throw error; return false; }
+    });
+  } else if (id === "addition") {
     const data = nodes.filter(
       (n): n is Extract<Node, { kind: "data" }> => n.kind === "data",
     );

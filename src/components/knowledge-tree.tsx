@@ -1,4 +1,6 @@
 "use client";
+import { localizedText } from "../lib/language-policy";
+import { ENABLE_ARABIC } from "@/lib/language-policy";
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { createPortal } from "react-dom";
 import { missions, paths } from "@/lib/curriculum";
@@ -33,11 +35,11 @@ export function KnowledgeTree({selected, open, lang, theme, progress, setProgres
   const activeTopics = activity.filter(m => m.pathId === activePath);
   const path = paths.find(p => p.id === activePath);
   const covered = new Set(activeTopics.flatMap(m => m.coveredTopics || []));
-  const previews = path && path.id !== "fundamentals" ? path.concepts.en.split(" · ").map((en, i) => ({en, ar: path.concepts.ar.split(" · ")[i] || en})).filter(p => !covered.has(p.en)) : [];
-  const results = search.trim() ? activity.filter(m => [m.title.en, m.title.ar, m.subtitle.en, m.subtitle.ar, m.id, m.example, ...m.objectives.flatMap(o => [o.en, o.ar]), paths.find(p => p.id === m.pathId)?.title.en, paths.find(p => p.id === m.pathId)?.title.ar].join(" ").toLowerCase().includes(search.trim().toLowerCase())) : [];
+  const previews = path && path.id !== "fundamentals" ? path.concepts.en.split(" · ").map((en, i) => ({en, ar: (path.concepts.ar || path.concepts.en).split(" · ")[i] || en})).filter(p => !covered.has(p.en)) : [];
+  const results = search.trim() ? activity.filter(m => [m.title.en, ENABLE_ARABIC ? m.title.ar : "", m.subtitle.en, ENABLE_ARABIC ? m.subtitle.ar : "", m.id, m.example, ...m.objectives.flatMap(o => [o.en, ENABLE_ARABIC ? o.ar : ""]), paths.find(p => p.id === m.pathId)?.title.en, ENABLE_ARABIC ? paths.find(p => p.id === m.pathId)?.title.ar : ""].join(" ").toLowerCase().includes(search.trim().toLowerCase())) : [];
   const futureResults = search.trim() ? paths.filter(p => p.id !== "fundamentals").flatMap(p => {
     const implemented = new Set(activity.filter(m => m.pathId === p.id).flatMap(m => m.coveredTopics || []));
-    return p.concepts.en.split(" · ").map((en, i) => ({en, ar:p.concepts.ar.split(" · ")[i] || en, pathId:p.id})).filter(topic => !implemented.has(topic.en) && `${topic.en} ${topic.ar}`.toLowerCase().includes(search.trim().toLowerCase()));
+    return p.concepts.en.split(" · ").map((en, i) => ({en, ar:(p.concepts.ar || p.concepts.en).split(" · ")[i] || en, pathId:p.id})).filter(topic => !implemented.has(topic.en) && `${topic.en} ${ENABLE_ARABIC ? topic.ar : ""}`.toLowerCase().includes(search.trim().toLowerCase()));
   }) : [];
   function reveal() {
     requestAnimationFrame(() => {
@@ -141,12 +143,12 @@ export function KnowledgeTree({selected, open, lang, theme, progress, setProgres
       <p>{lang === "en" ? "These recommendations build from program memory to persistent data, application behavior and complete architectures. Modern syntax can be explored earlier; project prerequisites vary. No completion is required to open any implemented lesson." : "تنتقل هذه التوصيات من ذاكرة البرنامج إلى البيانات الدائمة وسلوك التطبيقات والمعمارية المتكاملة. يمكنك استكشاف الصياغة الحديثة مبكراً، وتختلف متطلبات المشاريع. لا يشترط إكمال أي درس لفتح درس منفّذ."}</p>
     </div></details>
     {ready && !!search.trim() && document.getElementById("academy-header-search") && createPortal(<div className="tree-search-results" aria-label={c.search}>
-      {results.map(m => <button className="secondary" key={m.id} onClick={() => {choose(m.id);setSearch("");}}>{m.title[lang]}</button>)}
-      {futureResults.map(p => <button className="secondary" key={`${p.pathId}:${p.en}`} onClick={() => {open("home");setPathId(p.pathId);setPreview(p);setSearch("");}}>{p[lang]} · {t.comingSoon}</button>)}
-      {paths.filter(p => `${p.title.en} ${p.title.ar} ${p.concepts.en} ${p.concepts.ar}`.toLowerCase().includes(search.trim().toLowerCase())).map(p => <button className="secondary tree-path-result" key={p.id} onClick={() => {open("home");setPathId(p.id);setPreview(undefined);setSearch("");}}><strong>{p.title[lang]}</strong><small>{pathSummaries[p.id][lang]}</small></button>)}
-      {!results.length && !futureResults.length && !paths.some(p => `${p.title.en} ${p.title.ar} ${p.concepts.en} ${p.concepts.ar}`.toLowerCase().includes(search.trim().toLowerCase())) && <p role="status">{c.noResults}</p>}
+      {results.map(m => <button className="secondary" key={m.id} onClick={() => {choose(m.id);setSearch("");}}>{localizedText(m.title, lang)}</button>)}
+      {futureResults.map(p => <button className="secondary" key={`${p.pathId}:${p.en}`} onClick={() => {open("home");setPathId(p.pathId);setPreview(p);setSearch("");}}>{localizedText(p, lang)} · {t.comingSoon}</button>)}
+      {paths.filter(p => `${p.title.en} ${p.concepts.en} ${ENABLE_ARABIC ? `${p.title.ar} ${p.concepts.ar}` : ""}`.toLowerCase().includes(search.trim().toLowerCase())).map(p => <button className="secondary tree-path-result" key={p.id} onClick={() => {open("home");setPathId(p.id);setPreview(undefined);setSearch("");}}><strong>{localizedText(p.title, lang)}</strong><small>{localizedText(pathSummaries[p.id], lang)}</small></button>)}
+      {!results.length && !futureResults.length && !paths.some(p => `${p.title.en} ${p.concepts.en} ${ENABLE_ARABIC ? `${p.title.ar} ${p.concepts.ar}` : ""}`.toLowerCase().includes(search.trim().toLowerCase())) && <p role="status">{c.noResults}</p>}
     </div>, document.getElementById("academy-header-search")!)}
-    <nav className="tree-position" aria-label={c.position}>SAP ABAP {path && <> → {path.title[lang]}</>} {selected && <> → {activity.find(m => m.id === selected)?.title[lang]}</>}</nav>
+    <nav className="tree-position" aria-label={c.position}>SAP ABAP {path && <> → {localizedText(path.title, lang)}</>} {selected && <> → {localizedText(activity.find(m => m.id === selected)?.title, lang)}</>}</nav>
     <p className="sr-only" id="tree-pan-help">{c.pan}</p>
     <div className="tree-viewport" ref={viewport} dir="ltr" tabIndex={0} aria-label={c.overview} aria-describedby="tree-pan-help" onPointerDown={event => {
       if (event.button !== 0 || (event.target as HTMLElement).closest("button,input,a,select,[data-lesson-node]")) return;
@@ -163,13 +165,13 @@ export function KnowledgeTree({selected, open, lang, theme, progress, setProgres
         {!focus && <>
           <svg className="tree-connectors" aria-hidden="true">{lines.map(line => <path key={line.id} data-connector={line.id} d={line.d} className={line.selected ? "selected" : ""}/>)}</svg>
           <div className="tree-root-column"><button className="tree-node tree-root" data-tree-id="root" onClick={() => {open("home");setPathId(undefined);setPreview(undefined);}}>SAP ABAP<small>{c.progress}: {activity.length}</small></button></div>
-          <div className="tree-paths" role="group" aria-label={t.allPaths}>{paths.map(p => <button className="tree-node" key={p.id} data-tree-id={p.id} aria-expanded={activePath === p.id} onClick={() => {open("home");setPreview(undefined);setPathId(activePath === p.id ? undefined : p.id);}}><strong>{p.title[lang]}</strong><small className="tree-learning-summary">{pathSummaries[p.id][lang]}</small><small className="tree-level">{pathLevels[p.id][lang]}</small></button>)}</div>
-          {path && <div className="tree-topics" role="group" aria-label={path.title[lang]}>{activeTopics.map(m => <button className="tree-node" data-tree-id={m.id} data-topic-node key={m.id} aria-pressed={m.id === selected} disabled={!ready} onClick={() => choose(m.id)}><strong>{m.title[lang]}</strong><small className="tree-learning-summary">{m.subtitle[lang]}</small>{(m.id === "orientation" ? progress.labs.includes(m.id) : progress.missions.includes(m.id)) ? <small>{t.completed}</small> : progress.started?.includes(m.id) ? <small>{t.inProgress}</small> : null}</button>)}
-            {previews.map((p, i) => <button className="tree-node future-topic" data-tree-id={`future-${i}`} key={p.en} aria-pressed={preview?.en === p.en} onClick={() => {open("home");setPathId(path.id);setPreview(p);}}><strong>{p[lang]}</strong><small>{t.comingSoon}</small></button>)}
+          <div className="tree-paths" role="group" aria-label={t.allPaths}>{paths.map(p => <button className="tree-node" key={p.id} data-tree-id={p.id} aria-expanded={activePath === p.id} onClick={() => {open("home");setPreview(undefined);setPathId(activePath === p.id ? undefined : p.id);}}><strong>{localizedText(p.title, lang)}</strong><small className="tree-learning-summary">{localizedText(pathSummaries[p.id], lang)}</small><small className="tree-level">{localizedText(pathLevels[p.id], lang)}</small></button>)}</div>
+          {path && <div className="tree-topics" role="group" aria-label={localizedText(path.title, lang)}>{activeTopics.map(m => <button className="tree-node" data-tree-id={m.id} data-topic-node key={m.id} aria-pressed={m.id === selected} disabled={!ready} onClick={() => choose(m.id)}><strong>{localizedText(m.title, lang)}</strong><small className="tree-learning-summary">{localizedText(m.subtitle, lang)}</small>{(m.id === "orientation" ? progress.labs.includes(m.id) : progress.missions.includes(m.id)) ? <small className="status-completed">{t.completed}</small> : progress.started?.includes(m.id) ? <small className="status-in-progress">{t.inProgress}</small> : null}</button>)}
+            {previews.map((p, i) => <button className="tree-node future-topic" data-tree-id={`future-${i}`} key={p.en} aria-pressed={preview?.en === p.en} onClick={() => {open("home");setPathId(path.id);setPreview(p);}}><strong>{localizedText(p, lang)}</strong><small>{t.comingSoon}</small></button>)}
           </div>}
         </>}
-        {(selected || preview) && <ResizableLessonPanel title={activity.find(m=>m.id===selected)?.title[lang] || preview?.[lang] || c.tree} selection={selected || preview?.en || ""} lang={lang} focused={focus} onFocus={toggleFocus} viewport={viewport} ready={ready} zoom={zoom} onResizeStart={reserveGraphSpace}>
-          {ready && selected ? <ConnectedLesson key={selected} id={selected} lang={lang} theme={theme} progress={progress} setProgress={setProgress} onNavigate={choose}/> : preview ? <><span className="pill">{t.comingSoon}</span><h2>{preview[lang]}</h2><p>{c.preview}</p><p>{path?.concepts[lang]}</p></> : <p>{c.loading}</p>}
+        {(selected || preview) && <ResizableLessonPanel title={localizedText(activity.find(m=>m.id===selected)?.title, lang) || localizedText(preview, lang) || c.tree} selection={selected || preview?.en || ""} lang={lang} focused={focus} onFocus={toggleFocus} viewport={viewport} ready={ready} zoom={zoom} onResizeStart={reserveGraphSpace}>
+          {ready && selected ? <ConnectedLesson key={selected} id={selected} lang={lang} theme={theme} progress={progress} setProgress={setProgress} onNavigate={choose}/> : preview ? <><span className="pill">{t.comingSoon}</span><h2>{localizedText(preview, lang)}</h2><p>{c.preview}</p><p>{localizedText(path?.concepts, lang)}</p></> : <p>{c.loading}</p>}
         </ResizableLessonPanel>}
       </div>
     </div>

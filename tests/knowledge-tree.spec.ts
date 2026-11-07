@@ -1,3 +1,4 @@
+import { enabledLocales } from "../src/lib/language-policy";
 import { test, expect, type Page } from "@playwright/test";
 import { missions } from "../src/lib/curriculum";
 import { ui } from "../src/lib/i18n";
@@ -44,14 +45,14 @@ test("Knowledge Tree is the only learning layout, including old list links and b
   await page.reload();await expect(page.locator('.knowledge-tree')).toBeVisible();
   const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('abap2-master-progress')!));
   expect(saved.missions).toEqual(['structures']);expect(saved.results.structures).toEqual({attempts:2,passed:true});
-  await page.locator('header .language').click();
+  await expect(page.locator('header .language')).toHaveCount(0);
   await expect(page.getByRole('button',{name:/^(List view|عرض القائمة)$/})).toHaveCount(0);
 });
 
-test("viewport workspace anchors header search while graph moves in both languages", async ({page}, info) => {
+test("viewport workspace anchors header search while graph moves in enabled languages", async ({page}, info) => {
   await page.goto('/?mission=orientation');
   if (info.project.name === 'mobile') await page.getByRole('button', {name:treeCopy.en.restore, exact:true}).first().click();
-  for (const lang of ['en', 'ar'] as const) {
+  for (const lang of enabledLocales) {
     if (lang === 'ar') await page.getByRole('button', {name:'العربية', exact:true}).click();
     const header = page.locator('.immersive-academy > header');
     await expect(header.getByRole('searchbox')).toBeVisible();
@@ -198,7 +199,7 @@ test("tree completion retains legacy rewards, requires assessment and avoids dup
   expect(after.results.structures.attempts).toBe(2);
 });
 
-for (const lang of ["en", "ar"] as const) test(`${lang}: orientation tabs, simulation, Monaco draft, assessment, theme, reload and once-only XP`, async ({page}, info) => {
+for (const lang of enabledLocales) test(`${lang}: orientation tabs, simulation, Monaco draft, assessment, theme, reload and once-only XP`, async ({page}, info) => {
   const c = treeCopy[lang], t = ui[lang], errors: string[] = [];
   page.on("pageerror", e => errors.push(e.message));
   await page.goto("/?mission=orientation");
@@ -227,10 +228,12 @@ for (const lang of ["en", "ar"] as const) test(`${lang}: orientation tabs, simul
   await page.getByRole("button", {name:t.complete, exact:true}).click();
   await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('abap2-master-progress')!).labs)).toContain("orientation");
   await page.getByLabel(t.appearance, {exact:true}).selectOption('dark');
-  await page.getByRole("button", {name:lang === "en" ? "العربية" : "English", exact:true}).click();
+  await expect(page.locator("header .language")).toHaveCount(0);
+  await page.evaluate(()=>localStorage.setItem("abap2-language","ar"));
   await expect(page.locator('.feedback.success')).toBeVisible();
   await page.reload();
-  await page.getByRole("tab", {name:treeCopy[lang === "en" ? "ar" : "en"].challenge, exact:true}).click();
+  await page.getByRole("tab", {name:treeCopy[lang].challenge, exact:true}).click();
+  await expect(page.locator("html")).toHaveAttribute("lang","en");
   await expect(page.locator('.monaco-editor').filter({visible:true})).toContainText('WRITE 8.');
   const p = await page.evaluate(() => JSON.parse(localStorage.getItem('abap2-master-progress')!));
   expect(p.labs.filter((id:string) => id === 'orientation')).toHaveLength(1);

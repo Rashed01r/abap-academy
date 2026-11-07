@@ -1,3 +1,4 @@
+import { conditionalLoopMission } from "./conditional-loop-mission";
 import type { Mission, SyntaxToken, Text } from "./curriculum";
 import { fundamentals } from "./fundamentals";
 import { tableCategoryMission } from "./table-category-mission";
@@ -60,4 +61,4 @@ export const dataMissions: Mission[] = [{
   quiz: t("Does changing a work area after APPEND change the stored row?", "هل يؤدي تغيير منطقة العمل بعد APPEND إلى تغيير الصف المحفوظ؟"),
   options: [t("No; APPEND copied its value", "لا؛ نسخت APPEND قيمتها"), t("Yes; they are the same storage", "نعم؛ يشتركان في موضع الذاكرة نفسه")], answer: 0,
   quizExplanation: t("For the integer and string fields used here, the stored row is independent of the work area. LOOP AT INTO also copies a row; updating that copy alone does not update the table. Reference-valued components are a later topic.", "بالنسبة إلى حقول الأعداد والنصوص المستخدمة هنا، يكون الصف المحفوظ مستقلًا عن منطقة العمل. تنسخ LOOP AT INTO الصف أيضًا؛ ولا يكفي تعديل هذه النسخة لتحديث الجدول. سنتناول الحقول ذات القيم المرجعية لاحقًا."),
-}, tableCategoryMission, tableKeyMission, workAreaMission, readTableMission, tableMutationsMission, sortingFilteringMission];
+}, tableCategoryMission, tableKeyMission, workAreaMission, readTableMission, tableMutationsMission, sortingFilteringMission, conditionalLoopMission];

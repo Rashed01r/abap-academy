@@ -1,10 +1,12 @@
+import { enabledLocales } from "../src/lib/language-policy";
+import { localizedText } from "../src/lib/language-policy";
 import { test, expect } from "@playwright/test";
 import { guidedDefinitions } from "../src/lib/guided-curriculum";
 import { ui } from "../src/lib/i18n";
 import { treeCopy } from "../src/lib/tree-copy";
 import { openLesson, tab } from "./academy-helpers";
 
-for (const lang of ["en", "ar"] as const) for (const [index, d] of guidedDefinitions.entries()) {
+for (const lang of enabledLocales) for (const [index, d] of guidedDefinitions.entries()) {
   test(`${lang}: ${d.id} reference anatomy, model decisions and durable achievements`, async ({page}) => {
     const errors: string[] = []; page.on("pageerror", error => errors.push(error.message));
     await page.addInitScript(({lang, dark}) => {
@@ -13,21 +15,21 @@ for (const lang of ["en", "ar"] as const) for (const [index, d] of guidedDefinit
       if (!localStorage.getItem("abap2-master-progress")) localStorage.setItem("abap2-master-progress", JSON.stringify({version: 2, missions: ["structures"], labs: ["structures"], current: "structures", results: {structures: {attempts: 3, passed: true}}}));
     }, {lang, dark: index % 2 === 0});
     await page.goto(`/?mission=${d.id}`);
-    await expect(page.locator(".lesson-summary h1")).toHaveText(d.title[lang]);
+    await expect(page.locator(".lesson-summary h1")).toHaveText(localizedText(d.title, lang));
     const expand = page.getByRole("button", {name: treeCopy[lang].expandWorkspace, exact: true});
     if ((page.viewportSize()?.width || 0) >= 768) await expand.click();
-    await expect(page.locator(".guided-boundary")).toContainText(d.boundary[lang]);
+    await expect(page.locator(".guided-boundary")).toContainText(localizedText(d.boundary, lang));
     await expect(page.locator(".anatomy-group")).toHaveCount(d.groups.length);
     await page.locator(".anatomy-group").last().focus(); await page.keyboard.press("Enter");
-    await expect(page.locator(".anatomy-explanation h3")).toHaveText(d.groups.at(-1)!.title[lang]);
+    await expect(page.locator(".anatomy-explanation h3")).toHaveText(localizedText(d.groups.at(-1)!.title, lang));
     await expect(page.getByRole("button", {name: ui[lang].watchAnatomy, exact: true})).toHaveCount(0);
     let saved = await page.evaluate(() => JSON.parse(localStorage.getItem("abap2-master-progress")!));
     expect(saved.missions).toEqual(["structures"]); expect(saved.started).not.toContain(d.id);
     await tab(page, lang, "visualize");
     const explorer = page.locator(".artifact-explorer");
-    await expect(explorer.getByRole("button", {name: d.artifacts[0].title[lang], exact: false}).first()).toBeVisible();
+    await expect(explorer.getByRole("button", {name: localizedText(d.artifacts[0].title, lang), exact: false}).first()).toBeVisible();
     await explorer.locator("[data-artifact]").last().click();
-    await expect(explorer.locator(".artifact-detail h3")).toHaveText(d.artifacts.at(-1)!.title[lang]);
+    await expect(explorer.locator(".artifact-detail h3")).toHaveText(localizedText(d.artifacts.at(-1)!.title, lang));
     await expect(page.getByRole("tabpanel").locator(".monaco-editor")).toHaveCount(0);
     await tab(page, lang, "challenge");
     const assessment = page.getByRole("region", {name: lang === "en" ? "Apply the lesson" : "طبّق ما تعلمته", exact: true});
@@ -35,7 +37,7 @@ for (const lang of ["en", "ar"] as const) for (const [index, d] of guidedDefinit
     const complete = page.getByRole("button", {name: ui[lang].complete, exact: true});
     await expect(check).toBeDisabled(); await expect(complete).toBeDisabled();
     await assessment.getByRole("button", {name: lang === "en" ? "Show next hint" : "أظهر التلميح التالي", exact: true}).first().click();
-    await expect(assessment).toContainText(d.decisions[0].hints[0][lang]);
+    await expect(assessment).toContainText(localizedText(d.decisions[0].hints[0], lang));
     for (const decision of d.decisions) await assessment.locator(`[data-decision="${decision.id}"] select`).selectOption(decision.options.find(o => o.id !== decision.correct)!.id);
     await check.click(); await expect(assessment.getByTestId("guided-result")).toHaveClass(/error-text/);
     await expect(complete).toBeDisabled();
@@ -50,7 +52,7 @@ for (const lang of ["en", "ar"] as const) for (const [index, d] of guidedDefinit
     expect(saved.missions.filter((id: string) => id === d.id)).toHaveLength(1);
     expect(saved.passedChallenges).toContain(`${d.id}-assessment`);
     expect(saved.results.structures).toEqual({attempts: 3, passed: true});
-    await page.reload(); await expect(page.locator(".lesson-summary h1")).toHaveText(d.title[lang]);
+    await page.reload(); await expect(page.locator(".lesson-summary h1")).toHaveText(localizedText(d.title, lang));
     saved = await page.evaluate(() => JSON.parse(localStorage.getItem("abap2-master-progress")!));
     expect(saved.missions).toContain(d.id);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

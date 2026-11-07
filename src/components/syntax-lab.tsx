@@ -1,4 +1,5 @@
-﻿"use client";
+"use client";
+import { localizedText } from "../lib/language-policy";
 import { useRef, useState } from "react";
 import { Check, MousePointer2, ArrowRight } from "lucide-react";
 import { SyntaxToken } from "@/lib/curriculum";
@@ -166,11 +167,11 @@ export function SyntaxLab({
           </span>
           <dl>
             <dt>{t.meaning}</dt>
-            <dd><TechnicalText>{token.meaning[lang]}</TechnicalText></dd>
+            <dd><TechnicalText>{localizedText(token.meaning, lang)}</TechnicalText></dd>
             <dt>{t.why}</dt>
-            <dd><TechnicalText>{token.why[lang]}</TechnicalText></dd>
+            <dd><TechnicalText>{localizedText(token.why, lang)}</TechnicalText></dd>
             <dt>{t.write}</dt>
-            <dd><TechnicalText>{token.write[lang]}</TechnicalText></dd>
+            <dd><TechnicalText>{localizedText(token.write, lang)}</TechnicalText></dd>
           </dl>
           <div className="example-pair">
             <div>
@@ -184,10 +185,10 @@ export function SyntaxLab({
           </div>
           <Quiz
             key={id + token.id}
-            question={token.question[lang]}
-            options={token.options.map((o) => o[lang])}
+            question={localizedText(token.question, lang)}
+            options={token.options.map((o) => localizedText(o, lang))}
             answer={token.answer}
-            explanation={token.explanation[lang]}
+            explanation={localizedText(token.explanation, lang)}
             lang={lang}
             onCorrect={() =>
               setUnderstood((v) => Array.from(new Set([...v, token.id])))

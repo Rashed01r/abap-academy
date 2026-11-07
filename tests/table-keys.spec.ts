@@ -1,10 +1,12 @@
+import { enabledLocales } from "../src/lib/language-policy";
+import { localizedText } from "../src/lib/language-policy";
 import {openLesson,tab} from "./academy-helpers";
 import { test, expect } from "@playwright/test";
 import { missions } from "../src/lib/curriculum";
 import { ui } from "../src/lib/i18n";
 import { matchAnatomy } from "./anatomy-helpers";
 
-for (const lang of ["en", "ar"] as const) for (const theme of ["light", "dark"] as const) {
+for (const lang of enabledLocales) for (const theme of ["light", "dark"] as const) {
   test(`${lang}/${theme}: key policy, meaningful assessments, persistence and accessible exploration`, async ({ page }) => {
     const m = missions.find(m => m.id === "data-keys")!;
     const t = ui[lang];
@@ -19,7 +21,7 @@ for (const lang of ["en", "ar"] as const) for (const theme of ["light", "dark"] 
     const priorXP = missions.find(m => m.id === "structures")!.xp;
     await expect(page.locator(".header-xp")).toContainText(String(priorXP));
     await openLesson(page,m.id,lang);
-    await expect(page.locator(".lesson-summary h1")).toHaveText(m.title[lang]);
+    await expect(page.locator(".lesson-summary h1")).toHaveText(localizedText(m.title, lang));
     expect(await page.evaluate(() => JSON.parse(localStorage.getItem("abap2-master-progress")!).missions)).toEqual(["structures"]);
     await matchAnatomy(page, m.id, lang);
     await expect(page.locator('.anatomy-group[data-group="output"]')).toBeVisible();

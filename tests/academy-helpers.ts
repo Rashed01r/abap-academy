@@ -1,10 +1,11 @@
+import { localizedText } from "../src/lib/language-policy";
 import { expect, type Page } from "@playwright/test";
 import { missions, type Mission } from "../src/lib/curriculum";
 import { ui } from "../src/lib/i18n";
 import { treeCopy } from "../src/lib/tree-copy";
 import type { Locale } from "../src/lib/engine";
 export async function openLesson(page: Page, id: string, lang: Locale = "en") {
-    const title = id === "orientation" ? ui[lang].orientation : missions.find(m => m.id === id)!.title[lang];
+    const title = id === "orientation" ? ui[lang].orientation : localizedText(missions.find(m => m.id === id)!.title, lang);
     await page.getByRole('searchbox').fill(title);
     await page.locator('.tree-search-results').getByRole('button', { name: title, exact: true }).click();
     await expect(page.locator('.lesson-summary h1')).toHaveText(title);

@@ -1,10 +1,11 @@
+import { enabledLocales } from "../src/lib/language-policy";
 import { test,expect } from "@playwright/test";
 import { educationLessonIds } from "../src/lib/education-quality";
 import { visualPresentations } from "../src/lib/visual-presentations";
 import { openLesson,tab } from "./academy-helpers";
 test.use({actionTimeout:10000});
 
-for(const [lang,theme] of [["en","light"],["en","dark"],["ar","light"],["ar","dark"]] as const) test(`${lang}/${theme}: every implemented topic opens a visible, interactive primary illustration`,async({page},info)=>{
+for(const [lang,theme] of enabledLocales.flatMap(lang => (["light","dark"] as const).map(theme => [lang,theme] as const))) test(`${lang}/${theme}: every implemented topic opens a visible, interactive primary illustration`,async({page},info)=>{
  test.setTimeout(180000);const errors:string[]=[];page.on("pageerror",e=>errors.push(e.message));
  await page.addInitScript(({lang,theme})=>{localStorage.setItem("abap2-language",lang);localStorage.setItem("abap2-appearance",theme);},{lang,theme});
  await page.goto("/");
@@ -19,10 +20,10 @@ for(const [lang,theme] of [["en","light"],["en","dark"],["ar","light"],["ar","da
    }
    const trace=classroom.locator(".trace-classroom");
    if(await trace.count()){
-     const next=trace.getByRole("button",{name:lang === "en" ? "Next change" : "التغيير التالي",exact:true});
+     const next=trace.getByRole("button",{name:lang === "en" ? "Next" : "التالي",exact:true});
      if(await next.isEnabled())await next.click();else await trace.getByRole("button",{name:lang === "en" ? "Restart" : "البداية",exact:true}).click();
      await expect(page.locator('.syntax-lab .anatomy-group[aria-pressed="true"]')).toHaveCount(1);
-     if(visualPresentations[id] === "flow") await expect(trace.locator(".educational-flowchart path[marker-end]")).toHaveCount(id === "loop-control" ? 6 : 5);
+     if(visualPresentations[id] === "flow") await expect(trace.locator(".educational-flowchart path[marker-end]")).toHaveCount(id === "data-conditional-loop" ? 7 : id === "loop-control" ? 6 : 5);
    } else if(visualPresentations[id] === "relationships") {
      const nodes=classroom.locator(".architecture-node");await nodes.last().click();
      await expect(nodes.last()).toHaveAttribute("aria-pressed","true");
@@ -50,7 +51,7 @@ for(const [lang,theme] of [["en","light"],["en","dark"],["ar","light"],["ar","da
  const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem("abap2-master-progress")!));expect(saved.missions).toEqual([]);expect(saved.labs).toEqual([]);expect(saved.passedChallenges).toEqual([]);expect(errors).toEqual([]);
 });
 
-for(const lang of ["en","ar"] as const)test(`${lang}: category insertion, unique policy, lookup and linked reference anatomy change together`,async({page})=>{
+for(const lang of enabledLocales)test(`${lang}: category insertion, unique policy, lookup and linked reference anatomy change together`,async({page})=>{
  await page.addInitScript(lang=>localStorage.setItem("abap2-language",lang),lang);await page.goto("/");await openLesson(page,"data-table-categories",lang);
  const scene=page.locator(".category-classroom");await expect(scene.locator(".category-model")).toHaveCount(3);
  await scene.getByRole("button",{name:lang === "en" ? "Insert 30 / Omar" : "أدرج 30 / Omar",exact:true}).click();
@@ -66,7 +67,7 @@ for(const lang of ["en","ar"] as const)test(`${lang}: category insertion, unique
  await scene.locator('[data-group="category"]').click();await expect(scene.locator('[data-group="category"]')).toHaveAttribute("aria-pressed","true");
 });
 
-for(const lang of ["en","ar"] as const)test(`${lang}: row edits distinguish copying, explicit write-back and assigning the original row`,async({page})=>{
+for(const lang of enabledLocales)test(`${lang}: row edits distinguish copying, explicit write-back and assigning the original row`,async({page})=>{
  await page.addInitScript(lang=>localStorage.setItem("abap2-language",lang),lang);await page.goto("/");await openLesson(page,"data-work-areas-field-symbols",lang);
  const scene=page.locator(".row-access-classroom");await scene.getByRole("textbox").fill("O'Neil");await scene.getByRole("button",{name:lang === "en" ? "Change the name" : "غيّر الاسم",exact:true}).click();
  await expect(scene.locator(".row-source")).toContainText("Ahmed");await expect(scene.locator(".row-target")).toContainText("O'Neil");

@@ -1,10 +1,11 @@
+import { enabledLocales } from "../src/lib/language-policy";
 import {openLesson,tab} from "./academy-helpers";
 import {matchAnatomy} from "./anatomy-helpers";
 import {test, expect} from "@playwright/test";
 import {missions} from "../src/lib/curriculum";
 import {ui} from "../src/lib/i18n";
 
-for (const lang of ["en","ar"] as const) test(`${lang}: category comparison and both assessments are available immediately`, async ({page}) => {
+for (const lang of enabledLocales) test(`${lang}: category comparison and both assessments are available immediately`, async ({page}) => {
   const m=missions.find(m=>m.id === "data-table-categories")!;
   const t=ui[lang];
   await page.addInitScript(lang => {localStorage.setItem("abap2-language",lang);localStorage.setItem("abap2-appearance","light");},lang);

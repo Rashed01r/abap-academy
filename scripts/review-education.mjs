@@ -5,12 +5,12 @@ await mkdir(output, {recursive: true});
 const browser = await chromium.launch({executablePath: "C:/Program Files/Google/Chrome/Application/chrome.exe", headless: true});
 const topics = process.argv.length > 2 ? process.argv.slice(2) : ["conditions", "data-table-categories", "dictionary-introduction", "database-fundamentals", "oop-introduction", "applications-reports", "modern-syntax", "cloud-introduction", "projects-employee-management"];
 try {
-  for (const [lang, theme, width, height] of [["en", "light", 1440, 1100], ["ar", "dark", 390, 844]]) {
+  for (const [lang, theme, width, height] of [["en", "light", 1440, 1100], ["en", "dark", 390, 844]]) {
     const context = await browser.newContext({viewport: {width, height}});
     await context.addInitScript(({lang, theme}) => {localStorage.setItem("abap2-language", lang); localStorage.setItem("abap2-appearance", theme);}, {lang, theme});
     const page = await context.newPage();
     for (const id of topics) {
-      await page.goto(`http://localhost:3023/?mission=${id}`);
+      await page.goto(`${process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3023"}/?mission=${id}`);
       await page.locator(".lesson-concepts").waitFor();
       if (width > 760) await page.getByRole("button", {name: lang === "en" ? "Expand workspace" : "توسيع مساحة التعلّم", exact: true}).click();
       await page.locator(".lesson-concepts").scrollIntoViewIfNeeded();
@@ -43,4 +43,4 @@ try {
     await context.close();
   }
 } finally {await browser.close();}
-console.log(`Captured ${topics.length} topics in English desktop/light and Arabic mobile/dark, including available concept, diagram and relationship views. Inspect the actual PNGs before recording visual verification.`);
+console.log(`Captured ${topics.length} topics in English desktop/light and English mobile/dark, including available concept, diagram and relationship views. Inspect the actual PNGs before recording visual verification.`);

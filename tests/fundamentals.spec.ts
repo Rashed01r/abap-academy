@@ -1,9 +1,10 @@
+import { enabledLocales } from "../src/lib/language-policy";
 import { test, expect } from '@playwright/test';
 import { missions } from '../src/lib/curriculum';
 import { ui } from '../src/lib/i18n';
 import { openLesson, answerQuiz, edit, gradeAll, completion } from './academy-helpers';
 import { matchAnatomy } from './anatomy-helpers';
-for (const lang of ['en', 'ar'] as const)
+for (const lang of enabledLocales)
     test(`${lang}: returning learner completes Missions 04-09 and retains results`, async ({ page }) => {
         const t = ui[lang], errors: string[] = [];
         page.on('pageerror', e => errors.push(e.message));
@@ -62,16 +63,16 @@ test("table row pointer, backward stepping, restart and stale trace invalidation
     await expect(page.locator(".execution-pointer").filter({ visible: true })).toHaveCount(0);
 });
 for (const theme of ["light", "dark"] as const) {
-    test(`Arabic ${theme}: table and loop visual styling is loaded`, async ({ page }, info) => {
+    test(`Saved Arabic preference / English ${theme}: table and loop visual styling is loaded`, async ({ page }, info) => {
         await page.addInitScript(({ theme }) => {
             localStorage.setItem("abap2-language", "ar");
             localStorage.setItem("abap2-appearance", theme);
         }, { theme });
         await page.goto("/");
-        await expect(page.locator("html")).toHaveAttribute("lang", "ar");
-        await page.getByRole("button", { name: ui.ar.playground, exact: true }).click();
+        await expect(page.locator("html")).toHaveAttribute("lang", "en");
+        await page.getByRole("button", { name: ui.en.playground, exact: true }).click();
         await edit(page, "DATA lt_numbers TYPE STANDARD TABLE OF i WITH EMPTY KEY.\nAPPEND 10 TO lt_numbers.\nAPPEND 20 TO lt_numbers.\nDATA lv_number TYPE i.\nLOOP AT lt_numbers INTO lv_number.\n  WRITE lv_number.\nENDLOOP.");
-        await page.getByRole("button", { name: ui.ar.run, exact: true }).click();
+        await page.getByRole("button", { name: ui.en.run, exact: true }).click();
         await page.locator(".timeline li>button").filter({ visible: true }).filter({ hasText: "WRITE lv_number" }).nth(1).click();
         await expect(page.locator(".execution-pointer").filter({ visible: true })).toHaveCount(1);
         const table = page.getByTestId("table-memory");

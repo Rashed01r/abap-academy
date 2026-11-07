@@ -61,7 +61,7 @@ test("free guided exploration preserves prior achievements and gates once-only X
 test("content validation rejects broken graphs, missing translations and answerless decisions", () => {
   const d = guidedDefinitions[0];
   assert.ok(validateGuided({...d, relations: [{...d.relations[0], to: "absent"}]}).length);
-  assert.ok(validateGuided({...d, brief: {en: "English only", ar: ""}}).length);
+  assert.ok(validateGuided({...d, brief: {en: "", ar: "Retained"}}).length);
   assert.ok(validateGuided({...d, decisions: [{...d.decisions[0], correct: "absent"}, ...d.decisions.slice(1)]}).length);
   assert.ok(validateGuided({...d, decisions: []}).length);
 });

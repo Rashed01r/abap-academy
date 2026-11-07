@@ -1,10 +1,12 @@
+import { enabledLocales } from "../src/lib/language-policy";
+import { localizedText } from "../src/lib/language-policy";
 import { test, expect } from '@playwright/test';
 import { missions, structureExample } from '../src/lib/curriculum';
 import { ui } from '../src/lib/i18n';
 import { treeCopy } from '../src/lib/tree-copy';
 import { openLesson, tab, answerQuiz, edit, gradeAll, completion } from './academy-helpers';
 import { matchAnatomy } from './anatomy-helpers';
-for (const lang of ['en', 'ar'] as const)
+for (const lang of enabledLocales)
     for (const theme of ['light', 'dark'] as const)
         test(`${lang} ${theme}: complete orientation, missions and persist rewards`, async ({ page }, info) => {
             const t = ui[lang], errors: string[] = [];
@@ -13,7 +15,7 @@ for (const lang of ['en', 'ar'] as const)
             await page.goto('/');
             await expect(page.locator('html')).toHaveAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
             await openLesson(page, 'structures', lang);
-            await expect(page.locator('.lesson-summary h1')).toHaveText(missions[1].title[lang]);
+            await expect(page.locator('.lesson-summary h1')).toHaveText(localizedText(missions[1].title, lang));
             await expect(page.getByRole('dialog')).toHaveCount(0);
             await openLesson(page, 'orientation', lang);
             await matchAnatomy(page, 'orientation', lang);
@@ -57,7 +59,7 @@ for (const lang of ['en', 'ar'] as const)
             await page.screenshot({ path: info.outputPath('academy.png') });
             expect(errors).toEqual([]);
         });
-test("synchronized trace: next, previous, restart, play, edits, locale, and theme", async ({ page, }, info) => {
+test("synchronized trace: next, previous, restart, play, edits, English-only settings, and theme", async ({ page, }, info) => {
     await page.goto("/");
     await page
         .getByRole("button", { name: ui.en.playground, exact: true })
@@ -70,31 +72,31 @@ test("synchronized trace: next, previous, restart, play, edits, locale, and them
     await expect(page.getByTestId("memory")).toContainText("13");
     await controls.getByRole("button", { name: "Previous", exact: true }).click();
     await expect(page.getByTestId("memory").locator(".memory-card").last()).toContainText("0");
-    await page.getByRole("button", { name: "العربية", exact: true }).click();
+    await expect(page.locator("header .language")).toHaveCount(0);
     await expect(page.locator(".active-statement")).toHaveAttribute("data-start-line", "3");
     await expect(page.locator(".editor-shell")).toHaveAttribute("dir", "ltr");
-    await page.getByLabel(ui.ar.appearance, { exact: true }).selectOption("dark");
+    await page.getByLabel(ui.en.appearance, { exact: true }).selectOption("dark");
     await expect(page.locator(".editor-shell")).toHaveAttribute("data-editor-theme", "dark");
     await expect(page.locator(".active-statement")).toHaveAttribute("data-start-line", "3");
     await controls
-        .getByRole("button", { name: ui.ar.restart, exact: true })
+        .getByRole("button", { name: ui.en.restart, exact: true })
         .click();
     await expect(page.locator(".active-statement")).toHaveAttribute("data-start-line", "1");
-    await controls.getByRole("button", { name: ui.ar.play, exact: true }).click();
+    await controls.getByRole("button", { name: ui.en.play, exact: true }).click();
     await expect(page.locator(".active-statement")).toHaveAttribute("data-start-line", "2", { timeout: 4000 });
     await controls
-        .getByRole("button", { name: ui.ar.pause, exact: true })
+        .getByRole("button", { name: ui.en.pause, exact: true })
         .click();
     await edit(page, "DATA lv_age TYPE i\nlv_age = 25.");
     await expect(page.locator(".execution-pointer")).toHaveCount(0);
     await expect(page.locator(".timeline")).toHaveCount(0);
-    await page.getByRole("button", { name: ui.ar.run, exact: true }).click();
-    await expect(page.locator(".feedback.error")).toContainText("النقطة");
+    await page.getByRole("button", { name: ui.en.run, exact: true }).click();
+    await expect(page.locator(".feedback.error")).toContainText("period");
     await expect(page.locator(".error-range")).not.toHaveCount(0);
     await edit(page, structureExample);
-    await page.getByRole("button", { name: ui.ar.run, exact: true }).click();
+    await page.getByRole("button", { name: ui.en.run, exact: true }).click();
     await expect(page.locator(".active-statement")).toHaveAttribute("data-end-line", "4");
-    await controls.getByRole("button", { name: ui.ar.next, exact: true }).click();
+    await controls.getByRole("button", { name: ui.en.next, exact: true }).click();
     await page
         .locator(".view-line")
         .filter({ hasText: "ls_employee-name = 'Ahmed'." })

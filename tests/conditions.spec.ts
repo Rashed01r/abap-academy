@@ -1,9 +1,10 @@
+import { enabledLocales } from "../src/lib/language-policy";
 import { test, expect } from "@playwright/test";
 import { missions } from "../src/lib/curriculum";
 import { ui } from "../src/lib/i18n";
 import { openLesson, answerQuiz, edit, selectChallenge, completion } from "./academy-helpers";
 import { matchAnatomy } from "./anatomy-helpers";
-for (const lang of ["en", "ar"] as const)
+for (const lang of enabledLocales)
     for (const theme of ["light", "dark"] as const)
         test(`${lang} ${theme}: existing foundation migrates into all three Conditions challenges`, async ({ page }, info) => {
             const t = ui[lang], m = missions.find(m => m.id === "conditions")!;
@@ -59,19 +60,19 @@ for (const lang of ["en", "ar"] as const)
             expect(saved.results.conditions.attempts).toBe(6);
             expect(errors).toEqual([]);
         });
-test("diagnostics give relevant bilingual advice and permit correction", async ({ page }) => {
+test("diagnostics give relevant English advice and permit correction", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("button", { name: ui.en.playground, exact: true }).click();
     await edit(page, "WRITE missing.");
     await page.getByRole("button", { name: ui.en.run, exact: true }).click();
     await expect(page.locator(".feedback.error")).toContainText("DATA");
     await expect(page.locator(".feedback.error")).toContainText("FIELD-SYMBOLS");
-    await page.getByRole("button", { name: "العربية", exact: true }).click();
-    await page.getByText(ui.ar.explainWhy, { exact: true }).click();
-    await expect(page.locator(".feedback.error")).toContainText("قبل قراءة قيمته");
+    await expect(page.locator("header .language")).toHaveCount(0);
+    await page.getByText(ui.en.explainWhy, { exact: true }).click();
+    await expect(page.locator(".feedback.error")).toContainText("DATA");
     await edit(page, "DATA missing TYPE i VALUE 7.\nWRITE missing.");
     await expect(page.locator(".feedback.error")).toHaveCount(0);
-    await page.getByRole("button", { name: ui.ar.run, exact: true }).click();
+    await page.getByRole("button", { name: ui.en.run, exact: true }).click();
     await page.locator(".timeline li>button").filter({ visible: true }).last().click();
     await expect(page.getByTestId("output").filter({ visible: true })).toHaveText("7");
 });

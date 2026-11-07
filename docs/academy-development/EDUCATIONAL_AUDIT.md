@@ -1,5 +1,8 @@
 # Educational quality audit — 2026-11-05
 
+> **Current development language: English only (2026-11-07).** Arabic support is temporarily deferred, not removed. Preserve all existing Arabic resources and RTL support; do not create or review Arabic translations or run Arabic-specific UI checks while `ENABLE_ARABIC` is false. New playable content requires complete English teaching only. This policy supersedes bilingual authoring/review requirements in the historical sections below. See [the language-phase policy](LANGUAGE_PHASE.md).
+
+
 Presentation follow-up: the later user request explicitly rejected treating extra prose/selectors as sufficient. The current visual redesign, all-topic presentation inventory and newer verification evidence are in [VISUAL_CLASSROOM.md](VISUAL_CLASSROOM.md). This document retains the earlier source-level concept audit and its scoped historical evidence.
 
 The latest user request supersedes ordinary curriculum expansion for this session. Scope: all 24 implemented activities across all nine paths, including Orientation and the Employee Management design foundation. The 101 planned records are excluded from defect counts and inherit the new authoring requirements when implemented. No mission ID, challenge ID, completion record, XP amount, draft key or prerequisite-access rule changed.

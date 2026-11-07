@@ -17,3 +17,7 @@ IDs, existing learner progress, bilingual content, and working lessons. Use targ
 during development and full regression at milestone boundaries. Update the canonical
 continuation documents with exact verification results and remaining work before ending
 a development session. Do not mark planned or untested missions as verified.
+
+## Current language phase
+
+English only while `ENABLE_ARABIC = false`. Preserve existing Arabic resources for reactivation, but do not generate/review Arabic or run Arabic UI checks. New English-only lessons must pass active-language validation. Read docs/academy-development/LANGUAGE_PHASE.md and the latest continuation checkpoint.

@@ -1,5 +1,8 @@
 # English and Arabic authoring
 
+> **Current development language: English only (2026-11-07).** Arabic support is temporarily deferred, not removed. Preserve all existing Arabic resources and RTL support; do not create or review Arabic translations or run Arabic-specific UI checks while `ENABLE_ARABIC` is false. New playable content requires complete English teaching only. This policy supersedes bilingual authoring/review requirements in the historical sections below. See [the language-phase policy](LANGUAGE_PHASE.md).
+
+
 ## 2026-11-04 curriculum review
 
 New content distinguishes نتيجة البحث and الصف المطابق from بيانات منطقة العمل القديمة: a retained name after a failed READ is not success. Use فهرس/موضع الصف for the one-based position, مفتاح البحث for compared row fields, إدراج/تعديل/حذف for internal-table changes, and ترتيب تصاعدي/تنازلي for row ordering. Explain that filtering processing does not delete stored rows. The before/after panels read قبل then بعد in RTL layout; identifiers and values remain LTR.

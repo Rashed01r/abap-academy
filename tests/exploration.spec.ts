@@ -1,9 +1,11 @@
+import { enabledLocales } from "../src/lib/language-policy";
+import { localizedText } from "../src/lib/language-policy";
 import { test, expect } from '@playwright/test';
 import { missions, paths } from '../src/lib/curriculum';
 import { ui } from '../src/lib/i18n';
 import { treeCopy } from '../src/lib/tree-copy';
 import { openLesson, tab, answerQuiz, edit, selectChallenge, completion } from './academy-helpers';
-for (const lang of ['en', 'ar'] as const)
+for (const lang of enabledLocales)
     for (const theme of ['light', 'dark'] as const)
         test(`${lang} ${theme}: explore freely, skip labs, earn assessed XP once`, async ({ page }) => {
             const t = ui[lang], c = treeCopy[lang], m = missions.find(m => m.id === 'while')!;
@@ -14,8 +16,11 @@ for (const lang of ['en', 'ar'] as const)
             await expect(page.locator('.tree-paths>button')).toHaveCount(paths.length);
             await expect(page.locator('.header-xp')).toContainText('0');
             await openLesson(page, m.id, lang);
-            await page.locator('.lesson-summary details summary').click();
-            await expect(page.locator('.lesson-summary details')).toContainText(t.recommendedFirst);
+            const objectives = page.getByRole('button', { name: c.objectives, exact: true });
+            await expect(objectives).toHaveAttribute('aria-expanded', 'true');
+            await objectives.click();
+            await expect(objectives).toHaveAttribute('aria-expanded', 'false');
+            await expect(page.locator('.lesson-header-prerequisite')).toContainText(t.recommendedFirst);
             await tab(page, lang, 'challenge');
             const state = () => page.evaluate(() => JSON.parse(localStorage.getItem('abap2-master-progress')!));
             expect((await state()).viewed).toContain(m.id);
@@ -48,7 +53,7 @@ for (const lang of ['en', 'ar'] as const)
             await expect(page.locator('[data-lesson-node]')).toContainText(c.preview);
             await expect(page.getByRole('tab')).toHaveCount(0);
             await openLesson(page, 'addition', lang);
-            await expect(page.locator('.lesson-summary h1')).toHaveText(missions[0].title[lang]);
+            await expect(page.locator('.lesson-summary h1')).toHaveText(localizedText(missions[0].title, lang));
             expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
             expect(errors).toEqual([]);
         });

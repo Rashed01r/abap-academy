@@ -1,5 +1,8 @@
 # Visual classroom redesign — 2026-11-05
 
+> **Current development language: English only (2026-11-07).** Arabic support is temporarily deferred, not removed. Preserve all existing Arabic resources and RTL support; do not create or review Arabic translations or run Arabic-specific UI checks while `ENABLE_ARABIC` is false. New playable content requires complete English teaching only. This policy supersedes bilingual authoring/review requirements in the historical sections below. See [the language-phase policy](LANGUAGE_PHASE.md).
+
+
 The latest request changes the presentation standard to **SEE → UNDERSTAND → EXPLORE → READ THE CODE → PRACTICE**. This supersedes treating more prose, selectors or collapsed examples as a sufficient visual improvement.
 
 ## Safety and scope

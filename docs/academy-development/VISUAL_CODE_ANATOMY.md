@@ -1,5 +1,8 @@
 # Visual Code Anatomy
 
+> **Current development language: English only (2026-11-07).** Arabic support is temporarily deferred, not removed. Preserve all existing Arabic resources and RTL support; do not create or review Arabic translations or run Arabic-specific UI checks while `ENABLE_ARABIC` is false. New playable content requires complete English teaching only. This policy supersedes bilingual authoring/review requirements in the historical sections below. See [the language-phase policy](LANGUAGE_PHASE.md).
+
+
 ## 2026-11-04 curriculum extension
 
 Reference-only documents now reuse the same grouped-source selection, bilingual explanation, technical detail, matching activity and reference links for guided OOP/report/modern/CDS/RAP lessons. `referenceOnly` prevents all interpreter calls, runtime snapshots and Watch Execution controls for unsupported source. Guided groups explicitly define reviewed inclusive line ranges; validation requires full nonblank source coverage, ordered nonoverlapping groups and bilingual descriptions. The guided cloud/project authoring helper derives ranges from its authored code sections. This helper's fingerprint follows the authored source; executable Data examples retain fixed reviewed fingerprints so edits fail until their groups are reviewed.
@@ -8,7 +11,7 @@ The three new executable Data lessons add real lookup and before/after mutation/
 
 The authoring contract lives in [ARCHITECTURE.md](ARCHITECTURE.md). The shared UI is `src/components/visual-code-anatomy.tsx`; reviewed source groups are in `src/lib/anatomy-content.ts`; types and source validation are in `src/lib/code-anatomy.ts`.
 
-Start with complete code and meaningful operations. Provide stable group IDs, explicit source line ranges, English/Arabic titles and short explanations, appropriate state or type-blueprint views, optional syntax/glossary references, and meaningful matching descriptions. Cover every nonblank line without overlap. Review the source, semantics, ranges and prose together before setting a fixed source fingerprint. Never regenerate fingerprints to bypass source-drift failures.
+Start with complete code and meaningful operations. Provide stable group IDs, explicit source line ranges, English titles and short explanations (Arabic optional while disabled), appropriate state or type-blueprint views, optional syntax/glossary references, and meaningful matching descriptions. Cover every nonblank line without overlap. Review the source, semantics, ranges and prose together before setting a fixed source fingerprint. Never regenerate fingerprints to bypass source-drift failures.
 
 Selection shows a real matching trace snapshot, or an explicitly labelled type blueprint. Skipped branches have no invented state. Repeated groups show their last executed visit; Watch Execution provides the full trace. Educational Monaco decorations and execution pointers are independent. Editing the source invalidates stale decorations and traces. Code stays LTR; Arabic labels and explanations stay RTL. Match assessment checks understanding; browsing groups earns no XP.
 

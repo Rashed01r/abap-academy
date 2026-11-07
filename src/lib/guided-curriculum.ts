@@ -1,3 +1,4 @@
+import { hasRequiredTranslations } from "./language-policy";
 import type { Mission } from "./curriculum";
 import type { GuidedDefinition } from "./guided-types";
 import { guidedDataDefinitions } from "./guided-data-definitions";
@@ -34,7 +35,7 @@ export function validateGuided(d: GuidedDefinition): string[] {
     if (!value || typeof value !== "object") return;
     if ("en" in value || "ar" in value) {
       const t = value as {en?: unknown; ar?: unknown};
-      check(typeof t.en === "string" && t.en.trim() && typeof t.ar === "string" && t.ar.trim(), `${at} needs English and Arabic`);
+      check(hasRequiredTranslations(t), `${at} needs enabled-language translations`);
     } else Object.entries(value).forEach(([key, child]) => bilingual(child, `${at}.${key}`));
   };
   bilingual(d, "content");

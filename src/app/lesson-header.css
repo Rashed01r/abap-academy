@@ -1,0 +1,55 @@
+/* Shared lesson chrome. It scrolls inside the existing single panel body. */
+.panel-body .connected-lesson .lesson-header {
+  position:static;display:flex;flex-direction:column;gap:0;min-width:0;
+  margin:0 0 12px;padding:16px 18px;border:.5px solid #2a4239;border-radius:12px;
+  background:#12201c;color:#e6f2ee;box-shadow:none;font-size:13px;font-weight:400;
+}
+.lesson-header .lesson-header-title-row {display:flex;align-items:flex-start;gap:14px;min-width:0}
+.lesson-header .lesson-header-icon {display:flex;align-items:center;justify-content:center;flex:0 0 48px;width:48px;height:48px;border-radius:12px;background:#1d4a38;color:#7fe0bb}
+.lesson-header .lesson-header-title-block {flex:1;min-width:0}
+.lesson-header .lesson-header-context {margin-bottom:4px;font-size:11px;line-height:1.35;color:#9fb5ad;overflow-wrap:anywhere}
+.panel-body .connected-lesson .lesson-header .lesson-header-title {margin:0;font-size:22px;font-weight:500;line-height:1.25;letter-spacing:normal;overflow-wrap:anywhere}
+.lesson-header .lesson-header-subtitle {margin:5px 0 0;font-size:13px;font-weight:400;line-height:1.45;color:#b7cbc4;overflow-wrap:anywhere}
+.lesson-header .lesson-header-status {display:inline-flex;align-items:center;gap:5px;flex:0 0 auto;padding:3px 10px;border:0;border-radius:12px;font-size:11px;font-weight:400;line-height:1.4;white-space:nowrap}
+.lesson-header .lesson-header-status.status-completed {background:#1d4a38;color:#7fe0bb}
+.lesson-header .lesson-header-status.status-in-progress {background:#4a3d1a;color:#f0c969}
+.lesson-header .lesson-header-status.status-not-started {background:#26332f;color:#9fb5ad}
+.lesson-header .lesson-header-stats {display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:8px;margin:12px 0 0;min-width:0}
+.lesson-header .lesson-header-stat {min-width:0;padding:8px 12px;border:.5px solid #2a4239;border-radius:10px;background:#172a24}
+.lesson-header .lesson-header-stat dt {margin:0 0 4px;font-size:11px;font-weight:400;line-height:1.35;letter-spacing:.08em;text-transform:uppercase;color:#9fb5ad}
+.lesson-header .lesson-header-stat dd {margin:0;font-size:16px;font-weight:500;line-height:1.35;color:#e6f2ee;overflow-wrap:anywhere}
+.lesson-header .lesson-header-level {display:flex;align-items:center;flex-wrap:wrap;gap:5px 7px}
+.lesson-header .lesson-level-dots {display:inline-flex;gap:3px;align-items:center}
+.lesson-header .lesson-level-dots > span {width:5px;height:5px;border-radius:50%;background:#2f4a41}
+.lesson-header .lesson-level-dots > span[data-filled=true] {background:#5fd4a8}
+.lesson-header .lesson-header-objectives {margin-top:10px;min-width:0}
+.lesson-header .lesson-objectives-toggle {display:inline-flex;align-items:center;gap:7px;min-height:24px;padding:0;border:0;border-radius:4px;background:transparent;color:#b7cbc4;font-size:13px;font-weight:400;line-height:1.5;text-align:start;box-shadow:none;transform:none}
+.lesson-header .lesson-objectives-toggle:hover {background:transparent;color:#e6f2ee;transform:none;box-shadow:none}
+.lesson-header .lesson-objectives-chevron {transition:transform 150ms ease;transform:rotate(0deg)}
+.lesson-header .lesson-objectives-toggle[aria-expanded=true] .lesson-objectives-chevron {transform:rotate(180deg)}
+.lesson-header .lesson-header-objectives ul {display:grid;gap:4px;margin:8px 0 0;padding:0;list-style:none}
+.lesson-header .lesson-header-objectives ul[hidden] {display:none}
+.lesson-header .lesson-header-objectives li {display:flex;align-items:flex-start;gap:8px;margin:0;color:#cfe3dc;font-size:13px;font-weight:400;line-height:1.5;overflow-wrap:anywhere}
+.lesson-header .lesson-header-objectives li > svg {flex:0 0 15px;margin-top:2px;color:#4a6f62}
+.lesson-header:has(.status-completed) .lesson-header-objectives li > svg {color:#5fd4a8}
+.lesson-header .lesson-header-prerequisite {display:inline-flex;align-items:center;flex-wrap:wrap;align-self:flex-start;gap:5px 7px;max-width:100%;margin-top:10px;padding:4px 10px;border:.5px solid #2f5a4b;border-radius:8px;background:#172a24;color:#7fe0bb;font-size:12px;font-weight:400;line-height:1.5;text-align:start;overflow-wrap:anywhere;box-shadow:none;transform:none;transition:border-color 150ms ease,background-color 150ms ease}
+.lesson-header .lesson-header-prerequisite:hover {border-color:#5fd4a8;background:#172a24;color:#7fe0bb;box-shadow:none;transform:none}
+.lesson-header .lesson-header-prerequisite-label {color:#9fb5ad}
+.lesson-header .lesson-header-prerequisite-title {min-width:0}
+.lesson-header .lesson-header-back-arrow,.lesson-header .lesson-header-prerequisite > svg {flex-shrink:0}
+.lesson-header button:focus-visible {outline:2px solid #5fd4a8;outline-offset:3px}
+[dir=rtl] .lesson-header .lesson-header-back-arrow {transform:scaleX(-1)}
+[dir=rtl] .lesson-header .lesson-objectives-chevron {transform:scaleX(-1)}
+[dir=rtl] .lesson-header .lesson-objectives-toggle[aria-expanded=true] .lesson-objectives-chevron {transform:scaleX(-1) rotate(180deg)}
+@container lesson (max-width:520px) {
+  .panel-body .connected-lesson .lesson-header {padding:16px}
+  .lesson-header .lesson-header-title-row {flex-wrap:wrap;gap:10px 14px}
+  .lesson-header .lesson-header-title-block {flex-basis:calc(100% - 62px)}
+  .lesson-header .lesson-header-status {margin-inline-start:62px}
+}
+@container lesson (max-width:420px) {
+  .lesson-header .lesson-header-stats {grid-auto-flow:row;grid-template-columns:minmax(0,1fr)}
+}
+@media(prefers-reduced-motion:reduce) {
+  .lesson-header .lesson-objectives-chevron,.lesson-header .lesson-header-prerequisite {transition:none}
+}

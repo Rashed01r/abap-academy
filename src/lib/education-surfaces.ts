@@ -2,6 +2,7 @@
  * When adding a control or question, update its requirements as part of authoring.
  * These IDs must resolve to explicit teaching, not merely a substring in prose. */
 export const educationSurfaces: Record<string, {visualize: string[]; knowledge: string[]}> = Object.fromEntries(([
+  ["data-conditional-loop", "selection aggregate", "selection aggregate"],
   ["orientation", "statements readable-source simulation", "statements"],
   ["addition", "integer-storage sum-output", "integer-storage"],
   ["structures", "structure-type record-access", "structure-type record-access"],

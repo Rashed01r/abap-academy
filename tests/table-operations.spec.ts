@@ -1,10 +1,12 @@
+import { enabledLocales } from "../src/lib/language-policy";
+import { localizedText } from "../src/lib/language-policy";
 import { test, expect } from "@playwright/test";
 import { tableMutationsMission } from "../src/lib/table-mutations-mission";
 import { sortingFilteringMission } from "../src/lib/sorting-filtering-mission";
 import { ui } from "../src/lib/i18n";
 import { openLesson, tab, edit, answerQuiz, completion } from "./academy-helpers";
 
-for (const m of [tableMutationsMission, sortingFilteringMission]) for (const lang of ["en", "ar"] as const) {
+for (const m of [tableMutationsMission, sortingFilteringMission]) for (const lang of enabledLocales) {
   test(`${lang}: ${m.id} real before/after rows, behavioral grading and saved progress`, async ({page}) => {
     const errors: string[] = []; page.on("pageerror", error => errors.push(error.message));
     const t = ui[lang], sorting = m.id === "data-sorting-filtering";
@@ -52,7 +54,7 @@ for (const m of [tableMutationsMission, sortingFilteringMission]) for (const lan
     expect(saved.missions.filter((id:string) => id === m.id)).toHaveLength(1);
     expect(saved.passedChallenges).toContain(challenge.id);
     expect(saved.results.structures).toEqual({attempts:2,passed:true});
-    await page.reload(); await expect(page.locator(".lesson-summary h1")).toHaveText(m.title[lang]);
+    await page.reload(); await expect(page.locator(".lesson-summary h1")).toHaveText(localizedText(m.title, lang));
     expect(errors).toEqual([]);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   });

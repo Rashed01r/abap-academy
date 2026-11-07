@@ -1,10 +1,11 @@
+import { localizedText } from "../src/lib/language-policy";
 import {expect, type Page} from "@playwright/test";
 import {missions} from "../src/lib/curriculum";
 import {getAnatomy,orientationExamples} from "../src/lib/anatomy-content";
 import {ui, type Locale} from "../src/lib/i18n";
 
 export async function matchAnatomy(page:Page,id:string,lang:Locale) {
-  const source=id === "orientation" ? orientationExamples[lang] : missions.find(m=>m.id === id)!.example;
+  const source=id === "orientation" ? localizedText(orientationExamples, lang) : missions.find(m=>m.id === id)!.example;
   const doc=getAnatomy(id,source),t=ui[lang];
   const lab=page.locator(".syntax-lab > .visual-code-anatomy, .primary-code-anatomy > .visual-code-anatomy"),match=lab.locator(".anatomy-match");
   for(let index=0;index<doc.checks.length;index++) {

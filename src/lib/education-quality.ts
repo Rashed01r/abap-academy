@@ -1,3 +1,4 @@
+import { hasRequiredTranslations } from "./language-policy";
 import { missions, orientation, type Text } from "./curriculum";
 import { getAnatomy, orientationExamples } from "./anatomy-content";
 import { educationContent, educationExampleFragments, type EducationSpec } from "./education-content";
@@ -22,7 +23,7 @@ export function conceptRecords(lessonId: string, spec = educationContent[lessonI
 export function validateEducation(content: Record<string, EducationSpec> = educationContent): string[] {
   const errors: string[] = [];
   const check = (ok: unknown, message: string) => { if (!ok) errors.push(message); };
-  const bilingual = (value: Text | undefined) => !!value?.en?.trim() && !!value?.ar?.trim();
+  const bilingual = hasRequiredTranslations;
   for (const id of Object.keys(content)) check(educationLessonIds.includes(id), `${id}: unknown lesson`);
   for (const id of educationLessonIds) {
     check(!!visualPresentations[id], `${id}: missing primary visual presentation`);
@@ -51,13 +52,13 @@ export function validateEducation(content: Record<string, EducationSpec> = educa
       ...(m?.requiredActivities || []), ...(m?.guided?.decisions || []).map(d => d.id),
     ]);
     const required = m?.guided ? m.guided.decisions.map(d => d.id) : m ? [...(m.challenges || [m]).map(ch => ch.id), ...(m.requiredActivities || [])] : ["orientation-code", "orientation-quiz"];
-    check(bilingual(spec.what) && bilingual(spec.why), `${id}: missing bilingual introduction`);
+    check(bilingual(spec.what) && bilingual(spec.why), `${id}: missing required-language introduction`);
     check(spec.concepts.length > 0, `${id}: no essential concepts`);
     const ids = new Set<string>(), objectives = new Set<number>(), assessed = new Set<string>();
     for (const concept of spec.concepts) {
       const at = `${id}/${concept.id}`;
       check(!!concept.id && !ids.has(concept.id), `${at}: missing or duplicate concept ID`); ids.add(concept.id);
-      check(bilingual(concept.name) && bilingual(concept.explanation) && bilingual(concept.misconception), `${at}: missing bilingual concept teaching or feedback`);
+      check(bilingual(concept.name) && bilingual(concept.explanation) && bilingual(concept.misconception), `${at}: missing required-language concept teaching or feedback`);
       check(concept.objectives.length > 0, `${at}: no learning objective`);
       for (const index of concept.objectives) {
         check(Number.isInteger(index) && index >= 0 && index < (m?.objectives.length || 1), `${at}: unknown objective ${index}`);

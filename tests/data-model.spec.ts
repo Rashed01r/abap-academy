@@ -1,9 +1,10 @@
+import { enabledLocales } from "../src/lib/language-policy";
 import { test, expect } from '@playwright/test';
 import { missions } from '../src/lib/curriculum';
 import { ui } from '../src/lib/i18n';
 import { openLesson, edit, gradeAll, answerQuiz, completion } from './academy-helpers';
 import { matchAnatomy } from './anatomy-helpers';
-for (const lang of ['en', 'ar'] as const)
+for (const lang of enabledLocales)
     test(`${lang}: returning learner completes the data table model and retains results`, async ({ page }) => {
         const t = ui[lang], errors: string[] = [];
         page.on('pageerror', e => errors.push(e.message));

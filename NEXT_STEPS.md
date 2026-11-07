@@ -1,5 +1,36 @@
 # Resume academy development
 
+## Latest presentation checkpoint - shared lesson headers (2026-11-07)
+
+All 25 lessons now use one data-driven LessonHeader. Lesson content, routes, progress/XP, drafts and assessment behavior remain intact. First-visit objectives, accessible toggling, module icon defaults, status/stat tiles and linked recommended-first lessons are implemented. Missing-field audit: no displayed subtitle/objective gaps; Orientation uses existing fallback strings; all 25 lack explicit icons and use module defaults. See [the header contract/audit](docs/academy-development/LESSON_HEADERS.md) and [verification ledger](docs/academy-development/IMPLEMENTATION_PROGRESS.md).
+
+Build, lint/typecheck, both content validators and 111/111 unit tests passed. Targeted browser checks passed 18/18; full production regression passed 144/146 (4.9m), followed by unchanged 2/2 serial retries (3.6s) for Windows/Chrome resource failures. All 146 scenarios passed across those runs on the same build; no tests skipped and no application source changed afterward. English remains the only active language; Arabic resources/RTL styles remain preserved and deferred. No mission status changed. Next curriculum mission: **data-table-expressions**. Production preview: http://localhost:3033/?mission=structures.
+
+
+## English-only phase and conditional LOOP checkpoint (2026-11-07)
+
+Current development language: **English only**. Arabic is temporarily deferred and all resources are preserved. Active validators require English; no Arabic generation, editorial work or UI checks are required. This checkpoint supersedes the historical bilingual requirements and next-mission instructions below.
+
+Implemented `data-conditional-loop` (recommended prerequisite `data-sorting-filtering`), its real one-comparison LOOP WHERE simulation, full English anatomy/Syntax Lab, shared trace/flowchart and `data-conditional-report` assessment. Current inventory: **25 playable activities, 24 registered missions, 35 assessments (26 code + 9 guided), 5,615 XP, 100 planned records**. Verification complete: production build, standalone lint/typecheck, education/curriculum validation, **111/111 unit tests** and **140/140 full production browser tests (4.5m, three workers)** passed. Desktop/light and mobile/dark screenshots were inspected; architecture endpoint geometry passed 6/6. No tests were skipped. The new mission is technically VERIFIED; independent learner certification remains separate.
+
+Next mission: **data-table-expressions**, then **data-table-performance**, then **data-employee-manager**. The full academy and Employee Management capstone remain unfinished. Follow [the phase policy](docs/academy-development/LANGUAGE_PHASE.md); preserve all existing learner records, IDs and drafts.
+
+
+> **Current development language: English only (2026-11-07).** Arabic support is temporarily deferred, not removed. Preserve all existing Arabic resources and RTL support; do not create or review Arabic translations or run Arabic-specific UI checks while `ENABLE_ARABIC` is false. New playable content requires complete English teaching only. This policy supersedes bilingual authoring/review requirements in the historical sections below. See [the language-phase policy](docs/academy-development/LANGUAGE_PHASE.md).
+
+
+## Latest UI request - shared live teaching traces, 2026-11-07
+
+Verification: build, lint/typecheck, education/curriculum validation and **104/104 unit tests** passed. Full production browser regression: **202/202 (7.3m)**. After a final nested-block caption-only refinement, rebuilt production passed **22/22 targeted trace/visual cases (1.3m)**; full regression was not repeated after that scoped text change. Geometry: **6/6** architecture scenes. Representative actual English/Arabic images across all nine families were inspected.
+
+All 24 implemented lessons / nine visual families now use shared trace controls, per-step captions, numbered code, snapshot comparisons and responsive visual states. Lesson data, routes, interpreter semantics, progress v2, XP, assessments and existing model controls are preserved. Read [the shared trace contract](docs/academy-development/TEACHING_TRACE.md), [caption-review flags](docs/academy-development/TRACE_CAPTION_REVIEW.md) and the latest [implementation progress](docs/academy-development/IMPLEMENTATION_PROGRESS.md) for exact verification. Generated captions still need independent beginner/Arabic review; no curriculum mission was promoted. The next unimplemented mission remains **data-conditional-loop**. Production preview: http://localhost:3031/?mission=conditions.
+
+## Latest UI request - calm green restyle, 2026-11-07
+
+Verification: build/lint/typecheck, education/curriculum validation and 100/100 unit tests passed. Full browser run: 195/196 (7.9m); after its mobile maximize-height correction, rebuilt production passed 50/50 targeted tree/resizing/visual cases (2.0m), covering the failed scenario. Full regression was not repeated after that scoped CSS correction. Preview: http://localhost:3030/?mission=structures.
+
+Applied the user's presentation-only green theme to the existing tree and classroom: named CSS tokens, 18px dot grid, flat compact cards, thin selected borders, compact header, shared breadcrumb/journey strip, floating existing graph controls, lesson mode buttons and status chips. Component edits add status classes only. Content, routes, state, progress v2, drafts and assessments remain unchanged. Both appearance preferences use the requested green shell; the existing preference and editor theme behavior remain. See the latest entry in [implementation progress](docs/academy-development/IMPLEMENTATION_PROGRESS.md) for verification and scope limits. No curriculum expansion occurred; the next unimplemented mission remains **data-conditional-loop**.
+
 ## Latest priority — visual classroom redesign, 2026-11-05
 
 The latest user request supersedes prose/selector-only improvements. Read [the redesign inventory and verification ledger](docs/academy-development/VISUAL_CLASSROOM.md) first, then the existing audit, implementation progress and actual repository. Teaching order: SEE → UNDERSTAND → EXPLORE → READ THE CODE → PRACTICE.

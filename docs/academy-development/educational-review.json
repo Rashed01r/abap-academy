@@ -97,6 +97,12 @@
     "projects-employee-management": {
       "fingerprint": "f5dba082",
       "status": "SOURCE_REVIEWED_WITH_LIMITATIONS"
+    },
+    "data-conditional-loop": {
+      "fingerprint": "9a3ac941",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS",
+      "reviewedOn": "2026-11-07",
+      "scope": "English-only source and simulation review: selection preserves rows, inclusive boundary, empty results, count/total; one-comparison standard-table subset. Not SAP compilation or learner certification. Arabic deferred."
     }
   }
 }

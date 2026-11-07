@@ -1,3 +1,4 @@
+import { hasRequiredTranslations } from "../src/lib/language-policy";
 ﻿import { test } from "node:test";
 import assert from "node:assert/strict";
 import { parse, simulate, evaluate, SimulationError } from "../src/lib/engine";
@@ -266,7 +267,7 @@ test("curriculum prerequisites are ordered and Conditions teaches each assessed 
     assert.ok(seen.has(mission.prerequisite), `${mission.id} has an earlier prerequisite`);
     assert.ok(!seen.has(mission.id), "mission IDs are unique");
     seen.add(mission.id);
-    assert.ok(mission.objectives.length && mission.practice.en && mission.practice.ar);
+    assert.ok(mission.objectives.length && hasRequiredTranslations(mission.practice));
     if (!mission.guided) simulate(mission.example);
   }
   const conditions = missions.find(m => m.id === "conditions")!;

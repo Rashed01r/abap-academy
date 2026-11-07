@@ -1,5 +1,8 @@
 # Academy architecture
 
+> **Current development language: English only (2026-11-07).** Arabic support is temporarily deferred, not removed. Preserve all existing Arabic resources and RTL support; do not create or review Arabic translations or run Arabic-specific UI checks while `ENABLE_ARABIC` is false. New playable content requires complete English teaching only. This policy supersedes bilingual authoring/review requirements in the historical sections below. See [the language-phase policy](LANGUAGE_PHASE.md).
+
+
 ## Declarative guided curriculum and Data runtime (2026-11-04)
 
 `guided-types.ts` defines bilingual lesson metadata, grouped reference source, artifact relationships, scenario decisions, progressive hints and a final knowledge check. Independent data/development/cloud-project definition files feed `registerGuided` in `guided-curriculum.ts`; curriculum.ts remains the single playable registry. `validateGuided` checks bilingual fields, artifact endpoints, distinct decisions/options, answers and hints; the existing validator also checks source coverage and reference solutions. This is the reusable generation/registration pipeline for complete guided lessons, not a placeholder generator.

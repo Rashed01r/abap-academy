@@ -1,3 +1,4 @@
+import { enabledLocales } from "../src/lib/language-policy";
 import {test} from "node:test";
 import assert from "node:assert/strict";
 import {missions,structureExample} from "../src/lib/curriculum";
@@ -6,8 +7,8 @@ import {defineAnatomy,eventsForGroup,groupAtLine,lineRange,sourceFingerprint,val
 import {simulate} from "../src/lib/engine";
 import {anatomyConcepts} from "../src/lib/anatomy-concepts";
 
-test("every implemented lab has reviewed bilingual groups, complete source coverage and meaningful matching",()=>{
-  for(const [id,source] of [...missions.map(m=>[m.id,m.example]),...Object.values(orientationExamples).map(s=>["orientation",s])]) {
+test("every implemented lab has reviewed enabled-language groups, complete source coverage and meaningful matching",()=>{
+  for(const [id,source] of [...missions.map(m=>[m.id,m.example]),...enabledLocales.map(locale=>orientationExamples[locale]).map(s=>["orientation",s])]) {
     const doc=getAnatomy(id,source);
     validateAnatomy(doc,source);
     assert.ok(doc.groups.length>=2);

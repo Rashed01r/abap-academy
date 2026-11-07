@@ -1,9 +1,12 @@
 "use client";
+import { localizedText } from "../lib/language-policy";
 import { useEffect, useId, useRef, useState } from "react";
 import type { GuidedDefinition } from "@/lib/guided-types";
 import type { Locale } from "@/lib/engine";
 import type { ClassroomSelection } from "./trace-classroom";
 
+import { TeachingTrace } from "./teaching-trace";
+import { firstSentence } from "@/lib/teaching-trace";
 const groupMap: Record<string, Record<string,string>> = {
   "dictionary-introduction": {domain:"status-field",element:"status-field",structure:"table-container",table:"table-container"},
   "cloud-introduction": {package:"cloud-contract",api:"cloud-api",cds:"cloud-exposure",behavior:"cloud-exposure",service:"cloud-exposure",binding:"cloud-exposure",client:"cloud-exposure"},
@@ -28,19 +31,26 @@ export function ArchitectureClassroom({definition:d, lang, selection, onSelect}:
         const sameRow=Math.abs(a.top-b.top)<4*zoom;
         const ax=(a.left-base.left)/zoom, bx=(b.left-base.left)/zoom, ay=(a.top+a.height/2-base.top)/zoom, by=(b.top+b.height/2-base.top)/zoom;
         const longJump=y2-y1>Math.max(a.height,b.height)/zoom+50;
-        const d=sameRow ? a.left<b.left ? `M${(a.right-base.left)/zoom},${ay} L${bx},${by}` : `M${ax},${ay} L${(b.right-base.left)/zoom},${by}` : longJump ? `M${ax},${ay} L8,${ay} L8,${by} L${bx},${by}` : `M${x1},${y1} C${x1},${y1+18} ${x2},${y2-18} ${x2},${y2}`;
+        const right=x1>element.offsetWidth/2,side=right?element.offsetWidth-6:6,sign=right?1:-1;
+        const exit=right?(a.right-base.left)/zoom:ax;
+        const outside=`M${exit},${ay} H${side-sign*8} Q${side},${ay} ${side},${ay+8} V${y2-20} Q${side},${y2-12} ${side-sign*8},${y2-12} H${x2+sign*8} Q${x2},${y2-12} ${x2},${y2-4} V${y2}`;
+        const d=sameRow ? a.left<b.left ? `M${(a.right-base.left)/zoom},${ay} L${bx},${by}` : `M${ax},${ay} L${(b.right-base.left)/zoom},${by}` : longJump ? outside : `M${x1},${y1} C${x1},${y1+18} ${x2},${y2-18} ${x2},${y2}`;
         return {from:r.from,to:r.to,d};
       }));
     }
     const observer=new ResizeObserver(measure);observer.observe(element);measure();return()=>observer.disconnect();
-  },[d]);
+  },[d,lang]);
   const en=lang === "en";
+  const traceSteps=d.artifacts.map(a=>({id:a.id,title:localizedText(a.title, lang),sentence:firstSentence(localizedText(a.description, lang)),code:a.example,line:1,state:{[en ? "Definition" : "التعريف"]:localizedText(a.title, lang)}}));
+  const incoming=edges.filter(edge=>edge.to===artifact.id).at(-1);
   return <section className="architecture-classroom" data-primary-diagram="relationships" aria-label={en ? "Explore the connected definitions" : "استكشف التعريفات المترابطة"}>
-    <div className="architecture-canvas" ref={root} dir="ltr">
-      <svg className="architecture-connections" aria-hidden="true"><defs><marker id={marker} markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="currentColor"/></marker></defs>{edges.map((edge,i)=><path key={i} data-edge-to={edge.to} data-edge-from={edge.from} d={edge.d} markerEnd={`url(#${marker})`} className={edge.from === artifact.id || edge.to === artifact.id ? "active" : ""}/>)}</svg>
-      {d.artifacts.map(a=><button key={a.id} className={`architecture-node ${artifact.id === a.id ? "active" : ""}`} data-architecture-node={a.id} aria-pressed={artifact.id === a.id} onClick={()=>choose(a.id)} dir={en ? "ltr" : "rtl"}><strong>{a.title[lang]}</strong><code dir="ltr">{a.example.split("\n")[0]}</code></button>)}
+    <TeachingTrace steps={traceSteps} index={d.artifacts.indexOf(artifact)} onChoose={index=>choose(d.artifacts[index].id)} lang={lang} reference>
+    <div className="architecture-canvas" ref={root} dir={lang === "ar" ? "rtl" : "ltr"}>
+      <svg className="architecture-connections" aria-hidden="true"><defs><marker id={marker} markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#4a6f62"/></marker><marker id={marker+"-active"} markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#5fd4a8"/></marker></defs>{edges.map((edge,i)=><path key={i} data-edge-to={edge.to} data-edge-from={edge.from} d={edge.d} markerEnd={`url(#${marker}${edge === incoming ? "-active" : ""})`} className={edge === incoming ? "active" : ""}/>)}</svg>
+      {d.artifacts.map(a=><button key={a.id} className={`architecture-node ${artifact.id === a.id ? "active" : ""}`} data-architecture-node={a.id} aria-pressed={artifact.id === a.id} onClick={()=>choose(a.id)} dir={en ? "ltr" : "rtl"}><strong>{localizedText(a.title, lang)}</strong><code dir="ltr">{a.example.split("\n")[0]}</code></button>)}
     </div>
-    <article className="architecture-inspector" aria-live="polite"><h3>{artifact.title[lang]}</h3><p>{artifact.description[lang]}</p><div className="architecture-paths">{d.relations.filter(r=>r.from === artifact.id || r.to === artifact.id).map((r,i)=><div key={i}><button className="text-button" onClick={()=>choose(r.from)}>{d.artifacts.find(a=>a.id === r.from)!.title[lang]}</button><span> {en ? "→" : "←"} {r.label[lang]} {en ? "→" : "←"} </span><button className="text-button" onClick={()=>choose(r.to)}>{d.artifacts.find(a=>a.id === r.to)!.title[lang]}</button></div>)}</div></article>
+    </TeachingTrace>
+    <article className="architecture-inspector" aria-live="polite"><h3>{localizedText(artifact.title, lang)}</h3><p>{localizedText(artifact.description, lang)}</p><div className="architecture-paths">{d.relations.filter(r=>r.from === artifact.id || r.to === artifact.id).map((r,i)=><div key={i}><button className="text-button" onClick={()=>choose(r.from)}>{localizedText(d.artifacts.find(a=>a.id === r.from)!.title, lang)}</button><span> {en ? "→" : "←"} {localizedText(r.label, lang)} {en ? "→" : "←"} </span><button className="text-button" onClick={()=>choose(r.to)}>{localizedText(d.artifacts.find(a=>a.id === r.to)!.title, lang)}</button></div>)}</div></article>
     <p className="visual-boundary">{en ? "Connected conceptual artifacts · select a node to connect its responsibility with the reference code below. Arrows show declared relationships, not SAP activation or a running service." : "كائنات مفاهيمية مترابطة · اختر عقدة لربط مسؤوليتها بالأكواد المرجعية أدناه. توضح الأسهم العلاقات المصرح بها، لا تفعيل SAP أو خدمة تعمل فعلياً."}</p>
   </section>;
 }

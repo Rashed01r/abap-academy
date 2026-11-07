@@ -1,5 +1,8 @@
 # Smart resizable learning workspace — 2026-11-04
 
+> **Current development language: English only (2026-11-07).** Arabic support is temporarily deferred, not removed. Preserve all existing Arabic resources and RTL support; do not create or review Arabic translations or run Arabic-specific UI checks while `ENABLE_ARABIC` is false. New playable content requires complete English teaching only. This policy supersedes bilingual authoring/review requirements in the historical sections below. See [the language-phase policy](LANGUAGE_PHASE.md).
+
+
 ## Scope and safety
 
 This user-requested interface enhancement takes precedence over the next curriculum mission for this session. The existing KnowledgeTree and its one connected lesson are reused. No mission, educational source, assessment, stable ID, XP rule or progress version was changed. The next curriculum task remains `data-read-table`.

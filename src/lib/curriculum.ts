@@ -1,10 +1,10 @@
 ﻿import { Locale } from "./engine";
-export type Text = { en: string; ar: string };
+export type Text = import("./language-policy").LocalizedText;
 import { fundamentals } from "./fundamentals";
 import { dataMissions } from "./data-missions";
 import { guidedMissions } from "./guided-curriculum";
 import type { GuidedDefinition } from "./guided-types";
-export const text = (en: string, ar: string): Text => ({ en, ar });
+export const text = (en: string, ar?: string): Text => ar === undefined ? ({ en }) : ({ en, ar });
 export type SyntaxToken = {
   id: string;
   label: string;

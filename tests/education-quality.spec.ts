@@ -1,3 +1,5 @@
+import { enabledLocales } from "../src/lib/language-policy";
+import { localizedText } from "../src/lib/language-policy";
 import { test, expect } from "@playwright/test";
 import { missions } from "../src/lib/curriculum";
 import { educationContent } from "../src/lib/education-content";
@@ -5,7 +7,7 @@ import { educationScenarios } from "../src/lib/education-scenarios";
 import { openLesson, tab } from "./academy-helpers";
 import { ui } from "../src/lib/i18n";
 
-for (const lang of ["en", "ar"] as const) test(`${lang}: every implemented lesson exposes its complete bilingual concept teaching without awarding progress`, async ({page}) => {
+for (const lang of enabledLocales) test(`${lang}: every implemented lesson exposes its complete bilingual concept teaching without awarding progress`, async ({page}) => {
   test.setTimeout(180000);
   const errors: string[] = []; page.on("pageerror", e => errors.push(e.message));
   await page.addInitScript(lang => {localStorage.setItem("abap2-language", lang); localStorage.setItem("abap2-appearance", lang === "ar" ? "dark" : "light");}, lang);
@@ -13,12 +15,12 @@ for (const lang of ["en", "ar"] as const) test(`${lang}: every implemented lesso
   for (const [id, spec] of Object.entries(educationContent)) {
     await openLesson(page, id, lang);
     const concepts = page.locator(".lesson-concepts");
-    await expect(page.locator(".visual-introduction")).toContainText(spec.what[lang]);
-    await expect(page.locator(".visual-introduction")).toContainText(spec.why[lang]);
+    await expect(page.locator(".visual-introduction")).toContainText(localizedText(spec.what, lang));
+    await expect(page.locator(".visual-introduction")).toContainText(localizedText(spec.why, lang));
     for (const concept of spec.concepts) {
-      await concepts.locator(".concept-choices").getByRole("button", {name: concept.name[lang], exact: true}).click();
+      await concepts.locator(".concept-choices").getByRole("button", {name: localizedText(concept.name, lang), exact: true}).click();
       await expect(concepts.locator(".concept-detail")).toHaveAttribute("data-concept", `${id}/${concept.id}`);
-      await expect(concepts.locator(".concept-detail")).toContainText(concept.explanation[lang]);
+      await expect(concepts.locator(".concept-detail")).toContainText(localizedText(concept.explanation, lang));
     }
     await expect(page.locator(".header-xp")).toContainText("0");
   }
@@ -28,7 +30,7 @@ for (const lang of ["en", "ar"] as const) test(`${lang}: every implemented lesso
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
-for (const lang of ["en", "ar"] as const) test(`${lang}: interactive decision boundaries, loop alternatives and concept feedback preserve achievements`, async ({page}) => {
+for (const lang of enabledLocales) test(`${lang}: interactive decision boundaries, loop alternatives and concept feedback preserve achievements`, async ({page}) => {
   await page.addInitScript(lang => {localStorage.setItem("abap2-language", lang); localStorage.setItem("abap2-appearance", lang === "ar" ? "dark" : "light");}, lang);
   await page.goto("/?mission=conditions");
   await openLesson(page, "conditions", lang);
@@ -59,7 +61,7 @@ for (const lang of ["en", "ar"] as const) test(`${lang}: interactive decision bo
   expect(progress.missions).toEqual([]); expect(progress.labs).toEqual([]); expect(progress.passedChallenges).toEqual([]);
 });
 
-for (const lang of ["en", "ar"] as const) test(`${lang}: all alternative anatomy examples work and reference-only categories never offer simulated execution`, async ({page}) => {
+for (const lang of enabledLocales) test(`${lang}: all alternative anatomy examples work and reference-only categories never offer simulated execution`, async ({page}) => {
   test.setTimeout(180000);
   await page.addInitScript(lang => localStorage.setItem("abap2-language", lang), lang);
   await page.goto("/");
@@ -67,16 +69,16 @@ for (const lang of ["en", "ar"] as const) test(`${lang}: all alternative anatomy
     await openLesson(page, id, lang);
     const section = page.locator(".lesson-alternatives");
     for (const scenario of scenarios) {
-      await section.locator(":scope > .explore-actions").getByRole("button", {name: scenario.title[lang], exact: true}).click();
+      await section.locator(":scope > .explore-actions").getByRole("button", {name: localizedText(scenario.title, lang), exact: true}).click();
       await expect(section.locator(".anatomy-group")).toHaveCount(scenario.doc.groups.length);
       await expect(section.getByRole("button", {name: ui[lang].exploreSyntax, exact: true})).toHaveCount(0);
       for (const group of scenario.doc.groups) {
         await section.locator(`[data-group="${group.id}"]`).click();
-        await expect(section.locator(".anatomy-explanation")).toContainText(group.explanation[lang]);
+        await expect(section.locator(".anatomy-explanation")).toContainText(localizedText(group.explanation, lang));
       }
       if (scenario.doc.referenceOnly) {
         await expect(section.getByRole("button", {name: ui[lang].watchAnatomy, exact: true})).toHaveCount(0);
-        await expect(section).toContainText(scenario.boundary![lang]);
+        await expect(section).toContainText(localizedText(scenario.boundary!, lang));
       } else {
         await section.getByRole("button", {name: ui[lang].watchAnatomy, exact: true}).click();
         await section.getByRole("button", {name: ui[lang].run, exact: true}).click();
@@ -108,7 +110,7 @@ test("learning journey stays advisory and completed lessons offer a real next li
   expect(after.missions).toEqual(before.missions); expect(after.passedChallenges).toEqual(before.passedChallenges); expect(after.results).toEqual(before.results);
 });
 
-for (const lang of ["en", "ar"] as const) test(`${lang}: static ownership and abnormal report paths explain knowledge-check requirements`, async ({page}) => {
+for (const lang of enabledLocales) test(`${lang}: static ownership and abnormal report paths explain knowledge-check requirements`, async ({page}) => {
   await page.addInitScript(lang => {localStorage.setItem("abap2-language", lang); localStorage.setItem("abap2-appearance", lang === "ar" ? "dark" : "light");}, lang);
   await page.goto("/"); await openLesson(page, "oop-introduction", lang);
   const model = page.getByRole("tabpanel").locator(".control-flow-explorer");

@@ -1,6 +1,7 @@
 export type VisualFamily = "trace" | "flow" | "categories" | "row-access" | "relationships" | "sql" | "objects" | "report" | "expressions";
 /** Explicit inventory: adding a lesson requires choosing its actual presentation. */
 export const visualPresentations: Record<string, VisualFamily> = {
+  "data-conditional-loop": "flow",
   orientation: "trace", addition: "trace", structures: "trace", conditions: "flow", do: "flow", while: "flow",
   tables: "trace", "loop-at": "flow", "loop-control": "flow", employees: "trace",
   "data-table-model": "trace", "data-table-categories": "categories", "data-keys": "trace",

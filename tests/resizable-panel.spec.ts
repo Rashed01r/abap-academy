@@ -122,27 +122,27 @@ test('Monaco identity, cursor, undo, feedback and trace survive resize, maximize
   await page.screenshot({path:info.outputPath('resize-visualize.png'),animations:'disabled'});
 });
 
-test('Arabic resize direction, readable graph zoom, viewport clamping and reduced motion', async ({page},info) => {
+test('English resize direction, readable graph zoom, viewport clamping and reduced motion', async ({page},info) => {
   await page.emulateMedia({reducedMotion:'reduce'});
   await page.goto('/?mission=orientation');
-  await page.locator('header .language').click();
-  if(info.project.name==='mobile')await page.getByRole('button',{name:treeCopy.ar.restore,exact:true}).click();
+  await expect(page.locator('header .language')).toHaveCount(0);
+  if(info.project.name==='mobile')await page.getByRole('button',{name:treeCopy.en.restore,exact:true}).click();
   const before = await size(page);
   if(info.project.name==='desktop') {
-    await expect(page.locator('[data-resize=both]')).toHaveCSS('cursor','nesw-resize');
-    await drag(page,'width',100,0);expect((await size(page)).width).toBe(before.width-100);
-    await connected(page,true);
+    await expect(page.locator('[data-resize=both]')).toHaveCSS('cursor','nwse-resize');
+    await drag(page,'width',-100,0);expect((await size(page)).width).toBe(before.width-100);
+    await connected(page,false);
   }
   const width = (await panel(page).boundingBox())!.width;
-  await page.getByRole('button',{name:treeCopy.ar.zoomOut,exact:true}).click();
+  await page.getByRole('button',{name:treeCopy.en.zoomOut,exact:true}).click();
   expect(Math.abs((await panel(page).boundingBox())!.width-width)).toBeLessThan(2);
-  await connected(page,true);
+  await connected(page,false);
   if(info.project.name==='desktop') {
-    const zoomed = await size(page);await drag(page,'width',50,0);
-    expect((await size(page)).width).toBe(zoomed.width-50);await connected(page,true);
+    const zoomed = await size(page);await drag(page,'width',-50,0);
+    expect((await size(page)).width).toBe(zoomed.width-50);await connected(page,false);
   }
   await expect(page.locator('[data-resize=both]')).toHaveCSS('transition-duration','0s');
-  await page.getByLabel(ui.ar.appearance,{exact:true}).selectOption('dark');
+  await page.getByLabel(ui.en.appearance,{exact:true}).selectOption('dark');
   await page.screenshot({path:info.outputPath('resize-ar-dark.png'),animations:'disabled'});
   await page.setViewportSize({width:1000,height:750});
   await expect.poll(async()=> (await size(page)).width).toBeLessThanOrEqual(952);

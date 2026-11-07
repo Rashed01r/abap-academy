@@ -161,3 +161,120 @@
 .tree-learning-guide > div { max-height: 14rem; overflow: auto; padding-block: .5rem; }
 .tree-learning-guide p { margin-block: .5rem; }
 .tree-level { width: fit-content; border: 1px solid var(--line); border-radius: 6px; padding: .1rem .4rem; margin-block-start: .4rem; }
+
+/* Calm green canvas: presentation only; the existing graph and lesson state own content. */
+.app {font-weight:400}
+.app :is(h1,h2,h3,h4,strong,b,th,dt,legend,summary,button,.brand,.text-button,.visual-kicker) {font-weight:500}
+.app :is(button,a,input,select,summary) {transition:background-color 150ms,border-color 150ms,color 150ms}
+.app :is(button,a):hover {transform:none;filter:none}
+.app :is(button,a,input,select,summary):focus-visible {outline:2px solid var(--accent);outline-offset:3px}
+.app .eyebrow,.app .visual-kicker {font-size:11px;font-weight:500;letter-spacing:.08em;color:var(--accent-text);text-transform:uppercase}
+.app :is(h1,h2,h3) {letter-spacing:normal}
+.app .pill {border-radius:12px;padding:2px 9px;font-size:11px;font-weight:400;background:var(--neutral-chip);color:var(--text-secondary);border-color:transparent}
+.app .primary,.app .secondary {border-radius:8px;font-weight:500}
+.app .primary {background:var(--bg-card);color:var(--accent-text);border:1px solid var(--border-hover)}
+.app .primary:hover,.app .secondary:hover {background:#1d3a31;border-color:var(--border-hover)}
+.app button:disabled {opacity:.65}
+.app :is(.iteration-value,.new-row,.hero) {animation:none}
+
+.immersive-academy > header {min-height:60px;padding:8px 20px;gap:16px;flex-wrap:nowrap;background:var(--bg-page);border-bottom:.5px solid var(--track)}
+.immersive-academy .brand {font-size:18px;font-weight:500;gap:8px;white-space:nowrap}
+.immersive-academy .brand-icon {width:34px;height:34px;border:1px solid var(--track);border-radius:9px;background:var(--bg-root);color:var(--accent-text)}
+.immersive-academy > header nav {gap:18px;flex-shrink:0}
+.immersive-academy > header nav button {font-size:12px;font-weight:500;min-height:38px;padding:6px 0;color:var(--text-secondary)}
+.immersive-academy > header nav .nav-active {color:var(--accent-text);border-bottom:1.5px solid var(--accent)}
+.immersive-academy .header-settings {gap:8px;flex-shrink:0}
+.immersive-academy :is(.language,.theme-select) {min-height:36px;padding:6px 8px;background:transparent;border-color:var(--track);border-radius:8px}
+#academy-header-search {min-width:160px}
+#academy-header-search input {min-height:36px;padding:7px 12px;border-radius:8px;background:var(--bg-input);border-color:var(--track);font-size:12px}
+#academy-header-search input::placeholder {color:var(--text-muted);opacity:1}
+#academy-header-search input:hover {border-color:var(--border-hover)}
+#academy-header-search input:focus-visible {outline:2px solid var(--accent);outline-offset:2px}
+.immersive-academy .header-xp {border-radius:14px;background:var(--bg-input);color:var(--accent-text);padding:4px 10px}
+.immersive-academy > header > .glossary {width:36px}
+.immersive-academy > header > .glossary summary {width:36px;height:36px;background:transparent;border-color:var(--track)}
+
+/* Share one compact breadcrumb/journey strip without moving either DOM node. */
+.immersive-academy .knowledge-tree {display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto minmax(0,1fr)}
+.immersive-academy .tree-position {grid-column:1;grid-row:1;padding:9px 20px;color:var(--accent-text);font-size:11px;background:var(--bg-page)}
+.immersive-academy .tree-learning-guide {grid-column:2;grid-row:1;min-width:0;padding:9px 20px 9px 12px;font-size:11px;color:var(--text-secondary);background:var(--bg-page)}
+.tree-learning-guide > summary {cursor:pointer;line-height:1.65;font-weight:400}
+.tree-learning-guide[open] > div {position:static;width:min(540px,100%);max-height:14rem;margin:8px 0 0;padding:12px;background:var(--bg-panel);border:1px solid var(--track);border-radius:10px}
+.immersive-academy .tree-viewport {grid-column:1 / -1;grid-row:2;background-color:var(--bg-page);background-image:radial-gradient(#2a4239 1px,transparent 1px);background-size:18px 18px}
+.tree-canvas {gap:72px;padding:32px 32px 88px}
+.tree-paths,.tree-topics {gap:12px}
+.tree-node {gap:4px;padding:9px 10px;min-height:76px;background:var(--bg-card);border:1px solid var(--track);border-radius:10px;box-shadow:none;font-size:13px;font-weight:400}
+.tree-node strong {font-size:13px;font-weight:500;line-height:1.4}
+.tree-node small {font-size:11px;color:var(--text-secondary)}
+.tree-node .tree-learning-summary {font-size:11px;line-height:1.5}
+.tree-node:hover {border-color:var(--border-hover)}
+.tree-node[aria-expanded=true],.tree-node[aria-pressed=true] {border:1.5px solid var(--accent);background:var(--bg-card-selected);box-shadow:none}
+.tree-node.tree-root {align-items:center;text-align:center;gap:10px;padding:18px 12px;min-height:116px;border-radius:12px;background:var(--bg-root);border-color:var(--track);font-size:20px;font-weight:500;color:var(--text-primary)}
+.tree-node.tree-root small {font-size:11px;color:var(--text-secondary)}
+.tree-level {padding:2px 8px;border:0;border-radius:12px;background:var(--neutral-chip);color:var(--text-secondary)}
+.app :is(.status-completed,.status-in-progress) {width:fit-content;border:0;border-radius:12px;padding:2px 9px;font-size:11px;font-weight:400}
+.app .status-completed {background:var(--accent-soft-bg);color:var(--accent-text)}
+.app .status-completed::before {content:"";display:inline-block;width:11px;height:11px;margin-inline-end:5px;vertical-align:-1px;background:currentColor;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='6.5' fill='none' stroke='black'/%3E%3Cpath d='m4.5 8 2.3 2.3 4.7-4.7' fill='none' stroke='black' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat}
+.app .status-in-progress {background:var(--warning-bg);color:var(--warning)}
+.future-topic {opacity:.65;border-style:solid}
+.future-topic small {color:var(--lock-note)}
+.tree-connectors path {stroke:var(--line-dim);stroke-width:1;stroke-linecap:round;opacity:1;transition:stroke 150ms,stroke-width 150ms}
+.tree-connectors path.selected {stroke:var(--accent);stroke-width:2}
+.tree-canvas:has(.tree-node:hover) .tree-connectors path.selected {stroke:var(--accent-text)}
+
+/* Existing controls float above the canvas, independently of graph zoom. */
+.immersive-academy .tree-toolbar {position:absolute;inset-inline-start:16px;bottom:16px;z-index:16;display:flex;flex-wrap:nowrap;gap:2px;max-width:calc(100% - 32px);margin:0;padding:5px;background:var(--bg-root);border:1px solid var(--track);border-radius:10px;overflow:auto;box-shadow:none}
+.immersive-academy .tree-toolbar .secondary {min-height:32px;padding:5px 8px;border:1px solid transparent;border-radius:6px;background:transparent;font-size:11px;white-space:nowrap}
+.immersive-academy .tree-toolbar .secondary:hover {background:#1d3a31;border-color:var(--track)}
+.tree-toolbar output {min-width:36px;text-align:center;font-size:11px;color:var(--text-secondary)}
+.immersive-academy .tree-focus-control {position:static;margin:0}
+
+.immersive-academy .smart-lesson-panel {background:var(--bg-panel);border:1.5px solid var(--accent);border-radius:12px;box-shadow:none;transition:border-color 150ms,background-color 150ms}
+.panel-chrome {min-height:44px;padding:6px 12px;border-bottom:.5px solid var(--track);border-radius:10px 10px 0 0;background:var(--bg-panel)}
+.panel-chrome > strong {font-size:11px;font-weight:500;color:var(--accent-text)}
+.panel-body {padding:20px;background:var(--bg-panel);border-radius:0 0 10px 10px}
+.panel-body .lesson-summary {gap:8px;margin-bottom:16px}
+.panel-body .lesson-summary h1 {font-size:22px;font-weight:500;line-height:1.4;letter-spacing:normal}
+.panel-body .lesson-summary > p {margin:0;font-size:12px;color:var(--text-secondary)}
+.panel-body .lesson-summary details {font-size:12px;color:var(--text-secondary)}
+.panel-body .lesson-summary .eyebrow {font-size:10px;letter-spacing:.08em}
+.panel-body .lesson-tabs {top:-20px;gap:8px;padding:10px 0;background:var(--bg-panel);border-bottom:.5px solid var(--track);margin-bottom:16px}
+.panel-body .lesson-tabs button {min-width:0;min-height:40px;padding:7px;background:var(--bg-card);border:1px solid #2f5a4b;border-radius:8px;font-size:12px;font-weight:500}
+.panel-body .lesson-tabs button:hover {border-color:var(--border-hover)}
+.panel-body .lesson-tabs button[aria-selected=true] {background:var(--accent-soft-bg);border-color:var(--accent);color:var(--accent-text)}
+.panel-body .lesson-recommendation {position:sticky;bottom:-20px;z-index:6;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:20px;padding:12px 0;border-top:.5px solid var(--track);background:var(--bg-panel)}
+.panel-body .lesson-recommendation p {margin:0;font-size:11px;color:var(--text-secondary)}
+.panel-body .lesson-recommendation button {flex-shrink:0;max-width:55%;background:var(--accent);color:#0b1512;border:1px solid var(--accent);border-radius:8px;font-size:12px;font-weight:500}
+.panel-body .lesson-recommendation button:hover {background:var(--accent-text)}
+.smart-lesson-panel[data-resizing] {box-shadow:none}
+
+@media(max-width:1100px) {
+  .immersive-academy > header {flex-wrap:wrap;gap:8px 12px;padding:8px 16px}
+  .immersive-academy > header nav {order:0}
+  #academy-header-search {order:4;flex-basis:100%;max-width:none}
+}
+@media(max-width:760px) {
+  .immersive-academy > header {padding:8px 12px;gap:6px 8px}
+  .immersive-academy .brand {font-size:16px}
+  .immersive-academy .brand-icon {width:30px;height:30px}
+  .immersive-academy .header-settings {gap:4px}
+  .immersive-academy :is(.language,.theme-select) {min-height:36px;padding:5px}
+  .immersive-academy > header nav {gap:12px}
+  .immersive-academy .tree-position {padding:8px 12px}
+  .immersive-academy .tree-learning-guide {padding:8px 12px;font-size:10px;max-width:176px}
+  .immersive-academy .tree-toolbar {inset-inline-start:8px;bottom:8px;max-width:calc(100% - 16px)}
+  .immersive-academy .tree-toolbar button {min-height:36px;flex-shrink:0}
+  .immersive-academy .knowledge-tree:not(.lesson-focused) .smart-lesson-panel {max-height:calc(100dvh - 280px)}
+  .panel-body {padding:14px}
+  .panel-body .lesson-summary h1 {font-size:20px}
+  .panel-body .lesson-tabs {top:-14px}
+  .panel-body .lesson-recommendation {bottom:-14px;flex-wrap:wrap}
+  .panel-body .lesson-recommendation button {max-width:100%}
+}
+@container lesson (max-width:740px) {
+  .panel-body {padding:14px}
+  .panel-body .lesson-tabs {top:-14px}
+  .panel-body .lesson-recommendation {bottom:-14px}
+}
+.immersive-academy .lesson-focused .tree-viewport {padding-bottom:64px}
+@media(prefers-reduced-motion:reduce) {.app * {animation:none!important;transition:none!important}}

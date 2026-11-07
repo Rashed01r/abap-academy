@@ -1,5 +1,8 @@
 # Issues and scope boundaries
 
+> **Current development language: English only (2026-11-07).** Arabic support is temporarily deferred, not removed. Preserve all existing Arabic resources and RTL support; do not create or review Arabic translations or run Arabic-specific UI checks while `ENABLE_ARABIC` is false. New playable content requires complete English teaching only. This policy supersedes bilingual authoring/review requirements in the historical sections below. See [the language-phase policy](LANGUAGE_PHASE.md).
+
+
 ## Current scope and limits — 2026-11-04
 
 All nine paths now have introductory playable content; Fundamentals remains the only complete path. Data has 7/11 completed missions after adding explicit performance tracking. There are 101 planned topics/projects and one unfinished Employee Management capstone with a tested design foundation. The full academy is not complete.

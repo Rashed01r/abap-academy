@@ -1,3 +1,5 @@
+import { enabledLocales } from "../src/lib/language-policy";
+import { localizedText } from "../src/lib/language-policy";
 import {openLesson} from "./academy-helpers";
 import {test,expect} from "@playwright/test";
 import {missions,orientation} from "../src/lib/curriculum";
@@ -5,7 +7,7 @@ import {ui} from "../src/lib/i18n";
 import {getAnatomy,orientationExamples} from "../src/lib/anatomy-content";
 import {matchAnatomy} from "./anatomy-helpers";
 
-for(const lang of ["en","ar"] as const) for(const theme of ["light","dark"] as const) {
+for(const lang of enabledLocales) for(const theme of ["light","dark"] as const) {
   test(`${lang} ${theme}: six-part structure anatomy, matching and separate Monaco highlights`,async({page})=>{
     const t=ui[lang],m=missions.find(m=>m.id === "structures")!;
     const errors:string[]=[];page.on("pageerror",e=>errors.push(e.message));
@@ -82,14 +84,14 @@ for(const lang of ["en","ar"] as const) for(const theme of ["light","dark"] as c
     expect(errors).toEqual([]);
   });
 }
-for(const lang of ["en","ar"] as const) test(`${lang}: grouped matching works across every implemented lab`,async({page})=>{
+for(const lang of enabledLocales) test(`${lang}: grouped matching works across every implemented lab`,async({page})=>{
   test.setTimeout(180000);
   const t=ui[lang];
   await page.addInitScript(lang=>{localStorage.setItem("abap2-language",lang);},lang);
   await page.goto("/");
   for(const id of ["orientation",...missions.map(m=>m.id)]) {
     await openLesson(page,id,lang);
-    const source=id === "orientation" ? orientationExamples[lang] : missions.find(m=>m.id === id)!.example;
+    const source=id === "orientation" ? localizedText(orientationExamples, lang) : missions.find(m=>m.id === id)!.example;
     await expect(page.locator(".syntax-lab .anatomy-group, .primary-code-anatomy .anatomy-group")).toHaveCount(getAnatomy(id,source).groups.length);
     await matchAnatomy(page,id,lang);
     if (missions.find(m => m.id === id)?.guided) {

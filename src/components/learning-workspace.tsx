@@ -1,4 +1,5 @@
-﻿"use client";
+"use client";
+import { localizedText } from "../lib/language-policy";
 import { useEffect, useState } from "react";
 import {
   Play,
@@ -178,7 +179,7 @@ export function LearningWorkspace({
           )}
           {hint && mission && (
             <div className="hint-panel">
-              <p><TechnicalText>{mission.hint[lang]}</TechnicalText></p>
+              <p><TechnicalText>{localizedText(mission.hint, lang)}</TechnicalText></p>
               <button
                 className="text-button"
                 onClick={() => change(mission.solution)}
@@ -192,8 +193,8 @@ export function LearningWorkspace({
             <div role="alert" className="feedback error">
               <strong><TechnicalText>{errors[lang][error.code]}</TechnicalText></strong>
               {error.detail && <code dir="ltr"> {error.detail}</code>}
-              <p><TechnicalText>{diagnosticAdvice[error.code].hint[lang]}</TechnicalText></p>
-              <details><summary>{t.explainWhy}</summary><p>{diagnosticAdvice[error.code].why[lang]}</p><pre dir="ltr">{diagnosticAdvice[error.code].example}</pre></details>
+              <p><TechnicalText>{localizedText(diagnosticAdvice[error.code].hint, lang)}</TechnicalText></p>
+              <details><summary>{t.explainWhy}</summary><p>{localizedText(diagnosticAdvice[error.code].why, lang)}</p><pre dir="ltr">{diagnosticAdvice[error.code].example}</pre></details>
               <span>
                 {t.source}: {error.range.startLine}:{error.range.startColumn}
               </span>
@@ -205,7 +206,7 @@ export function LearningWorkspace({
               className={`feedback ${feedback === "correct" ? "success" : "warning"}`}
             >
               <p>{feedback === "correct" ? t.correct : t.wrong}</p>
-              {feedback === "wrong" && mission && <p><TechnicalText>{mission.hint[lang]}</TechnicalText></p>}
+              {feedback === "wrong" && mission && <p><TechnicalText>{localizedText(mission.hint, lang)}</TechnicalText></p>}
               {failure && <div className="probe-feedback"><p>{t.failedInput}: <code dir="ltr">{failure.name} = {failure.input}</code></p><p>{t.expected}: <code dir="ltr">{failure.expected}</code></p><p>{t.actualOutput}: <code dir="ltr">{failure.actual || "∅"}</code></p><p>{t.probeExplanation}</p></div>}
             </div>
           )}

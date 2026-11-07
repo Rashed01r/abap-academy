@@ -10,13 +10,13 @@ import { educationReviewErrors } from "../scripts/education-review-record";
 test("every implemented activity declares objective, teaching, example, demonstration and assessment bindings", () => {
   assert.deepEqual(validateEducation(), []);
 });
-test("quality gate rejects unregistered lessons and missing Arabic without relying on keywords", () => {
+test("quality gate rejects unregistered lessons and missing English without relying on keywords", () => {
   const content = structuredClone(educationContent);
   delete content["cloud-introduction"];
-  content.conditions.concepts[0].explanation.ar = "";
+  content.conditions.concepts[0].explanation.en = "";
   const errors = validateEducation(content);
   assert.ok(errors.some(e => e.includes("cloud-introduction: missing")));
-  assert.ok(errors.some(e => e.includes("conditions/if-else: missing bilingual")));
+  assert.ok(errors.some(e => e.includes("conditions/if-else: missing required-language")));
 });
 test("quality gate detects broken teaching, visualization and assessment edges", () => {
   const content = structuredClone(educationContent);

@@ -1,6 +1,18 @@
 # Mission registry checkpoint
 
-## Current registry status — 2026-11-04
+## English-only phase and conditional LOOP checkpoint (2026-11-07)
+
+Current development language: **English only**. Arabic is temporarily deferred and all resources are preserved. Active validators require English; no Arabic generation, editorial work or UI checks are required. This checkpoint supersedes the historical bilingual requirements and next-mission instructions below.
+
+Implemented `data-conditional-loop` (recommended prerequisite `data-sorting-filtering`), its real one-comparison LOOP WHERE simulation, full English anatomy/Syntax Lab, shared trace/flowchart and `data-conditional-report` assessment. Current inventory: **25 playable activities, 24 registered missions, 35 assessments (26 code + 9 guided), 5,615 XP, 100 planned records**. Verification complete: production build, standalone lint/typecheck, education/curriculum validation, **111/111 unit tests** and **140/140 full production browser tests (4.5m, three workers)** passed. Desktop/light and mobile/dark screenshots were inspected; architecture endpoint geometry passed 6/6. No tests were skipped. The new mission is technically VERIFIED; independent learner certification remains separate.
+
+Next mission: **data-table-expressions**, then **data-table-performance**, then **data-employee-manager**. The full academy and Employee Management capstone remain unfinished. Follow [the phase policy](LANGUAGE_PHASE.md); preserve all existing learner records, IDs and drafts.
+
+
+> **Current development language: English only (2026-11-07).** Arabic support is temporarily deferred, not removed. Preserve all existing Arabic resources and RTL support; do not create or review Arabic translations or run Arabic-specific UI checks while `ENABLE_ARABIC` is false. New playable content requires complete English teaching only. This policy supersedes bilingual authoring/review requirements in the historical sections below. See [the language-phase policy](LANGUAGE_PHASE.md).
+
+
+## Historical registry status — 2026-11-04
 
 Current checkpoint: **2026-11-04, introductory coverage across all nine paths plus three Data missions**. The latest full-curriculum request explicitly prioritizes Pass A across unavailable paths before Pass B in curriculum order; it supersedes the earlier instruction to finish Data before touching Paths 3–9. Pass A introductory coverage is implemented. Pass B resumed with data-read-table, data-table-mutations and data-sorting-filtering. The complete academy remains unfinished.
 
@@ -25,7 +37,7 @@ Canonical executable definitions: `src/lib/curriculum.ts` and imported lesson mo
 | 08 loop-control | EXIT/CONTINUE | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | None |
 | 09 employees | Employee Records Processor | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | None |
 
-The following IDs are stable tracking records. The current table includes the 2026-11-04 curriculum batch. VERIFIED columns on projects-employee-management refer only to its tested guided design foundation; its Overall remains IN_PROGRESS until the complete SAP capstone is built and verified. Next mission: `data-conditional-loop`.
+The following IDs are stable tracking records. The current table includes the 2026-11-07 conditional-loop batch. VERIFIED columns on projects-employee-management refer only to its tested guided design foundation; its Overall remains IN_PROGRESS until the complete SAP capstone is built and verified. Next mission: `data-table-expressions`.
 
 | Mission ID | Path | Topic | Overall | Syntax lab | English | Arabic | Visualization | Challenge | Validation | Browser |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -36,7 +48,7 @@ The following IDs are stable tracking records. The current table includes the 20
 | data-read-table | data | READ TABLE and key lookup | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED |
 | data-table-mutations | data | MODIFY DELETE INSERT APPEND | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED |
 | data-sorting-filtering | data | Sorting and filtering | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED |
-| data-conditional-loop | data | Conditional LOOP AT | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
+| data-conditional-loop | data | Conditional LOOP AT | VERIFIED | VERIFIED | VERIFIED | DEFERRED | VERIFIED | VERIFIED | VERIFIED | VERIFIED |
 | data-table-expressions | data | Table expressions and exceptions | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
 | data-employee-manager | data | Employee Data Manager | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
 | dictionary-introduction | dictionary | Dictionary introduction | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED |

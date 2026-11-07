@@ -1,3 +1,4 @@
+import { hasRequiredTranslations } from "./language-policy";
 import { sourceRange, type Range, type ExecutionEvent } from "./engine";
 import type { Text } from "./curriculum";
 
@@ -38,12 +39,12 @@ export function validateAnatomy(doc: CodeAnatomy, displayedSource: string) {
   if (displayedSource !== doc.source || sourceFingerprint(displayedSource) !== doc.fingerprint) throw new Error(`${doc.id}: anatomy source changed; review groups and explanations`);
   const ids = new Set<string>(), covered = new Set<number>();
   let previousEnd = 0;
-  const bilingual = (value: Text | undefined) => !!value?.en.trim() && !!value?.ar.trim();
+  const bilingual = hasRequiredTranslations;
   for (const group of doc.groups) {
     const r = group.range;
     if (!group.id || ids.has(group.id) || r.startLine <= previousEnd) throw new Error(`${doc.id}: duplicate, overlapping or unordered anatomy group`);
     ids.add(group.id);
-    if (!bilingual(group.title) || !bilingual(group.explanation) || group.detail && !bilingual(group.detail) || group.practice && !bilingual(group.practice)) throw new Error(`${doc.id}/${group.id}: missing bilingual anatomy content`);
+    if (!bilingual(group.title) || !bilingual(group.explanation) || group.detail && !bilingual(group.detail) || group.practice && !bilingual(group.practice)) throw new Error(`${doc.id}/${group.id}: missing required-language anatomy content`);
     if (JSON.stringify(r) !== JSON.stringify(lineRange(doc.source,r.startLine,r.endLine))) throw new Error(`${doc.id}/${group.id}: invalid source range`);
     for(let line=r.startLine;line<=r.endLine;line++) covered.add(line);
     for(const field of group.fields || []) if(field.line<r.startLine || field.line>r.endLine || !bilingual(field.explanation)) throw new Error(`${doc.id}: invalid anatomy field`);

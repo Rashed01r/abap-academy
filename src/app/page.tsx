@@ -1,4 +1,6 @@
-﻿"use client";
+"use client";
+import { localizedText } from "../lib/language-policy";
+import { ENABLE_ARABIC, resolveLocale } from "@/lib/language-policy";
 import { useEffect, useState } from "react";
 import {
   GraduationCap,
@@ -28,16 +30,20 @@ import { LearningWorkspace } from "@/components/learning-workspace";
 import { glossary } from "@/lib/glossary";
 import { KnowledgeTree } from "@/components/knowledge-tree";
 import "./knowledge-tree.css";
+import "./teaching-trace.css";
+import "./lesson-header.css";
 type Appearance = "light" | "dark" | "system";
 export default function Academy() {
-  const [lang, setLang] = useState<Locale>("en"),
+  const [preference, setLang] = useState<Locale>("en"),
     [appearance, setAppearance] = useState<Appearance>("system"),
     [systemDark, setSystemDark] = useState(false),
     [progress, setProgress] = useState<Progress>(initialProgress),
     [ready, setReady] = useState(false),
+    [progressStorageReady, setProgressStorageReady] = useState(false),
     [storage, setStorage] = useState(true),
     [view, setView] = useState("home"),
     [example, setExample] = useState(0);
+  const lang = resolveLocale(preference);
   const t = ui[lang],
     theme =
       appearance === "system" ? (systemDark ? "dark" : "light") : appearance;
@@ -50,13 +56,16 @@ export default function Academy() {
           JSON.parse(localStorage.getItem("abap2-master-progress") || "null"),
         ),
       );
-      const l = localStorage.getItem("abap2-language");
-      if (l === "ar") setLang(l);
-      const a = localStorage.getItem("abap2-appearance");
-      if (a === "light" || a === "dark" || a === "system") setAppearance(a);
+      setProgressStorageReady(true);
     } catch {
       setStorage(false);
     }
+    try { setLang(resolveLocale(localStorage.getItem("abap2-language"))); }
+    catch { setStorage(false); }
+    try {
+      const a = localStorage.getItem("abap2-appearance");
+      if (a === "light" || a === "dark" || a === "system") setAppearance(a);
+    } catch { setStorage(false); }
     const requested = new URLSearchParams(window.location.search).get("mission");
     if (requested && unlocked(requested)) {
       setProgress(p => visitMission(p, requested));
@@ -84,13 +93,13 @@ export default function Academy() {
     document.documentElement.dataset.theme = theme;
     if (ready)
       try {
-        localStorage.setItem("abap2-master-progress", JSON.stringify(progress));
+        if (progressStorageReady) localStorage.setItem("abap2-master-progress", JSON.stringify(progress));
         localStorage.setItem("abap2-language", lang);
         localStorage.setItem("abap2-appearance", appearance);
       } catch {
         setStorage(false);
       }
-  }, [lang, theme, appearance, progress, ready]);
+  }, [lang, theme, appearance, progress, ready, progressStorageReady]);
   /* eslint-enable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!ready) return;
@@ -171,13 +180,13 @@ export default function Academy() {
               <option value="system">{t.system}</option>
             </select>
           </label>
-          <button
+          {ENABLE_ARABIC && <button
             className="language"
             onClick={() => setLang(lang === "en" ? "ar" : "en")}
           >
             <Globe2 size={16} />
             {lang === "en" ? "العربية" : "English"}
-          </button>
+          </button>}
         </div>
         {view !== "simulator" && <AcademyGlossary lang={lang} compact />}
       </header>
@@ -198,7 +207,7 @@ export default function Academy() {
                       aria-pressed={example === i}
                       onClick={() => setExample(i)}
                     >
-                      {v[lang]}
+                      {localizedText(v, lang)}
                     </button>
                   ))}
                 </div>
@@ -229,6 +238,6 @@ export default function Academy() {
 function AcademyGlossary({lang, compact = false}: {lang: Locale; compact?: boolean}) {
   return <details className="glossary">
     <summary aria-label={ui[lang].glossary} title={ui[lang].glossary}>{compact ? <><Code2 size={18}/><span className="sr-only">{ui[lang].glossary}</span></> : ui[lang].glossary}</summary>
-    <dl>{glossary.map(([en, ar, enDefinition, arDefinition]) => <div key={en}><dt><bdi dir="ltr">{en}</bdi> · <bdi dir="rtl">{ar}</bdi></dt><dd>{lang === "ar" ? arDefinition : enDefinition}</dd></div>)}</dl>
+    <dl>{glossary.map(([en, ar, enDefinition, arDefinition]) => <div key={en}><dt><bdi dir="ltr">{en}</bdi>{ENABLE_ARABIC && <> · <bdi dir="rtl">{ar}</bdi></>}</dt><dd>{lang === "ar" ? arDefinition : enDefinition}</dd></div>)}</dl>
   </details>;
 }

@@ -1,3 +1,4 @@
+import { ENABLE_ARABIC } from "./language-policy";
 import { ExecutionEvent, ErrorCode, Locale } from "./engine";
 export type { Locale };
 export const ui = {
@@ -180,7 +181,7 @@ export const ui = {
     foundationProgress: "Foundation progress",
     availableProgress: "All available activities",
     previewProgress: "Upcoming lessons and advanced paths are previews; they are excluded from this percentage.",
-    glossary: "Programming terminology · English / Arabic",
+    glossary: ENABLE_ARABIC ? "Programming terminology · English / Arabic" : "Programming terminology",
     explainWhy: "Explain why · example",
   },
   ar: {

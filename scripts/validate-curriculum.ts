@@ -1,3 +1,4 @@
+import { enabledLocales, hasRequiredTranslations } from "../src/lib/language-policy";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { missions, paths, orientation } from "../src/lib/curriculum";
@@ -23,7 +24,7 @@ for (const mission of missions) {
     if (!value || typeof value !== "object") return;
     if ("en" in value || "ar" in value) {
       const text = value as { en?: unknown; ar?: unknown };
-      check(typeof text.en === "string" && text.en.trim() && typeof text.ar === "string" && text.ar.trim(), `${location}: missing bilingual content`);
+      check(hasRequiredTranslations(text), `${location}: missing required-language content`);
     } else for (const [key, child] of Object.entries(value)) bilingual(child, `${location}.${key}`);
   };
   bilingual(mission, mission.id);
@@ -57,7 +58,7 @@ for (const mission of missions) {
     catch (error) { failures.push(`${challenge.id}: invalid assessment (${String(error)})`); }
   }
 }
-for(const source of Object.values(orientationExamples)) {
+for(const source of enabledLocales.map(locale=>orientationExamples[locale])) {
   const anatomy=getAnatomy("orientation",source);
   validateAnatomy(anatomy,source);
   for(const group of anatomy.groups) for(const ref of group.syntaxRefs || []) check(orientation.some(token=>token.id === ref), `orientation/${group.id}: missing syntax reference ${ref}`);
@@ -75,4 +76,4 @@ if (existsSync(docRoot)) for (const name of readdirSync(docRoot).filter(file => 
 if (failures.length) {
   console.error(failures.join("\n"));
   process.exitCode = 1;
-} else console.log(`Validated ${missions.length} missions and ${challenges.size} assessments: prerequisites, bilingual fields, Syntax Labs, references, examples, solutions, and local documentation links.`);
+} else console.log(`Validated ${missions.length} missions and ${challenges.size} assessments: prerequisites, enabled-language fields, Syntax Labs, references, examples, solutions, and local documentation links.`);

@@ -1,5 +1,19 @@
 # Simulator support
 
+## 2026-11-07: conditional standard-table traversal
+
+Supported: `LOOP AT table INTO work_area WHERE component operator operand`, also existing inline INTO DATA. The condition is one typed comparison (=, <>, <, <=, >, >=); elementary rows use table_line. The right operand is a compatible literal/scalar reference, reevaluated for each candidate. No compound/dynamic conditions, arithmetic predicate expressions, secondary keys, sorted/hashed runtime or ASSIGNING. Unknown fields and incompatible types fail at the source statement.
+
+Only matching rows are copied into the work area. A declared target remains unchanged when no row matches. All rows remain stored in original order. Filter trace metadata includes the candidate row, original one-based index, actual operands and result; tableSelection remains zero-based. Rejected candidates skip body ranges and do not change work-area storage. Shared captions and flowchart show actual decisions; no performance guarantee is implied.
+
+For standard-table loops, sy-tabix is the original current position during body execution and returns to its pre-loop value afterward, including nested loops and EXIT. sy-subrc is 0 if a row was processed, otherwise 4. Status emulation remains limited to documented operations; existing APPEND status behavior is unchanged. Changing an actively looped table is rejected, including APPEND; limits remain unchanged. The new assessment varies names, salaries, thresholds, equality and empty selection and rejects canned output, missing WHERE and data loss.
+
+Earlier WHERE-unsupported statements below are historical and superseded here.
+
+
+> **Current development language: English only (2026-11-07).** Arabic support is temporarily deferred, not removed. Preserve all existing Arabic resources and RTL support; do not create or review Arabic translations or run Arabic-specific UI checks while `ENABLE_ARABIC` is false. New playable content requires complete English teaching only. This policy supersedes bilingual authoring/review requirements in the historical sections below. See [the language-phase policy](LANGUAGE_PHASE.md).
+
+
 ## 2026-11-04: typed lookup, indexed changes and sorting
 
 The executable subset now includes `READ TABLE table INTO target WITH KEY component = expression ...` and `READ TABLE table INTO target INDEX expression` for typed standard tables. Key comparisons use all supplied components and select the first match; elementary rows use `table_line`. `INTO` copies the complete row. A miss returns `sy-subrc = 4` and leaves the target unchanged; success returns 0. Successful `sy-tabix` is the one-based position. The model resets `sy-tabix` to 0 on a miss; SAP leaves it undefined for a failed linear search, so this value is explicitly identified as a model convention. Check `sy-subrc`, never a retained work-area name, for success. Current SAP keyword documentation returns 4 for READ indexes outside the table, including nonpositive values; older documentation differs. Source checks reject unknown fields, wrong operand types, duplicate predicates, inline INTO, ASSIGNING, secondary keys and BINARY SEARCH.

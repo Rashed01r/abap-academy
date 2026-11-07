@@ -1,3 +1,5 @@
+import { enabledLocales } from "../src/lib/language-policy";
+import { localizedText } from "../src/lib/language-policy";
 import {openLesson,tab} from "./academy-helpers";
 import {test,expect} from "@playwright/test";
 import {workAreaMission as m, workAreaExample} from "../src/lib/work-area-mission";
@@ -5,7 +7,7 @@ import {missions} from "../src/lib/curriculum";
 import {ui} from "../src/lib/i18n";
 import {matchAnatomy} from "./anatomy-helpers";
 
-for(const lang of ["en","ar"] as const) for(const theme of ["light","dark"] as const) {
+for(const lang of enabledLocales) for(const theme of ["light","dark"] as const) {
   test(`${lang}/${theme}: work-area fields, live aliases, diagnostics and both persisted assessments`,async({page})=>{
     const t=ui[lang];
     const errors:string[]=[];page.on("pageerror",error=>errors.push(error.message));
@@ -24,7 +26,7 @@ for(const lang of ["en","ar"] as const) for(const theme of ["light","dark"] as c
     await openLesson(page,m.id,lang);
     await expect(page).toHaveURL(new RegExp(`mission=${m.id}`));
     await page.reload();
-    await expect(page.locator(".lesson-summary h1")).toHaveText(m.title[lang]);
+    await expect(page.locator(".lesson-summary h1")).toHaveText(localizedText(m.title, lang));
     expect(await page.evaluate(()=>JSON.parse(localStorage.getItem("abap2-master-progress")!).missions)).toEqual(["data-keys"]);
     const code=page.locator(".syntax-lab .anatomy-code"), panel=page.locator(".syntax-lab .anatomy-explanation");
     await code.locator('[data-group="fill"]').click();
@@ -86,13 +88,13 @@ for(const lang of ["en","ar"] as const) for(const theme of ["light","dark"] as c
     await tab(page,lang,"challenge");
     await page.getByRole("button",{name:t.complete,exact:true}).click();
     await expect(page.locator(".header-xp")).toContainText("540");
-    await expect(page.locator(".lesson-summary .pill")).toHaveText(t.completed);
+    await expect(page.locator(".lesson-summary .pill")).toHaveText(t.completed.charAt(0).toUpperCase() + t.completed.slice(1));
     const progress=await page.evaluate(()=>JSON.parse(localStorage.getItem("abap2-master-progress")!));
     expect(progress.version).toBe(2);expect(progress.missions).toEqual(["data-keys",m.id]);
     expect(progress.labs).toEqual(["structures",m.id]);expect(progress.results.while).toEqual({attempts:4,passed:false});
     expect(progress.passedChallenges).toEqual(expect.arrayContaining(m.challenges!.map(c=>c.id)));
     await page.goto(`/?mission=${m.id}`);
-    await expect(page.locator(".lesson-summary h1")).toHaveText(m.title[lang]);
+    await expect(page.locator(".lesson-summary h1")).toHaveText(localizedText(m.title, lang));
     await tab(page,lang,"challenge");
     await page.getByRole("tabpanel").locator(".quiz .answer-options button").nth(m.answer).click();
     await page.getByRole("button",{name:t.completed,exact:true}).click();
@@ -108,7 +110,7 @@ test("valid lesson deep links are freely accessible; unknown and preview IDs do 
     const progress=await page.evaluate(()=>JSON.parse(localStorage.getItem("abap2-master-progress")!));
     expect(progress.missions).toEqual([]);expect(progress.labs).toEqual([]);expect(progress.started).toEqual([]);expect(progress.passedChallenges).toEqual([]);
   }
-  for(const id of ["data-conditional-loop","not-a-lesson"]) {
+  for(const id of ["data-table-expressions","not-a-lesson"]) {
     await page.goto(`/?mission=${id}`);
     await expect(page.locator("[data-tree-id=root]")).toBeVisible();
     await expect(page.getByRole("tab")).toHaveCount(0);

@@ -1,10 +1,10 @@
 import { chromium } from "@playwright/test";
 const browser=await chromium.launch({executablePath:"C:/Program Files/Google/Chrome/Application/chrome.exe",headless:true});
 let checked=0;
-try{for(const [lang,width,height] of [["en",1440,1000],["ar",390,844]]){
+try{for(const [lang,width,height] of [["en",1440,1000],["en",390,844]]){
  const context=await browser.newContext({viewport:{width,height}});await context.addInitScript(lang=>localStorage.setItem("abap2-language",lang),lang);const page=await context.newPage();
  for(const id of ["dictionary-introduction","cloud-introduction","projects-employee-management"]){
-  await page.goto(`http://localhost:3025/?mission=${id}`);await page.locator(".architecture-node").first().waitFor();
+  await page.goto(`${process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3025"}/?mission=${id}`);await page.locator(".architecture-node").first().waitFor();
   if(width>760)await page.getByRole("button",{name:"Expand workspace",exact:true}).click();
   await page.waitForFunction(()=>document.querySelectorAll(".architecture-connections > path").length>0);
   await page.waitForTimeout(60);
@@ -16,4 +16,4 @@ try{for(const [lang,width,height] of [["en",1440,1000],["ar",390,844]]){
  }
  await context.close();
 }}finally{await browser.close();}
-console.log(`${checked} architecture scenes passed actual SVG-to-node endpoint geometry in desktop English and mobile Arabic.`);
+console.log(`${checked} architecture scenes passed actual SVG-to-node endpoint geometry in desktop English and mobile English.`);
