@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { openLesson, tab } from "./academy-helpers";
+import { openLesson, tab, openPath } from "./academy-helpers";
 
 async function lab(page: Page, id: string, name: string) {
   await page.goto(`/?mission=${id}`);
@@ -51,8 +51,8 @@ test("Dictionary labs react to real input", async ({ page }) => {
 
 test("the ABAP Dictionary path shows every planned topic as a lesson", async ({ page }) => {
   await page.goto("/");
-  await page.locator('[data-tree-id="dictionary"]').click();
+  await openPath(page, "dictionary");
   for (const title of ["Domains: define a value's shape once", "Data elements: give a field its meaning", "Structures: group fields into one type", "Database tables: store rows for good", "Foreign keys: link a field to a check table", "Search helps: offer a list of valid values"])
-    await expect(page.locator(".tree-node").filter({ hasText: title })).toBeVisible();
-  await expect(page.locator(".future-topic")).toHaveCount(0);
+    await expect(page.locator('[data-node^="lesson:dictionary-"] .card, [data-mobile-node^="lesson:dictionary-"]').filter({ visible: true }).filter({ hasText: title })).toHaveCount(1);
+  await expect(page.locator('[data-node^="planned:dictionary:"], [data-mobile-node^="planned:dictionary:"]')).toHaveCount(0);
 });

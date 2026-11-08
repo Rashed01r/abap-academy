@@ -1,6 +1,6 @@
 import { enabledLocales } from "../src/lib/language-policy";
 import { localizedText } from "../src/lib/language-policy";
-import {openLesson,tab} from "./academy-helpers";
+import {openLesson,tab,openPath,roadmapNode} from "./academy-helpers";
 import {test,expect} from "@playwright/test";
 import {workAreaMission as m, workAreaExample} from "../src/lib/work-area-mission";
 import {missions} from "../src/lib/curriculum";
@@ -17,14 +17,9 @@ for(const lang of enabledLocales) for(const theme of ["light","dark"] as const) 
     },{lang,theme});
     await page.goto("/");
     await expect(page.locator(".header-xp")).toContainText("260");
-    await page.locator('[data-tree-id="data"]').click();
-    const future = await page.locator('.future-topic').allTextContents();
-    expect(future.join(' ')).not.toContain(lang==='en'?'Work areas':'مناطق العمل');
-    expect(future.join(' ')).not.toContain(lang==='en'?'Field symbols':'رموز الحقول');
-    expect(future.join(' ')).not.toContain(lang==='en'?'Table operations':'عمليات الجداول');
-    // Since 2026-11-08 every Working with Data topic is a lesson, so the path shows no previews.
-    expect(future.join(' ')).not.toContain('Table expressions');
-    expect(future).toEqual([]);
+    await openPath(page,"data");
+    // Since 2026-11-08 every Working with Data topic is a lesson, so the path shows no planned topics.
+    await expect(page.locator('[data-node^="planned:data:"], [data-mobile-node^="planned:data:"]')).toHaveCount(0);
     await openLesson(page,m.id,lang);
     await expect(page).toHaveURL(new RegExp(`mission=${m.id}`));
     await page.reload();
@@ -121,7 +116,7 @@ test("valid lesson deep links are freely accessible; unknown and preview IDs do 
   }
   for(const id of ["dictionary-lock-objects","not-a-lesson"]) {
     await page.goto(`/?mission=${id}`);
-    await expect(page.locator("[data-tree-id=root]")).toBeVisible();
+    await expect(roadmapNode(page,"abap")).toBeVisible();
     await expect(page.getByRole("tab")).toHaveCount(0);
   }
 });

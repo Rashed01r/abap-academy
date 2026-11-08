@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { sqlMissions } from "../src/lib/sql-missions";
-import { gradeAll, answerQuiz, completion, selectChallenge, edit } from "./academy-helpers";
+import { gradeAll, answerQuiz, completion, selectChallenge, edit, openPath, roadmapNode } from "./academy-helpers";
 import { matchAnatomy, finishLearn, runnerTo } from "./anatomy-helpers";
 import { ui } from "../src/lib/i18n";
 
@@ -36,7 +36,7 @@ test("a SQL syntax mistake explains how to fix it", async ({ page }) => {
 
 test("the Database Development path shows every planned topic as a lesson", async ({ page }) => {
   await page.goto("/");
-  await page.locator('[data-tree-id="database"]').click();
-  for (const m of sqlMissions) await expect(page.locator(".tree-node").filter({ hasText: m.title.en })).toBeVisible();
-  await expect(page.locator(".future-topic")).toHaveCount(0);
+  await openPath(page, "database");
+  for (const m of sqlMissions) await expect(roadmapNode(page, `lesson:${m.id}`)).toBeVisible();
+  await expect(page.locator('[data-node^="planned:database:"], [data-mobile-node^="planned:database:"]')).toHaveCount(0);
 });

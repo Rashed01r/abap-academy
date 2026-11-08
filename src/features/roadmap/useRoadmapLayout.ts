@@ -279,9 +279,12 @@ export function useRoadmapLayout(opts: {
         if (z !== lastZoom && zoomRef.current) { zoomRef.current.textContent = `${z}%`; lastZoom = z; }
       }
       const tc = tint.current, tt = tintT.current;
-      if (tc.some((v, i) => Math.abs(v - tt[i]) > 0.5)) {
-        for (let i = 0; i < 3; i++) tc[i] += (tt[i] - tc[i]) * (instant ? 1 : Math.min(1, dt * 3));
-        tintRef.current?.style.setProperty("--tint", `${tc[0] | 0},${tc[1] | 0},${tc[2] | 0}`);
+      if (tc.some((v, i) => v !== tt[i])) {
+        for (let i = 0; i < 3; i++) {
+          tc[i] += (tt[i] - tc[i]) * (instant ? 1 : Math.min(1, dt * 3));
+          if (Math.abs(tt[i] - tc[i]) < 0.5) tc[i] = tt[i]; // land exactly on the path colour
+        }
+        tintRef.current?.style.setProperty("--tint", tc.map(v => Math.round(v)).join(","));
       }
       raf = requestAnimationFrame(frame);
     };

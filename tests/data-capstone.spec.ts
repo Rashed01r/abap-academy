@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { tablePerformanceMission } from "../src/lib/table-performance-mission";
 import { employeeManagerMission } from "../src/lib/employee-manager-mission";
-import { gradeAll, answerQuiz, completion } from "./academy-helpers";
+import { gradeAll, answerQuiz, completion, openPath, roadmapNode } from "./academy-helpers";
 import { matchAnatomy, finishLearn } from "./anatomy-helpers";
 
 for (const [mission, wrong, xp] of [[tablePerformanceMission, "WRITE / 1.", "300"], [employeeManagerMission, "WRITE / 8500.", "400"]] as const) {
@@ -21,8 +21,8 @@ for (const [mission, wrong, xp] of [[tablePerformanceMission, "WRITE / 1.", "300
 
 test("the Working with Data path has no Coming Soon topics left", async ({ page }) => {
   await page.goto("/");
-  await page.locator('[data-tree-id="data"]').click();
-  await expect(page.locator(".tree-node").filter({ hasText: "Find rows with fewer checks" })).toBeVisible();
-  await expect(page.locator(".tree-node").filter({ hasText: "Build the Employee Data Manager" })).toBeVisible();
-  await expect(page.locator(".future-topic")).toHaveCount(0);
+  await openPath(page, "data");
+  await expect(roadmapNode(page, "lesson:data-table-performance")).toHaveAccessibleName(/^Find rows with fewer checks/);
+  await expect(roadmapNode(page, "lesson:data-employee-manager")).toHaveAccessibleName(/^Build the Employee Data Manager/);
+  await expect(page.locator('[data-node^="planned:data:"], [data-mobile-node^="planned:data:"]')).toHaveCount(0);
 });

@@ -3,17 +3,18 @@ import { localizedText } from "../src/lib/language-policy";
 import { test, expect } from '@playwright/test';
 import { missions, paths } from '../src/lib/curriculum';
 import { ui } from '../src/lib/i18n';
-import { treeCopy } from '../src/lib/tree-copy';
-import { openLesson, tab, answerQuiz, edit, selectChallenge, completion } from './academy-helpers';
+import { roadmapCopy } from '../src/lib/tree-copy';
+import { openLesson, tab, answerQuiz, edit, selectChallenge, completion, openPath, roadmapNode } from './academy-helpers';
 for (const lang of enabledLocales)
     for (const theme of ['light', 'dark'] as const)
         test(`${lang} ${theme}: explore freely, skip labs, earn assessed XP once`, async ({ page }) => {
-            const t = ui[lang], c = treeCopy[lang], m = missions.find(m => m.id === 'while')!;
+            const t = ui[lang], m = missions.find(m => m.id === 'while')!;
             const errors: string[] = [];
             page.on('pageerror', e => errors.push(e.message));
             await page.addInitScript(({ lang, theme }) => { localStorage.setItem('abap2-language', lang); localStorage.setItem('abap2-appearance', theme); }, { lang, theme });
             await page.goto('/');
-            await expect(page.locator('.tree-paths>button')).toHaveCount(paths.length);
+            await roadmapNode(page, 'learn').click();
+            await expect(page.locator('[data-node^="path:"] .card, [data-mobile-node^="path:"]').filter({ visible: true })).toHaveCount(paths.length);
             await expect(page.locator('.header-xp')).toContainText('0');
             await openLesson(page, m.id, lang);
             await expect(page.getByRole('heading', { name: 'What you’ll learn' })).toBeVisible();
@@ -45,9 +46,10 @@ for (const lang of enabledLocales)
             await page.getByRole('button', { name: t.run, exact: true }).click();
             await expect(page.getByRole('tabpanel').locator('.timeline li')).not.toHaveCount(0);
             await page.getByRole('button', { name: t.path, exact: true }).click();
-            await page.locator('[data-tree-id=cloud]').click();
-            await page.locator('.future-topic').first().click();
-            await expect(page.locator('[data-lesson-node]')).toContainText(c.preview);
+            await openPath(page, 'cloud');
+            await page.locator('[data-node^="planned:cloud:"] .card, [data-mobile-node^="planned:cloud:"]').first().click();
+            await expect(page.locator('[data-drawer]')).toContainText(roadmapCopy(lang).plannedText);
+            await expect(page.locator('[data-drawer]').getByRole('button', { name: /Open lesson/ })).toHaveCount(0);
             await expect(page.getByRole('tab')).toHaveCount(0);
             await openLesson(page, 'addition', lang);
             await expect(page.locator('.lesson-summary h1')).toHaveText(localizedText(missions[0].title, lang));

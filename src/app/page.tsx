@@ -200,7 +200,7 @@ export default function Academy() {
           <RoadmapHome lang={lang} progress={progress} setProgress={setProgress} ready={ready} focusMission={lastLesson} onOpenLesson={open} />
         ) : view !== "simulator" ? (
           <LessonView id={view} lang={lang} theme={theme} progress={progress} setProgress={setProgress} ready={ready}
-            onBack={() => { navigate("home"); window.scrollTo({ top: 0 }); }} onNavigate={open} />
+            onBack={() => { setLastLesson(view); navigate("home"); window.scrollTo({ top: 0 }); }} onNavigate={open} />
         ) : (
               <section className="simulator-page">
                 <span className="eyebrow">{t.limit}</span>

@@ -2,18 +2,32 @@ import { localizedText } from "../src/lib/language-policy";
 import { expect, type Page } from "@playwright/test";
 import { missions, type Mission } from "../src/lib/curriculum";
 import { ui } from "../src/lib/i18n";
-import { treeCopy } from "../src/lib/tree-copy";
+import { treeCopy, roadmapCopy } from "../src/lib/tree-copy";
 import type { Locale } from "../src/lib/engine";
+/** A roadmap node on the desktop tree or in the mobile accordion. */
+export function roadmapNode(page: Page, id: string) {
+    return page.locator(`[data-node="${id}"] .card, [data-mobile-node="${id}"]`);
+}
+/** Expands Learning and one of its paths (no-op for nodes that are already open). */
+export async function openPath(page: Page, pathId: string) {
+    for (const id of ["learn", `path:${pathId}`]) {
+        const node = roadmapNode(page, id);
+        if (await node.getAttribute('aria-expanded') !== 'true') await node.click();
+        await expect(node).toHaveAttribute('aria-expanded', 'true');
+    }
+}
+export function roadmapSearch(page: Page, lang: Locale = "en") {
+    return page.getByRole('combobox', { name: roadmapCopy(lang).searchLabel, exact: true });
+}
+/** Roadmap search → result → drawer → Open lesson. Works from home or from an open lesson. */
 export async function openLesson(page: Page, id: string, lang: Locale = "en") {
     const title = id === "orientation" ? ui[lang].orientation : localizedText(missions.find(m => m.id === id)!.title, lang);
-    await page.getByRole('searchbox').fill(title);
-    await page.locator('.tree-search-results').getByRole('button', { name: title, exact: true }).click();
+    const back = page.getByRole('button', { name: roadmapCopy(lang).backToRoadmap, exact: true });
+    if (await back.count()) await back.click();
+    await roadmapSearch(page, lang).fill(title);
+    await page.locator(`[data-result="lesson:${id}"]`).click();
+    await page.locator('[data-drawer]').getByRole('button', { name: new RegExp(roadmapCopy(lang).openLesson) }).click();
     await expect(page.locator('.lesson-summary h1')).toHaveText(title);
-    const expand = page.getByRole('button', { name: treeCopy[lang].expandWorkspace, exact: true });
-    // Mobile enters focus automatically; its initial Expand control can disappear
-    // between counting and clicking as the responsive effect finishes.
-    if ((page.viewportSize()?.width || 0) > 760 && await expand.count())
-        await expand.click();
     await tab(page, lang, 'learn');
 }
 /** Lesson pictures (VisualClassroom and alternatives) live on Explore code, below the editor. */

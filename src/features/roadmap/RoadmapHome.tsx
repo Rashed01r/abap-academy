@@ -180,7 +180,7 @@ export function RoadmapHome({ lang, progress, setProgress, ready, focusMission, 
         if (e.key === "ArrowDown") { e.preventDefault(); buttons[(i + 1) % buttons.length]?.focus(); }
         if (e.key === "ArrowUp") { e.preventDefault(); buttons[(i - 1 + buttons.length) % buttons.length]?.focus(); }
       }}>
-      {results.map(n => <button type="button" key={n.id} onClick={() => pick(n)}>
+      {results.map(n => <button type="button" key={n.id} data-result={n.id} onClick={() => pick(n)}>
         <span className="c" dir="ltr">{kindLabel(n)}</span>
         <span>{localizedText(n.label, lang)}</span>
         <small>{n.depth >= 2 && n.parent ? localizedText(n.parent.label, lang) : ""}</small>
