@@ -1,4 +1,7 @@
 import { conditionalLoopGroups } from "./conditional-loop-mission";
+import { tableExpressionsGroups } from "./table-expressions-mission";
+import { tablePerformanceGroups } from "./table-performance-mission";
+import { employeeManagerGroups } from "./employee-manager-mission";
 import { missions, type Text } from "./curriculum";
 import { defineAnatomy, sourceFingerprint, type AnatomyGroupSpec, type CodeAnatomy } from "./code-anatomy";
 import { anatomyConcepts } from "./anatomy-concepts";
@@ -15,6 +18,9 @@ const definitions: Record<string,{fingerprint:string;groups:AnatomyGroupSpec[];c
   "data-table-mutations": tableMutationsAnatomy,
   "data-sorting-filtering": sortingFilteringAnatomy,
   "data-conditional-loop": {fingerprint:"bfc32d9b", groups:conditionalLoopGroups, checks:["select","aggregate","report"]},
+  "data-table-expressions": {fingerprint:"c9b0f0f3", groups:tableExpressionsGroups, checks:["by-position","by-key","exists"]},
+  "data-table-performance": {fingerprint:"308fb1d3", groups:tablePerformanceGroups, checks:["linear","sort","binary"]},
+  "data-employee-manager": {fingerprint:"1ac63dd1", groups:employeeManagerGroups, checks:["find","raise","remove","report"]},
   "data-work-areas-field-symbols":{fingerprint:"7e1d85f8",checks:["create","fill","save","bind","change","read"],groups:[
     g("shape",[1,4],t("Define the Employee Structure","تعريف بنية الموظف"),t("Describe an employee with an integer ID and a text name. This is the shape, not an employee record yet.","صف الموظف برقم صحيح واسم نصي. هذا وصف للشكل، وليس سجل موظف بعد."),"type",{visualizer:{kind:"type",line:4}}),
     g("create",[5,5],t("Create the Work Area","إنشاء منطقة العمل"),t("Create ls_employee with that structure. Its ID starts at 0 and its name starts empty.","أنشئ ls_employee وفق هذه البنية. يبدأ الرقم بصفر والاسم بنص فارغ."),"variable"),

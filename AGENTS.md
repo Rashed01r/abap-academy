@@ -17,6 +17,8 @@ IDs, existing learner progress, bilingual content, and working lessons. Use targ
 during development and full regression at milestone boundaries. Update the canonical
 continuation documents with exact verification results and remaining work before ending
 a development session. Do not mark planned or untested missions as verified.
+For any new or expanded lesson, follow `.claude/skills/academy-lesson/SKILL.md` (SAP sources,
+file checklist, writing style and verification steps).
 
 ## Current language phase
 

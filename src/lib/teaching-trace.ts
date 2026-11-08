@@ -43,17 +43,21 @@ export function firstSentence(text: string): string {
 
 export function executionSteps(events: readonly ExecutionEvent[], lang: Locale): TeachingStep[] {
   const en = lang === "en";
-  const titles: Record<ExecutionEvent["operation"], string> = en ? {
+  const english: Record<ExecutionEvent["operation"], string> = {
     define:"Describe the data", declare:"Create storage", assign:"Update a value", write:"Show a value",
     condition:"Check a choice", end:"Finish this block", loop:"Check the next pass", append:"Save a row",
     read:"Find a row", insert:"Insert a row", modify:"Replace a row", delete:"Remove a row", sort:"Put rows in order",
     control:"Choose the next instruction", bind:"Connect to existing data", unbind:"Disconnect the reference",
-  } : {
+    try:"Enter a protected block", catch:"Handle a missing row",
+  };
+  // Arabic titles are optional while Arabic is deferred; missing ones fall back to English.
+  const arabic: Partial<Record<ExecutionEvent["operation"], string>> = {
     define:"وصف البيانات", declare:"إنشاء مكان للقيمة", assign:"تحديث قيمة", write:"عرض قيمة",
     condition:"فحص الاختيار", end:"إنهاء هذا الجزء", loop:"فحص الدورة التالية", append:"حفظ صف",
     read:"البحث عن صف", insert:"إدراج صف", modify:"استبدال صف", delete:"حذف صف", sort:"ترتيب الصفوف",
     control:"تحديد التعليمة التالية", bind:"الارتباط ببيانات موجودة", unbind:"إلغاء الارتباط",
   };
+  const titles: Record<ExecutionEvent["operation"], string> = en ? english : { ...english, ...arabic };
   return events.map((event, index) => {
     const changes = changedNames(events[index - 1]?.memory, event.memory);
     const name = changes.find(n => !n.startsWith("sy-")) || changes[0];

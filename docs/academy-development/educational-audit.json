@@ -1,11 +1,11 @@
 {
-  "scope": "25 implemented activities across all nine paths. Current development language: English only; Arabic preserved and deferred. Planned lessons excluded; review status does not change completion.",
-  "implemented": 25,
-  "reviewed": 25,
-  "concepts": 83,
+  "scope": "28 implemented activities across all nine paths. Current development language: English only; Arabic preserved and deferred. Planned lessons excluded; review status does not change completion.",
+  "implemented": 28,
+  "reviewed": 28,
+  "concepts": 95,
   "issuesByPriority": {
     "critical": 0,
-    "high": 15,
+    "high": 18,
     "medium": 7
   },
   "records": [
@@ -3077,6 +3077,635 @@
       "arabicStatus": "DEFERRED: existing Arabic resources preserved; no Arabic authoring or review required in this phase.",
       "technicalAccuracyStatus": "Supported examples checked against interpreter/regression and selected official SAP references; no real SAP compilation or activation.",
       "remainingGaps": "One-comparison standard-table interpreter subset; no compound WHERE, secondary keys, ASSIGNING, SAP compilation or performance guarantee. Arabic deferred.",
+      "gates": {
+        "A": "STRUCTURAL_PASS_AND_SCOPED_SOURCE_REVIEW",
+        "B": "SOURCE_REVIEWED",
+        "C": "SOURCE_REVIEWED_SEE_BROWSER_LEDGER",
+        "D": "RANGE_VALIDATED_AND_SCOPED_SOURCE_REVIEW",
+        "E": "STRUCTURAL_PASS_AND_SCOPED_SOURCE_REVIEW",
+        "F": "SCOPED_NOT_SAP_COMPILED",
+        "G": "NEW_CONTENT_REVIEWED_SEE_VISUAL_LEDGER",
+        "H": "SEE_EDUCATIONAL_AUDIT_VERIFICATION_LEDGER"
+      },
+      "verificationStatus": "SOURCE_REVIEWED_WITH_LIMITATIONS"
+    },
+    {
+      "topicId": "data-table-expressions",
+      "learningPath": "data",
+      "educationalLevel": {
+        "en": "Beginner",
+        "ar": "مبتدئ"
+      },
+      "lessonDifficulty": "intermediate",
+      "objectives": [
+        {
+          "en": "Read one row or one field by position or by key with a table expression"
+        },
+        {
+          "en": "Handle a missing row with TRY … CATCH, line_exists( ), line_index( ) or OPTIONAL instead of sy-subrc"
+        }
+      ],
+      "conceptsPromised": [
+        "data-table-expressions/expression-read",
+        "data-table-expressions/not-found",
+        "data-table-expressions/exists-index",
+        "data-table-expressions/optional-default"
+      ],
+      "conceptsCurrentlyCovered": [
+        "data-table-expressions/expression-read",
+        "data-table-expressions/not-found",
+        "data-table-expressions/exists-index",
+        "data-table-expressions/optional-default"
+      ],
+      "missingDeclaredConcepts": [],
+      "coverageLimit": "Structural bindings are validated; their presence alone does not prove semantic quality or retention.",
+      "concepts": [
+        {
+          "id": "data-table-expressions/expression-read",
+          "name": {
+            "en": "Position or key in brackets"
+          },
+          "explanation": {
+            "en": "[ 3 ] reads position 3, Omar. [ id = lv_id ] searches the id component and finds Sara at position 2. Adding -name reads only that field. The result is a copy; changing ls_employee does not change the table."
+          },
+          "misconception": {
+            "en": "[ lv_id ] is a position, not an ID search. With lv_id = 102 it asks for row 102 and fails."
+          },
+          "objectives": [
+            0
+          ],
+          "learn": [
+            "group:by-position",
+            "group:by-key",
+            "token:table-expression"
+          ],
+          "demonstrate": "trace",
+          "assess": [
+            "data-expression-lookup",
+            "concept-check"
+          ],
+          "lessonId": "data-table-expressions",
+          "difficulty": "intermediate",
+          "priority": "essential",
+          "priorKnowledge": [
+            "data-conditional-loop"
+          ],
+          "learningObjectives": [
+            {
+              "en": "Read one row or one field by position or by key with a table expression"
+            }
+          ]
+        },
+        {
+          "id": "data-table-expressions/not-found",
+          "name": {
+            "en": "A miss raises an exception"
+          },
+          "explanation": {
+            "en": "When no row matches, the expression raises CX_SY_ITAB_LINE_NOT_FOUND. TRY skips its remaining statements and runs CATCH. Without TRY, the program stops with a runtime error."
+          },
+          "misconception": {
+            "en": "A table expression never sets sy-subrc or sy-tabix. After it, sy-subrc still holds whatever an earlier READ TABLE or loop left there."
+          },
+          "objectives": [
+            1
+          ],
+          "learn": [
+            "group:by-key",
+            "token:line-not-found"
+          ],
+          "demonstrate": "trace",
+          "assess": [
+            "data-expression-lookup",
+            "knowledge-check"
+          ],
+          "lessonId": "data-table-expressions",
+          "difficulty": "intermediate",
+          "priority": "essential",
+          "priorKnowledge": [
+            "data-conditional-loop"
+          ],
+          "learningObjectives": [
+            {
+              "en": "Handle a missing row with TRY … CATCH, line_exists( ), line_index( ) or OPTIONAL instead of sy-subrc"
+            }
+          ]
+        },
+        {
+          "id": "data-table-expressions/exists-index",
+          "name": {
+            "en": "Existence and position checks"
+          },
+          "explanation": {
+            "en": "line_exists( lt_employees[ id = 999 ] ) is false, so ELSE runs. line_index( lt_employees[ id = lv_id ] ) returns 2. Neither copies a row or raises an exception; line_index( ) returns 0 for a miss."
+          },
+          "misconception": {
+            "en": "Do not test line_exists( ) and then read the same row again. When you need the row, read it once inside TRY."
+          },
+          "objectives": [
+            1
+          ],
+          "learn": [
+            "group:position",
+            "group:exists"
+          ],
+          "demonstrate": "trace",
+          "assess": [
+            "data-expression-lookup",
+            "knowledge-check"
+          ],
+          "lessonId": "data-table-expressions",
+          "difficulty": "intermediate",
+          "priority": "essential",
+          "priorKnowledge": [
+            "data-conditional-loop"
+          ],
+          "learningObjectives": [
+            {
+              "en": "Handle a missing row with TRY … CATCH, line_exists( ), line_index( ) or OPTIONAL instead of sy-subrc"
+            }
+          ]
+        },
+        {
+          "id": "data-table-expressions/optional-default",
+          "name": {
+            "en": "OPTIONAL and DEFAULT"
+          },
+          "explanation": {
+            "en": "VALUE #( lt_employees[ id = 999 ] OPTIONAL ) returns an initial row (id 0, empty name) instead of raising. DEFAULT returns a fallback you choose, such as lt_employees[ 1 ]."
+          },
+          "misconception": {
+            "en": "An initial row is not a real employee. Use OPTIONAL only when an empty result is an acceptable answer."
+          },
+          "objectives": [
+            1
+          ],
+          "learn": [
+            "group:optional"
+          ],
+          "demonstrate": "trace",
+          "assess": [
+            "concept-check"
+          ],
+          "lessonId": "data-table-expressions",
+          "difficulty": "intermediate",
+          "priority": "essential",
+          "priorKnowledge": [
+            "data-conditional-loop"
+          ],
+          "learningObjectives": [
+            {
+              "en": "Handle a missing row with TRY … CATCH, line_exists( ), line_index( ) or OPTIONAL instead of sy-subrc"
+            }
+          ]
+        }
+      ],
+      "tabRequirements": {
+        "visualize": [
+          "expression-read",
+          "not-found",
+          "exists-index",
+          "optional-default"
+        ],
+        "knowledge": [
+          "not-found",
+          "exists-index"
+        ]
+      },
+      "priority": "high",
+      "issuesFound": "Table expressions need a real executable subset, an exception path instead of sy-subrc, and existence/position checks that do not raise.",
+      "correctionsMade": "Added English-only position/key reads, -component chaining, TRY … CATCH cx_sy_itab_line_not_found, line_exists/line_index and VALUE #( … OPTIONAL | DEFAULT ) to the interpreter; full anatomy, expression-aware lookup panel, trace with catch steps and a changed-input assessment including missing IDs. Facts checked against the SAP-samples internal-tables cheat sheet and Clean ABAP.",
+      "introductionClarity": "English what/why introduction (Arabic deferred) and selectable essential explanations; original depth retained.",
+      "visualCodeAnatomy": {
+        "primaryGroups": 10,
+        "alternatives": []
+      },
+      "visualizationSuitability": "Actual interpreter snapshots; specialized conceptual controls labeled separately.",
+      "challengeAlignment": "All existing assessment IDs and knowledge-check requirements mapped to taught concept IDs; original grading retained; optional misconception checks add no achievements.",
+      "englishStatus": "New teaching reviewed; retained content source-alignment review, not learner comprehension research.",
+      "arabicStatus": "DEFERRED: existing Arabic resources preserved; no Arabic authoring or review required in this phase.",
+      "technicalAccuracyStatus": "Supported examples checked against interpreter/regression and selected official SAP references; no real SAP compilation or activation.",
+      "remainingGaps": "Standard tables only; no write access through expressions, KEY/TABLE KEY additions, chained brackets, other exception classes or loops inside TRY; no SAP compilation. WRITE with a table expression is accepted by the simulator but the lesson assigns to a variable first. Arabic deferred.",
+      "gates": {
+        "A": "STRUCTURAL_PASS_AND_SCOPED_SOURCE_REVIEW",
+        "B": "SOURCE_REVIEWED",
+        "C": "SOURCE_REVIEWED_SEE_BROWSER_LEDGER",
+        "D": "RANGE_VALIDATED_AND_SCOPED_SOURCE_REVIEW",
+        "E": "STRUCTURAL_PASS_AND_SCOPED_SOURCE_REVIEW",
+        "F": "SCOPED_NOT_SAP_COMPILED",
+        "G": "NEW_CONTENT_REVIEWED_SEE_VISUAL_LEDGER",
+        "H": "SEE_EDUCATIONAL_AUDIT_VERIFICATION_LEDGER"
+      },
+      "verificationStatus": "SOURCE_REVIEWED_WITH_LIMITATIONS"
+    },
+    {
+      "topicId": "data-table-performance",
+      "learningPath": "data",
+      "educationalLevel": {
+        "en": "Beginner",
+        "ar": "مبتدئ"
+      },
+      "lessonDifficulty": "intermediate",
+      "objectives": [
+        {
+          "en": "Compare how many rows a one-by-one search and a binary search check"
+        },
+        {
+          "en": "Sort by the search field before BINARY SEARCH, and know when sorted or hashed tables are the better choice"
+        }
+      ],
+      "conceptsPromised": [
+        "data-table-performance/linear-search",
+        "data-table-performance/binary-search",
+        "data-table-performance/sort-first",
+        "data-table-performance/choose-category"
+      ],
+      "conceptsCurrentlyCovered": [
+        "data-table-performance/linear-search",
+        "data-table-performance/binary-search",
+        "data-table-performance/sort-first",
+        "data-table-performance/choose-category"
+      ],
+      "missingDeclaredConcepts": [],
+      "coverageLimit": "Structural bindings are validated; their presence alone does not prove semantic quality or retention.",
+      "concepts": [
+        {
+          "id": "data-table-performance/linear-search",
+          "name": {
+            "en": "One by one from the top"
+          },
+          "explanation": {
+            "en": "READ TABLE … WITH KEY on a standard table checks position 1, then 2, and so on. Finding 101 at position 16 takes 16 checks. Twice as many rows means up to twice as many checks."
+          },
+          "misconception": {
+            "en": "A row near the top is found quickly, so a small test can hide the cost. The worst case still checks every row."
+          },
+          "objectives": [
+            0
+          ],
+          "learn": [
+            "group:linear",
+            "token:binary-search"
+          ],
+          "demonstrate": "trace",
+          "assess": [
+            "data-performance-lookup",
+            "concept-check"
+          ],
+          "lessonId": "data-table-performance",
+          "difficulty": "intermediate",
+          "priority": "essential",
+          "priorKnowledge": [
+            "data-table-expressions"
+          ],
+          "learningObjectives": [
+            {
+              "en": "Compare how many rows a one-by-one search and a binary search check"
+            }
+          ]
+        },
+        {
+          "id": "data-table-performance/binary-search",
+          "name": {
+            "en": "Halving a sorted table"
+          },
+          "explanation": {
+            "en": "BINARY SEARCH looks at the middle row and keeps the half that can contain the key. 16 rows need about 5 checks; 1,000 rows about 10."
+          },
+          "misconception": {
+            "en": "BINARY SEARCH does not sort anything. It only makes sense after the table is sorted by the search field."
+          },
+          "objectives": [
+            0
+          ],
+          "learn": [
+            "group:binary",
+            "token:binary-search"
+          ],
+          "demonstrate": "trace",
+          "assess": [
+            "data-performance-lookup",
+            "knowledge-check"
+          ],
+          "lessonId": "data-table-performance",
+          "difficulty": "intermediate",
+          "priority": "essential",
+          "priorKnowledge": [
+            "data-table-expressions"
+          ],
+          "learningObjectives": [
+            {
+              "en": "Compare how many rows a one-by-one search and a binary search check"
+            }
+          ]
+        },
+        {
+          "id": "data-table-performance/sort-first",
+          "name": {
+            "en": "Sort once, by the search field"
+          },
+          "explanation": {
+            "en": "SORT lt_ids BY table_line orders the IDs 101 to 116. Without it, BINARY SEARCH on the newest-first list misses 101 and reports Not found, with no error."
+          },
+          "misconception": {
+            "en": "Sorting before every read repeats the most expensive step. Sort once, then read many times."
+          },
+          "objectives": [
+            1
+          ],
+          "learn": [
+            "group:sort",
+            "token:sort-first"
+          ],
+          "demonstrate": "trace",
+          "assess": [
+            "data-performance-lookup",
+            "knowledge-check"
+          ],
+          "lessonId": "data-table-performance",
+          "difficulty": "intermediate",
+          "priority": "essential",
+          "priorKnowledge": [
+            "data-table-expressions"
+          ],
+          "learningObjectives": [
+            {
+              "en": "Sort by the search field before BINARY SEARCH, and know when sorted or hashed tables are the better choice"
+            }
+          ]
+        },
+        {
+          "id": "data-table-performance/choose-category",
+          "name": {
+            "en": "Let the table type do it"
+          },
+          "explanation": {
+            "en": "A sorted table keeps its rows in key order, so key reads use a binary search automatically. A hashed table finds a full unique key almost directly. A standard table is fine for small lists."
+          },
+          "misconception": {
+            "en": "Hashed is not always best: it needs the full key and costs more to change. Pick by table size and how it is read."
+          },
+          "objectives": [
+            1
+          ],
+          "learn": [
+            "token:sort-first"
+          ],
+          "demonstrate": "trace",
+          "assess": [
+            "knowledge-check"
+          ],
+          "lessonId": "data-table-performance",
+          "difficulty": "intermediate",
+          "priority": "essential",
+          "priorKnowledge": [
+            "data-table-expressions"
+          ],
+          "learningObjectives": [
+            {
+              "en": "Sort by the search field before BINARY SEARCH, and know when sorted or hashed tables are the better choice"
+            }
+          ]
+        }
+      ],
+      "tabRequirements": {
+        "visualize": [
+          "linear-search",
+          "binary-search",
+          "sort-first"
+        ],
+        "knowledge": [
+          "binary-search",
+          "sort-first",
+          "choose-category"
+        ]
+      },
+      "priority": "high",
+      "issuesFound": "Performance must be taught without fabricated SAP timings and must expose the unsorted BINARY SEARCH trap.",
+      "correctionsMade": "Added READ TABLE … WITH KEY … BINARY SEARCH (leftmost, SAP sy-subrc 4/8 and insert-position sy-tabix on a miss) and per-read rows-checked paths to the interpreter; a 17-line newest-first example comparing 16 linear checks with 5 binary checks, experiments for unsorted data and doubling, and a grader that varies list size and searched ID. Category guidance follows Clean ABAP.",
+      "introductionClarity": "English what/why introduction (Arabic deferred) and selectable essential explanations; original depth retained.",
+      "visualCodeAnatomy": {
+        "primaryGroups": 5,
+        "alternatives": []
+      },
+      "visualizationSuitability": "Actual interpreter snapshots; specialized conceptual controls labeled separately.",
+      "challengeAlignment": "All existing assessment IDs and knowledge-check requirements mapped to taught concept IDs; original grading retained; optional misconception checks add no achievements.",
+      "englishStatus": "New teaching reviewed; retained content source-alignment review, not learner comprehension research.",
+      "arabicStatus": "DEFERRED: existing Arabic resources preserved; no Arabic authoring or review required in this phase.",
+      "technicalAccuracyStatus": "Supported examples checked against interpreter/regression and selected official SAP references; no real SAP compilation or activation.",
+      "remainingGaps": "Rows checked are a teaching count, not runtime. Sorted/hashed tables and secondary keys are explained, not executed. Arabic deferred.",
+      "gates": {
+        "A": "STRUCTURAL_PASS_AND_SCOPED_SOURCE_REVIEW",
+        "B": "SOURCE_REVIEWED",
+        "C": "SOURCE_REVIEWED_SEE_BROWSER_LEDGER",
+        "D": "RANGE_VALIDATED_AND_SCOPED_SOURCE_REVIEW",
+        "E": "STRUCTURAL_PASS_AND_SCOPED_SOURCE_REVIEW",
+        "F": "SCOPED_NOT_SAP_COMPILED",
+        "G": "NEW_CONTENT_REVIEWED_SEE_VISUAL_LEDGER",
+        "H": "SEE_EDUCATIONAL_AUDIT_VERIFICATION_LEDGER"
+      },
+      "verificationStatus": "SOURCE_REVIEWED_WITH_LIMITATIONS"
+    },
+    {
+      "topicId": "data-employee-manager",
+      "learningPath": "data",
+      "educationalLevel": {
+        "en": "Beginner",
+        "ar": "مبتدئ"
+      },
+      "lessonDifficulty": "intermediate",
+      "objectives": [
+        {
+          "en": "Find an employee by ID, change a copy of the row and save it back with MODIFY"
+        },
+        {
+          "en": "Remove an employee safely, then report the remaining count and total with LOOP"
+        }
+      ],
+      "conceptsPromised": [
+        "data-employee-manager/find-first",
+        "data-employee-manager/copy-save",
+        "data-employee-manager/remove-shift",
+        "data-employee-manager/report-current"
+      ],
+      "conceptsCurrentlyCovered": [
+        "data-employee-manager/find-first",
+        "data-employee-manager/copy-save",
+        "data-employee-manager/remove-shift",
+        "data-employee-manager/report-current"
+      ],
+      "missingDeclaredConcepts": [],
+      "coverageLimit": "Structural bindings are validated; their presence alone does not prove semantic quality or retention.",
+      "concepts": [
+        {
+          "id": "data-employee-manager/find-first",
+          "name": {
+            "en": "Find before you change"
+          },
+          "explanation": {
+            "en": "line_index( lt_employees[ id = lv_id ] ) returns Sara's position, 2. The IF lets the update run only for a position greater than 0."
+          },
+          "misconception": {
+            "en": "A position of 0 means the employee is missing. Never use it as a row number."
+          },
+          "objectives": [
+            0
+          ],
+          "learn": [
+            "group:find",
+            "group:missing",
+            "token:find-change-save"
+          ],
+          "demonstrate": "trace",
+          "assess": [
+            "data-manager-raise",
+            "knowledge-check"
+          ],
+          "lessonId": "data-employee-manager",
+          "difficulty": "intermediate",
+          "priority": "essential",
+          "priorKnowledge": [
+            "data-table-performance"
+          ],
+          "learningObjectives": [
+            {
+              "en": "Find an employee by ID, change a copy of the row and save it back with MODIFY"
+            }
+          ]
+        },
+        {
+          "id": "data-employee-manager/copy-save",
+          "name": {
+            "en": "Change a copy, then save it"
+          },
+          "explanation": {
+            "en": "The table expression copies Sara's row into ls_employee. Adding the raise changes only the copy until MODIFY … INDEX 2 writes it back."
+          },
+          "misconception": {
+            "en": "Forgetting MODIFY leaves the old salary in the table, even though the work area shows the new one."
+          },
+          "objectives": [
+            0
+          ],
+          "learn": [
+            "group:raise",
+            "token:find-change-save"
+          ],
+          "demonstrate": "trace",
+          "assess": [
+            "data-manager-raise",
+            "concept-check"
+          ],
+          "lessonId": "data-employee-manager",
+          "difficulty": "intermediate",
+          "priority": "essential",
+          "priorKnowledge": [
+            "data-table-performance"
+          ],
+          "learningObjectives": [
+            {
+              "en": "Find an employee by ID, change a copy of the row and save it back with MODIFY"
+            }
+          ]
+        },
+        {
+          "id": "data-employee-manager/remove-shift",
+          "name": {
+            "en": "Delete moves later rows up"
+          },
+          "explanation": {
+            "en": "Deleting Ahmed at position 1 moves Sara to 1 and Omar to 2. Find a position again after a DELETE instead of reusing an old one."
+          },
+          "misconception": {
+            "en": "DELETE with position 0 is not a safe no-op. Guard it with IF lv_position > 0."
+          },
+          "objectives": [
+            1
+          ],
+          "learn": [
+            "group:remove",
+            "token:remove-report"
+          ],
+          "demonstrate": "trace",
+          "assess": [
+            "data-manager-report",
+            "concept-check"
+          ],
+          "lessonId": "data-employee-manager",
+          "difficulty": "intermediate",
+          "priority": "essential",
+          "priorKnowledge": [
+            "data-table-performance"
+          ],
+          "learningObjectives": [
+            {
+              "en": "Remove an employee safely, then report the remaining count and total with LOOP"
+            }
+          ]
+        },
+        {
+          "id": "data-employee-manager/report-current",
+          "name": {
+            "en": "Report what is left"
+          },
+          "explanation": {
+            "en": "The LOOP after the DELETE visits Sara and Omar only, so the count is 2 and the total 14500. The totals are written once, after ENDLOOP."
+          },
+          "misconception": {
+            "en": "A report written before the changes, or totals typed in by hand, no longer match the table."
+          },
+          "objectives": [
+            1
+          ],
+          "learn": [
+            "group:report",
+            "group:totals",
+            "token:remove-report"
+          ],
+          "demonstrate": "trace",
+          "assess": [
+            "data-manager-report",
+            "knowledge-check"
+          ],
+          "lessonId": "data-employee-manager",
+          "difficulty": "intermediate",
+          "priority": "essential",
+          "priorKnowledge": [
+            "data-table-performance"
+          ],
+          "learningObjectives": [
+            {
+              "en": "Remove an employee safely, then report the remaining count and total with LOOP"
+            }
+          ]
+        }
+      ],
+      "tabRequirements": {
+        "visualize": [
+          "find-first",
+          "copy-save",
+          "remove-shift",
+          "report-current"
+        ],
+        "knowledge": [
+          "find-first",
+          "report-current"
+        ]
+      },
+      "priority": "high",
+      "issuesFound": "The Working with Data path needed a capstone that combines its operations at beginner level.",
+      "correctionsMade": "Added a 44-line manager program built only from taught statements (line_index, table-expression copy, MODIFY/DELETE … INDEX guarded by position > 0, LOOP count/total), nine anatomy groups and two behavioral challenges graded on seven changed-data probes including missing and duplicate IDs.",
+      "introductionClarity": "English what/why introduction (Arabic deferred) and selectable essential explanations; original depth retained.",
+      "visualCodeAnatomy": {
+        "primaryGroups": 9,
+        "alternatives": []
+      },
+      "visualizationSuitability": "Actual interpreter snapshots; specialized conceptual controls labeled separately.",
+      "challengeAlignment": "All existing assessment IDs and knowledge-check requirements mapped to taught concept IDs; original grading retained; optional misconception checks add no achievements.",
+      "englishStatus": "New teaching reviewed; retained content source-alignment review, not learner comprehension research.",
+      "arabicStatus": "DEFERRED: existing Arabic resources preserved; no Arabic authoring or review required in this phase.",
+      "technicalAccuracyStatus": "Supported examples checked against interpreter/regression and selected official SAP references; no real SAP compilation or activation.",
+      "remainingGaps": "In-memory only; no database persistence. Separate from the guided cloud capstone projects-employee-management. Arabic deferred.",
       "gates": {
         "A": "STRUCTURAL_PASS_AND_SCOPED_SOURCE_REVIEW",
         "B": "SOURCE_REVIEWED",

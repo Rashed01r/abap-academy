@@ -290,6 +290,54 @@ export const beginnerLessons: Record<string, BeginnerLesson> = {
     ],
     challenge: { title: "Build the selected-employee report", must: ["LOOP AT lt_employees INTO ls_employee WHERE salary >= lv_min_salary.", "Inside: show the name, add 1 to lv_count and the salary to lv_total.", "After ENDLOOP, show the count, then the total: Sara, Omar, 2, 14000."], hints: ["WHERE chooses rows; it does not delete any. Use >= so exactly 6000 counts.", "WRITE / ls_employee-name. inside the loop. WRITE / lv_count. and WRITE / lv_total. after ENDLOOP."] },
   },
+  "data-table-expressions": {
+    goal: { give: "look for ID 102, then ID 999", shows: "Sara, 2 · then Not found, 0" },
+    ideas: [["Brackets read one row.", "lt_employees[ 3 ] is a position; lt_employees[ id = lv_id ] searches by ID."], ["A miss is an exception, not sy-subrc.", "TRY … CATCH cx_sy_itab_line_not_found handles a missing ID."], ["Ask without reading.", "line_exists( ) answers yes or no; line_index( ) gives the position, or 0."]],
+    mistakes: [
+      { title: "Checking sy-subrc after a table expression", wrong: "ls_employee = lt_employees[ id = lv_id ].\nIF sy-subrc <> 0.\n  WRITE / 'Not found'.\nENDIF.", right: "TRY.\n    ls_employee = lt_employees[ id = lv_id ].\n  CATCH cx_sy_itab_line_not_found.\n    WRITE / 'Not found'.\nENDTRY.", why: "A table expression never sets sy-subrc. A missing ID raises an exception instead, and without TRY the program stops." },
+      { title: "Putting the ID where a position goes", wrong: "ls_employee = lt_employees[ lv_id ].", right: "ls_employee = lt_employees[ id = lv_id ].", why: "[ lv_id ] asks for row 102. Name the field to search by ID." },
+      { title: "Reading the same row twice", wrong: "IF line_exists( lt_employees[ id = lv_id ] ).\n  ls_employee = lt_employees[ id = lv_id ].\nENDIF.", right: "TRY.\n    ls_employee = lt_employees[ id = lv_id ].\n  CATCH cx_sy_itab_line_not_found.\nENDTRY.", why: "When you need the row, read it once inside TRY. line_exists( ) is for yes-or-no questions." },
+    ],
+    check: { question: "lv_id is 999. What does lv_position = line_index( lt_employees[ id = lv_id ] ). store?", options: ["0", "The program stops with an exception", "4"], answer: 0, explanation: "line_index( ) never raises the exception. It returns 0 when no row matches." },
+    experiments: [
+      { title: "Look for Ahmed", why: "ID 101 is at position 1, so the TRY block shows Ahmed and line_index( ) returns 1.", from: "DATA lv_id TYPE i VALUE 102.", to: "DATA lv_id TYPE i VALUE 101." },
+      { title: "Look for a missing ID", why: "No row has ID 999. The TRY block jumps to CATCH and writes Not found; line_index( ) returns 0.", from: "DATA lv_id TYPE i VALUE 102.", to: "DATA lv_id TYPE i VALUE 999." },
+      { title: "Read a different position", why: "[ 1 ] is the first row, so lv_name becomes Ahmed instead of Omar.", from: "lv_name = lt_employees[ 3 ]-name.", to: "lv_name = lt_employees[ 1 ]-name." },
+    ],
+    challenge: { title: "Look up an employee safely", must: ["Inside TRY: ls_employee = lt_employees[ id = lv_id ]. then show the name and the salary.", "CATCH cx_sy_itab_line_not_found and show exactly Not found.", "After ENDTRY: lv_position = line_index( lt_employees[ id = lv_id ] ). and show it. With lv_id = 102: Sara, 8000, 2."], hints: ["Search by key: lt_employees[ id = lv_id ]. A missing ID raises an exception, so the read goes inside TRY.", "Put both WRITE lines for the employee inside TRY, after the read. line_index( ) goes after ENDTRY and returns 0 for a missing ID."] },
+  },
+  "data-table-performance": {
+    goal: { give: "16 IDs, newest first; find 101", shows: "16 checks one by one, 5 with BINARY SEARCH" },
+    ideas: [["One by one checks every row.", "Finding 101 at the bottom of 16 rows takes 16 checks."], ["BINARY SEARCH halves the rows.", "Look at the middle, keep the right half, repeat: about 5 checks."], ["Sort first, by the same field.", "On an unsorted list BINARY SEARCH can miss a row that is there."]],
+    mistakes: [
+      { title: "BINARY SEARCH without SORT", wrong: "READ TABLE lt_ids INTO lv_found WITH KEY table_line = lv_search BINARY SEARCH.", right: "SORT lt_ids BY table_line.\nREAD TABLE lt_ids INTO lv_found WITH KEY table_line = lv_search BINARY SEARCH.", why: "The IDs are newest first. Without SORT, the search heads the wrong way and says Not found." },
+      { title: "Sorting by a different field", wrong: "SORT lt_employees BY name.\nREAD TABLE lt_employees INTO ls_employee WITH KEY id = lv_id BINARY SEARCH.", right: "SORT lt_employees BY id.\nREAD TABLE lt_employees INTO ls_employee WITH KEY id = lv_id BINARY SEARCH.", why: "BINARY SEARCH needs the rows in order of the field you search, here id." },
+      { title: "Sorting before every read", wrong: "SORT lt_ids BY table_line.\nREAD TABLE … BINARY SEARCH.\nSORT lt_ids BY table_line.\nREAD TABLE … BINARY SEARCH.", right: "SORT lt_ids BY table_line.\nREAD TABLE … BINARY SEARCH.\nREAD TABLE … BINARY SEARCH.", why: "Sorting is the expensive step. Do it once, then read as often as you need." },
+    ],
+    check: { question: "The sorted list grows from 16 to 32 IDs. How many more checks does BINARY SEARCH need?", options: ["About one more", "Twice as many", "Exactly the same"], answer: 0, explanation: "Doubling the rows adds just one halving step. A one-by-one search would need up to twice as many checks." },
+    experiments: [
+      { title: "Look for the newest ID", why: "116 is at the top, so the one-by-one search finds it at once and shows 1. After SORT it is the last row, so the binary search shows 16.", from: "DATA lv_search TYPE i VALUE 101.", to: "DATA lv_search TYPE i VALUE 116." },
+      { title: "Forget to sort", why: "Without SORT the list is newest first, so BINARY SEARCH heads the wrong way and shows Not found, even though 101 is there.", from: "SORT lt_ids BY table_line.", to: "* SORT lt_ids BY table_line." },
+      { title: "Double the list", why: "The one-by-one search now needs 32 checks and shows 32. The binary search needs only one more check and still shows 1.", from: "DO 16 TIMES.", to: "DO 32 TIMES." },
+    ],
+    challenge: { title: "Find an ID with BINARY SEARCH", must: ["SORT lt_ids BY table_line. once, before the read.", "READ TABLE lt_ids INTO lv_found WITH KEY table_line = lv_search BINARY SEARCH.", "If sy-subrc = 0 show sy-tabix, otherwise show exactly Not found. With lv_search = 101 the screen shows 1."], hints: ["The IDs start newest first. BINARY SEARCH needs them sorted, so SORT comes first.", "BINARY SEARCH is the last part of the READ TABLE line. Then IF sy-subrc = 0. WRITE / sy-tabix. ELSE. WRITE / 'Not found'. ENDIF."] },
+  },
+  "data-employee-manager": {
+    goal: { give: "a raise of 500 for Sara; remove Ahmed", shows: "8500, then Sara, Omar, 2, 14500" },
+    ideas: [["Find the position first.", "line_index( ) gives the row number, or 0 when the ID is missing."], ["Change a copy, then MODIFY.", "The table only changes when MODIFY writes the copy back."], ["Report after the changes.", "DELETE first, then LOOP, so the count and total match the table."]],
+    mistakes: [
+      { title: "Forgetting MODIFY", wrong: "ls_employee-salary = ls_employee-salary + lv_raise.\nWRITE / ls_employee-salary.", right: "ls_employee-salary = ls_employee-salary + lv_raise.\nMODIFY lt_employees FROM ls_employee INDEX lv_position.", why: "Without MODIFY only the copy has the raise; the table keeps the old salary." },
+      { title: "Using position 0", wrong: "lv_position = line_index( lt_employees[ id = lv_id ] ).\nDELETE lt_employees INDEX lv_position.", right: "lv_position = line_index( lt_employees[ id = lv_id ] ).\nIF lv_position > 0.\n  DELETE lt_employees INDEX lv_position.\nENDIF.", why: "0 means the employee is missing. Only change the table when the position is greater than 0." },
+      { title: "Writing the totals inside the loop", wrong: "  lv_total = lv_total + ls_employee-salary.\n  WRITE / lv_total.\nENDLOOP.", right: "  lv_total = lv_total + ls_employee-salary.\nENDLOOP.\nWRITE / lv_total.", why: "Inside the loop the total is shown once per employee. After ENDLOOP it is shown once." },
+    ],
+    check: { question: "lv_id is 999. What happens to the table during the raise step?", options: ["Nothing changes; Not found is shown", "The first employee gets the raise", "The program stops"], answer: 0, explanation: "line_index( ) returns 0, so the IF skips the copy, the raise and the MODIFY." },
+    experiments: [
+      { title: "Raise Omar instead", why: "Omar is 103, so he gets the raise: 6500 is shown and the total becomes 14500 with Sara at 8000.", from: "DATA lv_id TYPE i VALUE 102.", to: "DATA lv_id TYPE i VALUE 103." },
+      { title: "Use a missing ID", why: "No employee is 999, so Not found is shown, nobody gets a raise and the total is 14000.", from: "DATA lv_id TYPE i VALUE 102.", to: "DATA lv_id TYPE i VALUE 999." },
+      { title: "Give a bigger raise", why: "Sara's salary becomes 9000 and the total grows to 15000.", from: "DATA lv_raise TYPE i VALUE 500.", to: "DATA lv_raise TYPE i VALUE 1000." },
+    ],
+    challenge: { title: "Run the Employee Data Manager", must: ["Challenge 1: find lv_id with line_index( ), copy the row, add lv_raise, MODIFY it back and show the new salary (Not found if missing). With lv_id = 102: 8500.", "Challenge 2: remove lv_id with DELETE … INDEX (Not found if missing), then LOOP to show each remaining name, the count and the total. With lv_id = 102: Ahmed, Omar, 2, 11000.", "Only change the table when the position is greater than 0."], hints: ["Both challenges start the same way: lv_position = line_index( lt_employees[ id = lv_id ] ). then IF lv_position > 0.", "Raise: ls_employee = lt_employees[ lv_position ]. add the raise, MODIFY … INDEX lv_position. Report: DELETE first, LOOP after, totals after ENDLOOP."] },
+  },
   "dictionary-introduction": {
     ideas: [["A domain is the technical shape.", "Type, length and allowed values, defined once."], ["A data element gives meaning.", "Labels such as “Employee status” that users see."], ["A database table stores rows.", "Its key fields identify each row."]],
     mistakes: [
@@ -381,5 +429,8 @@ export const challengeBriefs: Record<string, ChallengeBrief> = {
   "data-read-table": { intro: "Find an employee by ID. If the ID does not exist, say so instead of showing an old name.", boxes: [["lv_id", "102"], "→", ["Screen shows", "Sara"]], start: "Both employees and lv_id are ready. Add the READ TABLE line and the sy-subrc check." },
   "data-table-mutations": { intro: "Update an employee list in three steps: insert Sara, rename her to Sarah, then remove Ahmed.", boxes: [["Start", "Ahmed, Omar"], "→", ["Screen shows", "Sarah, Omar"]], start: "The two employees and the three input values are ready. Add INSERT, MODIFY, DELETE and the loop." },
   "data-sorting-filtering": { intro: "Show the employees who earn at least 6000, highest salary first, without deleting anyone.", boxes: [["Minimum", "6000"], "→", ["Screen shows", "Sara, Omar"]], start: "The three employees and lv_min_salary are ready. Add SORT, then the loop with IF." },
+  "data-table-performance": { intro: "Find one ID in a list of 16 using as few checks as possible: sort the list once, then use BINARY SEARCH.", boxes: [["lv_search", "101"], "→", ["Screen shows", "1"]], start: "The 16 IDs are stored newest first and lv_search is ready. Add SORT, the BINARY SEARCH read and the sy-subrc check." },
+  "data-employee-manager": { intro: "Run the two jobs of an employee manager: give one employee a raise, then remove one and report who is left.", boxes: [["Challenge 1", "8500"], ["Challenge 2", "Ahmed, Omar, 2, 11000"]], start: "Ahmed, Sara and Omar, lv_id and lv_raise are ready. Start each challenge by finding the position with line_index( )." },
+  "data-table-expressions": { intro: "Find an employee by ID with a table expression. If the ID does not exist, say Not found instead of stopping, then report the row position.", boxes: [["lv_id", "102"], "→", ["Screen shows", "Sara, 8000, 2"]], start: "The employees, lv_id and lv_position are ready. Add TRY … CATCH around the read, then line_index( )." },
   "data-conditional-loop": { intro: "Report only the employees earning at least 6000, then show how many there are and their total salary.", boxes: [["Minimum", "6000"], "→", ["Screen shows", "Sara, Omar, 2, 14000"]], start: "The employees and the zeroed counters are ready. Add LOOP … WHERE and the final WRITE lines." },
 };

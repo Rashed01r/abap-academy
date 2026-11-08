@@ -22,7 +22,9 @@ for(const lang of enabledLocales) for(const theme of ["light","dark"] as const) 
     expect(future.join(' ')).not.toContain(lang==='en'?'Work areas':'مناطق العمل');
     expect(future.join(' ')).not.toContain(lang==='en'?'Field symbols':'رموز الحقول');
     expect(future.join(' ')).not.toContain(lang==='en'?'Table operations':'عمليات الجداول');
-    expect(future.join(' ')).toContain(lang==='en'?'Table expressions':'تعبيرات الجداول');
+    // Since 2026-11-08 every Working with Data topic is a lesson, so the path shows no previews.
+    expect(future.join(' ')).not.toContain('Table expressions');
+    expect(future).toEqual([]);
     await openLesson(page,m.id,lang);
     await expect(page).toHaveURL(new RegExp(`mission=${m.id}`));
     await page.reload();
@@ -111,13 +113,13 @@ for(const lang of enabledLocales) for(const theme of ["light","dark"] as const) 
   });
 }
 test("valid lesson deep links are freely accessible; unknown and preview IDs do not fabricate lessons",async({page})=>{
-  for(const id of ["data-work-areas-field-symbols","data-keys","structures","data-read-table"]) {
+  for(const id of ["data-work-areas-field-symbols","data-keys","structures","data-read-table","data-table-expressions","data-table-performance","data-employee-manager"]) {
     await page.goto(`/?mission=${id}`);
     await expect(page.locator(".lesson-summary h1")).toHaveText(missions.find(m=>m.id === id)!.title.en);
     const progress=await page.evaluate(()=>JSON.parse(localStorage.getItem("abap2-master-progress")!));
     expect(progress.missions).toEqual([]);expect(progress.labs).toEqual([]);expect(progress.started).toEqual([]);expect(progress.passedChallenges).toEqual([]);
   }
-  for(const id of ["data-table-expressions","not-a-lesson"]) {
+  for(const id of ["dictionary-domains","not-a-lesson"]) {
     await page.goto(`/?mission=${id}`);
     await expect(page.locator("[data-tree-id=root]")).toBeVisible();
     await expect(page.getByRole("tab")).toHaveCount(0);

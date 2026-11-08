@@ -59,7 +59,7 @@
       "status": "SOURCE_REVIEWED_WITH_LIMITATIONS"
     },
     "data-read-table": {
-      "fingerprint": "35a388cb",
+      "fingerprint": "4044c386",
       "status": "SOURCE_REVIEWED_WITH_LIMITATIONS"
     },
     "data-table-mutations": {
@@ -103,6 +103,24 @@
       "status": "SOURCE_REVIEWED_WITH_LIMITATIONS",
       "reviewedOn": "2026-11-07",
       "scope": "English-only source and simulation review: selection preserves rows, inclusive boundary, empty results, count/total; one-comparison standard-table subset. Not SAP compilation or learner certification. Arabic deferred."
+    },
+    "data-table-expressions": {
+      "fingerprint": "f7e12f8a",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS",
+      "reviewedOn": "2026-11-08",
+      "scope": "English-only source and simulation review against the SAP-samples internal-tables cheat sheet and Clean ABAP: position/key reads, -component, CX_SY_ITAB_LINE_NOT_FOUND with TRY/CATCH, unchanged sy-subrc/sy-tabix, line_exists/line_index, OPTIONAL/DEFAULT; standard-table subset. Desktop/light and mobile/dark screenshots inspected. Not SAP compilation or learner certification. Arabic deferred."
+    },
+    "data-table-performance": {
+      "fingerprint": "2d47a98f",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS",
+      "reviewedOn": "2026-11-08",
+      "scope": "English-only source and simulation review against the SAP-samples internal-tables cheat sheet (BINARY SEARCH, read performance) and Clean ABAP table-type guidance: linear vs binary rows-checked counts, sort-first requirement, unsorted miss, SAP sy-subrc 4/8 miss semantics. Counts are a teaching model, not runtime. Screenshots inspected. Not SAP compilation or learner certification. Arabic deferred."
+    },
+    "data-employee-manager": {
+      "fingerprint": "c6dd690b",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS",
+      "reviewedOn": "2026-11-08",
+      "scope": "English-only capstone review: combines only taught statements (line_index, table-expression copy, guarded MODIFY/DELETE INDEX, LOOP count/total); two behavioral graders with missing and duplicate IDs. In-memory only. Screenshots inspected. Not SAP compilation or learner certification. Arabic deferred."
     }
   }
 }

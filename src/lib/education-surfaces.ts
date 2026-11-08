@@ -3,6 +3,9 @@
  * These IDs must resolve to explicit teaching, not merely a substring in prose. */
 export const educationSurfaces: Record<string, {visualize: string[]; knowledge: string[]}> = Object.fromEntries(([
   ["data-conditional-loop", "selection aggregate", "selection aggregate"],
+  ["data-table-expressions", "expression-read not-found exists-index optional-default", "not-found exists-index"],
+  ["data-table-performance", "linear-search binary-search sort-first", "binary-search sort-first choose-category"],
+  ["data-employee-manager", "find-first copy-save remove-shift report-current", "find-first report-current"],
   ["orientation", "statements readable-source simulation", "statements"],
   ["addition", "integer-storage sum-output", "integer-storage"],
   ["structures", "structure-type record-access", "structure-type record-access"],

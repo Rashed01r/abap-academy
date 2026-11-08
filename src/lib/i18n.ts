@@ -379,6 +379,7 @@ export function explain(e: ExecutionEvent, lang: Locale) {
     append: `Add a copy of the value to ${name}. Later changes to the source variable do not change the appended row.`,
     readFound: `Found row ${e.lookup?.index} in ${e.lookup?.table} and copied it into ${name}. sy-subrc is 0; sy-tabix is the one-based row position. The table stays unchanged.`,
     readMissing: `No matching row in ${e.lookup?.table}. sy-subrc is 4. ${name} keeps its previous value; check sy-subrc before using it. This simulator displays sy-tabix as 0 on a miss; SAP does not guarantee that value for a failed linear search.`,
+    readMissingBinary: `BINARY SEARCH found no matching row in ${e.lookup?.table}. sy-subrc is ${e.lookup?.subrc}${e.lookup?.subrc === 8 ? ": the key is beyond the last row" : ""}, and sy-tabix ${e.memory["sy-tabix"]} is where the key would belong. ${name} keeps its previous value. If the table was not sorted by this key, the row may exist and still be missed.`,
     insertFound: `Insert a copy at position ${e.mutation?.index} in ${name}; following rows shift right. sy-subrc is 0. The source work area and sy-tabix are unchanged.`,
     insertMissing: `Position ${e.mutation?.index} exceeds the row count plus one in ${name}. No row is inserted; sy-subrc is 4.`,
     modifyFound: `Replace row ${e.mutation?.index} in ${name} with a copy of the source. The row count is unchanged; sy-subrc is 0.`,
@@ -388,6 +389,11 @@ export function explain(e: ExecutionEvent, lang: Locale) {
     sort: `Reorder ${name} by ${e.mutation?.fields?.map(item => `${item.field} ${item.direction}`).join(", ")}. The rows and row count are preserved. SORT does not set sy-subrc or sy-tabix.`,
     loop: e.loop?.kind === "loop" ? `Read row ${(e.loop.index ?? 0) + 1} from ${e.loop.table} and copy it into ${name || "the receiving variable"}. The table itself is unchanged.` : `Loop iteration ${e.loop?.iteration ?? 0}. ${e.condition ? `The condition ${e.condition.expression} is ${e.condition.result ? "TRUE: enter the body" : "FALSE: leave the loop"}.` : "The loop body runs again while counted iterations remain."}`,
     loopEnd: "The loop test is false. There are no more iterations or rows to process; execution continues after the loop.",
+    assignRow: `Store a copy of the whole row in ${name}. Later changes to ${name} do not change the table.`,
+    try: "TRY starts a protected block. If a table expression inside it finds no row, execution jumps to the matching CATCH.",
+    catch: `No row of ${e.lookup?.table} matched, so the table expression raised CX_SY_ITAB_LINE_NOT_FOUND. The rest of the TRY block is skipped and the CATCH block runs. sy-subrc and sy-tabix are unchanged.`,
+    trySkipped: "The TRY block finished without an exception, so the CATCH block was skipped.",
+    tryCaught: "ENDTRY: the exception was handled, so the program continues after the block instead of stopping.",
     loopIteration: "This iteration has finished. Unless EXIT ended the loop, execution returns to the next condition test or row.",
     exit: "EXIT ends the nearest enclosing loop. The remaining statements in that loop pass are skipped; execution continues after the loop.",
     continue: "CONTINUE skips the rest of this iteration and proceeds to the next loop test or row. It does not end the whole loop.",
@@ -423,9 +429,18 @@ export function explain(e: ExecutionEvent, lang: Locale) {
     exit: "تنهي EXIT أقرب حلقة تكرارية تحتويها. يتجاوز البرنامج بقية تعليمات الدورة الحالية، ثم يتابع بعد نهاية الحلقة.",
     continue: "تتجاوز CONTINUE بقية تعليمات دورة التكرار الحالية، ثم ينتقل البرنامج إلى فحص الدورة التالية أو قراءة الصف التالي. لا تنهي الحلقة كاملة.",
   };
-  return (lang === "en" ? en : ar)[key];
+  let sentence = (lang === "en" ? en : ar)[key] ?? en[key];
+  const checked = e.lookup?.checked;
+  if (lang === "en" && checked && e.operation === "read")
+    sentence += ` It checked ${checked.length} of ${(e.memory[e.lookup!.table] as unknown[]).length} rows${e.lookup!.binary ? " with a binary search" : ", one by one from the top"}.`;
+  // Assignments and output that read a row through a table expression name the lookup first.
+  if (lang === "en" && e.lookup?.via === "expression" && ["assign", "assignRow", "write"].includes(key))
+    return `${e.lookup.found ? `The table expression found row ${e.lookup.index} of ${e.lookup.table} and read a copy` : `No row of ${e.lookup.table} matched, so ${e.lookup.fallback === "optional" ? "OPTIONAL supplied an initial row" : "DEFAULT supplied the fallback value"}`}; sy-subrc and sy-tabix are unchanged. ${sentence}`;
+  return sentence;
 }
-export const errors: Record<Locale, Record<ErrorCode, string>> = {
+/** Arabic messages are optional while Arabic is deferred; missing entries fall back to English. */
+export const errorMessage = (code: ErrorCode, lang: Locale) => errors[lang][code] ?? errors.en[code];
+export const errors: { en: Record<ErrorCode, string>; ar: Partial<Record<ErrorCode, string>> } = {
   en: {
     period:
       "A statement is missing its ending period (.). ABAP ends statements with a period, even across line breaks.",
@@ -448,6 +463,7 @@ export const errors: Record<Locale, Record<ErrorCode, string>> = {
       "Use a signed 32-bit integer (−2147483648 to 2147483647). INSERT, MODIFY and DELETE indexes must be greater than zero.",
     string: "This text literal is missing its closing single quote or crosses a physical line. Keep the quoted text on one line.",
     unassigned: "This field symbol is unassigned. Use ASSIGN with a compatible existing data object before reading or changing it.",
+    notfound: "No row matched this table expression, so ABAP raised CX_SY_ITAB_LINE_NOT_FOUND and the program stopped. A table expression does not set sy-subrc.",
     limit:
       "This example exceeded a simulator resource limit. Loops must terminate within 100 iterations, and traces within 1,000 steps. Check whether a counter or condition stops changing.",
   },

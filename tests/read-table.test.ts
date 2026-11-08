@@ -32,7 +32,7 @@ WRITE sy-subrc.
 WRITE sy-tabix.
 WRITE ls_employee-name.`);
   const read = trace.find(event => event.operation === "read")!;
-  assert.deepEqual(read.lookup, {table:"lt_employees",target:"ls_employee",found:true,index:1,keys:{id:101}});
+  assert.deepEqual(read.lookup, {table:"lt_employees",target:"ls_employee",found:true,index:1,keys:{id:101},checked:[1],subrc:0});
   assert.deepEqual(read.tableSelection, {name:"lt_employees",index:0,row:{id:101,name:"Ahmed"}});
   assert.deepEqual(read.memory.ls_employee, {id:101,name:"Ahmed"});
   assert.deepEqual(trace.at(-1)!.memory.lt_employees, [{id:101,name:"Ahmed"},{id:102,name:"Sara"}]);

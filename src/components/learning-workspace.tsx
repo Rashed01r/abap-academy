@@ -22,7 +22,7 @@ import {
   ChallengeFailure,
   Range,
 } from "@/lib/engine";
-import { ui, errors, explain } from "@/lib/i18n";
+import { ui, errorMessage, explain } from "@/lib/i18n";
 import { diagnosticAdvice } from "@/lib/diagnostics";
 import { TechnicalText } from "./technical-text";
 import { TableMemory } from "./table-memory";
@@ -195,7 +195,7 @@ export function LearningWorkspace({
           {hint && hintText && <div className="hint-panel"><p>{hintText}</p></div>}
           {error && (
             <div role="alert" className="feedback error">
-              <strong><TechnicalText>{errors[lang][error.code]}</TechnicalText></strong>
+              <strong><TechnicalText>{errorMessage(error.code, lang)}</TechnicalText></strong>
               {error.detail && <code dir="ltr"> {error.detail}</code>}
               <p><TechnicalText>{localizedText(diagnosticAdvice[error.code].hint, lang)}</TechnicalText></p>
               <details><summary>{t.explainWhy}</summary><p>{localizedText(diagnosticAdvice[error.code].why, lang)}</p><pre dir="ltr">{diagnosticAdvice[error.code].example}</pre></details>

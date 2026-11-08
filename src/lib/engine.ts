@@ -26,6 +26,7 @@ export type ErrorCode =
   | "range"
   | "string"
   | "unassigned"
+  | "notfound"
   | "limit";
 export class SimulationError extends Error {
   constructor(
@@ -43,21 +44,28 @@ export type Token = {
   start: number;
   end: number;
 };
+/** Table expression subset: itab[ index ] or itab[ comp = value ... ], optional -component chaining,
+ * and VALUE #( itab[ ... ] OPTIONAL | DEFAULT value ). Reads never change sy-subrc or sy-tabix. */
+export type TableExpr = { kind: "tableExpr"; table: string; index?: Expr; keys?: { field: string; value: Expr }[]; component?: string; fallback?: "optional" | { default: Expr } };
 export type Expr =
   | { kind: "literal"; value: Primitive }
   | { kind: "ref"; name: string }
-  | { kind: "add"; left: Expr; right: Expr };
+  | { kind: "add"; left: Expr; right: Expr }
+  | TableExpr
+  | { kind: "lineIndex"; target: TableExpr }
+  | { kind: "lineExists"; target: TableExpr };
 export type Node =
   | { kind: "do"; count: Expr; body: Node[]; range: Range; endRange: Range }
   | { kind: "while"; left: Expr; op: string; right: Expr; body: Node[]; range: Range; endRange: Range }
   | { kind: "loop"; table: string; into: string; inline: boolean; where?: { field: string; op: string; value: Expr }; body: Node[]; range: Range; endRange: Range }
   | { kind: "append"; value: Expr; table: string; range: Range }
-  | { kind: "read"; table: string; into: string; index?: Expr; keys?: { field: string; value: Expr }[]; range: Range }
+  | { kind: "read"; table: string; into: string; index?: Expr; keys?: { field: string; value: Expr }[]; binary?: boolean; range: Range }
   | { kind: "insert"; table: string; value: Expr; index: Expr; range: Range }
   | { kind: "modify"; table: string; value: Expr; index: Expr; range: Range }
   | { kind: "delete"; table: string; index: Expr; range: Range }
   | { kind: "sort"; table: string; fields: { field: string; direction: "ascending" | "descending" }[]; range: Range }
   | { kind: "control"; action: "exit" | "continue"; range: Range }
+  | { kind: "try"; body: Node[]; handler: Node[]; range: Range; catchRange: Range; endRange: Range; bodyRange?: Range; handlerRange?: Range }
   | { kind: "data"; name: string; type: string; initial?: Expr; range: Range }
   | { kind: "fieldSymbol"; name: string; type: string; range: Range }
   | { kind: "bind"; source: string; target: string; range: Range }
@@ -85,7 +93,7 @@ export type Node =
     };
 export type ExecutionEvent = {
   id: number;
-  operation: "define" | "declare" | "assign" | "write" | "condition" | "end" | "loop" | "append" | "read" | "insert" | "modify" | "delete" | "sort" | "control" | "bind" | "unbind";
+  operation: "define" | "declare" | "assign" | "write" | "condition" | "end" | "loop" | "append" | "read" | "insert" | "modify" | "delete" | "sort" | "control" | "bind" | "unbind" | "try" | "catch";
   range: Range;
   statement: string;
   memory: Memory;
@@ -97,7 +105,9 @@ export type ExecutionEvent = {
   loop?: { kind: "do" | "while" | "loop"; iteration: number; count?: number; range: Range; table?: string; index?: number; row?: Primitive | StructureValue };
   tableSelection?: { name: string; index: number; row: Primitive | StructureValue };
   /** Lookup index is one-based (0 on a miss); tableSelection indexes are zero-based. */
-  lookup?: { table: string; target: string; found: boolean; index: number; keys?: Record<string, Primitive>; requestedIndex?: number };
+  lookup?: { table: string; target: string; found: boolean; index: number; keys?: Record<string, Primitive>; requestedIndex?: number; via?: "expression"; fallback?: "optional" | "default"; raised?: boolean;
+    /** One-based row positions examined, in order (a teaching count, not a runtime measurement). */
+    checked?: number[]; binary?: boolean; subrc?: number };
   /** Mutation index is one-based; before/after are independent snapshots, including misses. */
   mutation?: { table: string; kind: "insert" | "modify" | "delete" | "sort"; index?: number; applied: boolean; before: TableValue; after: TableValue; fields?: { field: string; direction: "ascending" | "descending" }[] };
   filter?: { table: string; index: number; field: string; value: Primitive; operand: Primitive; matched: boolean };
@@ -173,7 +183,7 @@ export function tokenize(source: string): Token[] {
         start,
         end: i,
       });
-    } else if (".,:+-=<>/()".includes(c)) {
+    } else if (".,:+-=<>/()[]#".includes(c)) {
       i++;
       if ([">=", "<=", "<>"].includes(c + source[i])) i++;
       tokens.push({
@@ -240,8 +250,46 @@ export function parse(source: string): Node[] {
     if (peek()?.kind === "number")
       return { kind: "literal", value: sign * Number(tokens[p++].text) };
     if (sign === -1) fail("assignment");
+    const next = tokens[p + 1]?.text;
+    if (t.kind === "word" && (t.text === "line_exists" || t.text === "line_index") && next === "(") {
+      p += 2;
+      const target = tableExpr(name(), false);
+      take(")", "unsupported");
+      return { kind: t.text === "line_exists" ? "lineExists" : "lineIndex", target };
+    }
+    if (t.kind === "word" && t.text === "value" && next === "#") {
+      p += 2; take("(", "unsupported");
+      if (peek()?.kind !== "word" || tokens[p + 1]?.text !== "[") fail("unsupported", "VALUE #( ) supports only a table expression here");
+      const target = tableExpr(name(), false);
+      if (at("optional")) { p++; target.fallback = "optional"; }
+      else if (at("default")) { p++; target.fallback = { default: atom() }; }
+      take(")", "unsupported");
+      return target;
+    }
+    if (t.kind === "word" && next === "[") return tableExpr(name(), true);
     return { kind: "ref", name: ref() };
   };
+  function tableExpr(table: string, chain: boolean): TableExpr {
+    take("[", "unsupported");
+    if (at("table") || at("key") || at("index")) fail("unsupported", "KEY / TABLE KEY / INDEX additions");
+    const e: TableExpr = { kind: "tableExpr", table };
+    if (peek()?.kind === "word" && tokens[p + 1]?.text === "=") {
+      const keys: { field: string; value: Expr }[] = [];
+      while (peek() && !at("]")) {
+        const field = name();
+        if (keys.some(key => key.field === field)) fail("component", field);
+        take("=", "assignment"); keys.push({ field, value: expr() });
+      }
+      e.keys = keys;
+    } else e.index = expr();
+    take("]", "unsupported");
+    if (chain && at("-") && tokens[p + 1]?.kind === "word") {
+      p++; e.component = name();
+      if (at("-")) fail("access");
+    }
+    if (at("[") || (at("-") && tokens[p + 1]?.kind !== "number")) fail("unsupported", "chained table expressions");
+    return e;
+  }
   const expr = (): Expr => {
     let e = atom();
     while (at("+")) {
@@ -260,10 +308,23 @@ export function parse(source: string): Node[] {
     }
     p++;
   };
+  /** A comparison, or the predicate line_exists( ... ) optionally preceded by NOT (op "pred" / "!pred"). */
+  const condition = (): { left: Expr; op: string; right: Expr } => {
+    const negate = at("not") && tokens[p + 1]?.text === "line_exists";
+    if (negate) p++;
+    const left = atom();
+    if (left.kind === "lineExists" && !["=", "<>", ">=", "<=", ">", "<"].includes(peek()?.text))
+      return { left, op: negate ? "!pred" : "pred", right: left };
+    if (negate || left.kind === "lineExists") fail("unsupported", "line_exists( ) is a predicate; do not compare it");
+    const op = peek()?.text;
+    if (!["=", "<>", ">=", "<=", ">", "<"].includes(op)) fail("assignment");
+    p++;
+    return { left, op, right: atom() };
+  };
   function nodes(nested = false, depth = 0): Node[] {
     if (depth > RUNTIME_LIMITS.nesting) fail("limit");
     const list: Node[] = [];
-    while (peek() && !["else", "elseif", "endif", "enddo", "endwhile", "endloop"].includes(peek().text)) {
+    while (peek() && !["else", "elseif", "endif", "enddo", "endwhile", "endloop", "catch", "endtry"].includes(peek().text)) {
       const start = p;
       let node!: Node;
       if (at("data")) {
@@ -325,11 +386,7 @@ export function parse(source: string): Node[] {
         node = { kind: "write", value, range: range(start) };
       } else if (at("if")) {
         p++;
-        const left = atom();
-        const op = peek()?.text;
-        if (!["=", "<>", ">=", "<=", ">", "<"].includes(op)) fail("assignment");
-        p++;
-        const right = atom();
+        const { left, op, right } = condition();
         period(start);
         const ifRange = range(start),
           yesStart = p,
@@ -338,11 +395,7 @@ export function parse(source: string): Node[] {
         const elseifs: NonNullable<Extract<Node, { kind: "if" }>["elseifs"]> = [];
         while (at("elseif")) {
           const branchStart = p++;
-          const left = atom();
-          const op = peek()?.text;
-          if (!["=", "<>", ">=", "<=", ">", "<"].includes(op)) fail("assignment");
-          p++;
-          const right = atom();
+          const { left, op, right } = condition();
           period(branchStart);
           const branchRange = range(branchStart), bodyStart = p;
           const body = nodes(true, depth + 1);
@@ -429,18 +482,39 @@ export function parse(source: string): Node[] {
         if (at("index")) { p++; index = expr(); }
         else {
           take("with"); take("key"); keys = [];
-          while (peek() && !at(".")) {
+          while (peek() && !at(".") && !at("binary")) {
             const field = name();
             if (keys.some(key => key.field === field)) fail("component", field);
             take("=", "assignment"); keys.push({field, value: expr()});
           }
           if (!keys.length) fail("declaration");
         }
+        let binary = false;
+        if (at("binary")) {
+          if (index) fail("unsupported", "BINARY SEARCH needs WITH KEY");
+          p++; take("search", "unsupported"); binary = true;
+        }
         period(start);
-        node = {kind:"read", table, into, index, keys, range:range(start)};
+        node = {kind:"read", table, into, index, keys, ...(binary ? {binary} : {}), range:range(start)};
       } else if (at("append")) {
         p++; const value = expr(); take("to"); const table = name(); period(start);
         node = { kind: "append", value, table, range: range(start) };
+      } else if (at("try")) {
+        p++; period(start);
+        const opening = range(start), bodyStart = p;
+        const body = nodes(true, depth + 1);
+        const bodyRange = body.length ? range(bodyStart) : undefined;
+        if (!at("catch")) fail("block");
+        const catchStart = p++;
+        if (name() !== "cx_sy_itab_line_not_found") fail("unsupported", "Only CATCH cx_sy_itab_line_not_found is supported", catchStart + 1);
+        period(catchStart);
+        const catchRange = range(catchStart), handlerStart = p;
+        const handler = nodes(true, depth + 1);
+        const handlerRange = handler.length ? range(handlerStart) : undefined;
+        if (at("catch")) fail("unsupported", "one CATCH per TRY");
+        if (!at("endtry")) fail("block");
+        const endStart = p++; period(endStart);
+        node = { kind: "try", body, handler, range: opening, catchRange, endRange: range(endStart), bodyRange, handlerRange };
       } else if (at("exit") || at("continue")) {
         const action = tokens[p++].text as "exit" | "continue"; period(start);
         node = { kind: "control", action, range: range(start) };
@@ -459,6 +533,7 @@ export function parse(source: string): Node[] {
         )
           fail("unsupported");
         const target = ref();
+        if (at("[")) fail("unsupported", "write access through a table expression");
         if (at(".") && tokens[p + 1]?.kind === "word") fail("access");
         take("=", "assignment");
         const value = expr();
@@ -515,11 +590,30 @@ export function execute(nodes: Node[], source: string): ExecutionEvent[] {
       return typeof e.value === "number" ? "i" : "string";
     }
     if (e.kind === "ref") return refType(e.name, n);
+    if (e.kind === "lineIndex") { exprType(e.target, n); return "i"; }
+    if (e.kind === "lineExists") { exprType(e.target, n); return "bool"; }
+    if (e.kind === "tableExpr") {
+      const tableType = refType(e.table, n);
+      if (!tableType.startsWith("table:")) return error("type", n, e.table);
+      const rowType = tableType.slice(6);
+      if (e.index && exprType(e.index, n) !== "i") error("type", n);
+      for (const key of e.keys || []) {
+        const keyType = key.field === "table_line" && !definitions[rowType] ? rowType : definitions[rowType]?.[key.field];
+        if (!keyType) error("component", n, key.field);
+        if (exprType(key.value, n) !== keyType) error("type", n);
+      }
+      if (e.fallback && e.fallback !== "optional" && exprType(e.fallback.default, n) !== rowType) error("type", n);
+      if (!e.component) return rowType;
+      if (!definitions[rowType]) return error("access", n, e.table);
+      if (!(e.component in definitions[rowType])) return error("component", n, e.component);
+      return definitions[rowType][e.component];
+    }
     if (exprType(e.left, n) !== "i" || exprType(e.right, n) !== "i")
       return error("type", n);
     return "i";
   }
-  function validate(list: Node[], loops = 0) {
+  const isPredicate = (op: string) => op === "pred" || op === "!pred";
+  function validate(list: Node[], loops = 0, tries = 0) {
     for (const n of list) {
       if (n.kind === "define") {
         if (n.name in definitions || ["i", "string"].includes(n.name))
@@ -540,9 +634,11 @@ export function execute(nodes: Node[], source: string): ExecutionEvent[] {
         refType(n.target, n);
       } else if (n.kind === "assign") {
         if (n.target.startsWith("sy-")) error("assignment", n);
+        const targetType = refType(n.target, n);
+        // Whole structures are assignable only from a table expression row in this subset.
         if (
-          exprType(n.value, n) !== refType(n.target, n) ||
-          !["i", "string"].includes(refType(n.target, n))
+          exprType(n.value, n) !== targetType ||
+          (!["i", "string"].includes(targetType) && !(n.value.kind === "tableExpr" && definitions[targetType]))
         )
           error("type", n);
       } else if (n.kind === "write") {
@@ -575,7 +671,11 @@ export function execute(nodes: Node[], source: string): ExecutionEvent[] {
           if (!keyType) error("component", n, key.field);
           if (exprType(key.value, n) !== keyType) error("type", n);
         }
+      } else if (n.kind === "try") {
+        validate(n.body, loops, tries + 1);
+        validate(n.handler, loops, tries + 1);
       } else if (n.kind === "do" || n.kind === "while" || n.kind === "loop") {
+        if (tries) error("unsupported", n, "Loops inside TRY are outside this subset");
         if (n.kind === "do" && exprType(n.count, n) !== "i") error("type", n);
         if (n.kind === "while" && (exprType(n.left, n) !== exprType(n.right, n) || !["i", "string"].includes(exprType(n.left,n)))) error("type", n);
         if (n.kind === "loop") {
@@ -592,17 +692,21 @@ export function execute(nodes: Node[], source: string): ExecutionEvent[] {
             types[n.into] = tableType.slice(6);
           } else if (refType(n.into,n) !== tableType.slice(6)) error("type",n);
         }
-        validate(n.body, loops + 1);
+        validate(n.body, loops + 1, tries);
       } else {
-        if (exprType(n.left, n) !== exprType(n.right, n)) error("type", n);
-        if (!["i", "string"].includes(exprType(n.left, n))) error("type", n);
-        validate(n.yes, loops);
+        if (isPredicate(n.op)) exprType(n.left, n);
+        else {
+          if (exprType(n.left, n) !== exprType(n.right, n)) error("type", n);
+          if (!["i", "string"].includes(exprType(n.left, n))) error("type", n);
+        }
+        validate(n.yes, loops, tries);
         for (const branch of n.elseifs || []) {
           const branchNode = { ...n, range: branch.range };
-          if (exprType(branch.left, branchNode) !== exprType(branch.right, branchNode)) error("type", branchNode);
-          validate(branch.body, loops);
+          if (isPredicate(branch.op)) exprType(branch.left, branchNode);
+          else if (exprType(branch.left, branchNode) !== exprType(branch.right, branchNode) || !["i", "string"].includes(exprType(branch.left, branchNode))) error("type", branchNode);
+          validate(branch.body, loops, tries);
         }
-        validate(n.no, loops);
+        validate(n.no, loops, tries);
       }
     }
   }
@@ -626,8 +730,85 @@ export function execute(nodes: Node[], source: string): ExecutionEvent[] {
     if (typeof value !== "object" || Array.isArray(value) || !(field in value)) return error("component", n, field);
     return value[field];
   }
+  type Lookup = NonNullable<ExecutionEvent["lookup"]>;
+  let pendingLookup: Lookup | undefined;
+  const initialOf = (type: string): Primitive | StructureValue => definitions[type] ? Object.fromEntries(Object.entries(definitions[type]).map(([key,t])=>[key,t === "i" ? 0 : ""])) : type === "i" ? 0 : "";
+  /** Finds a key in a standard table. Linear search checks rows from the top; BINARY SEARCH assumes the
+   * rows are sorted ascending by the key fields and halves the remaining range (leftmost match).
+   * On a binary miss, insertAt is the one-based position where the key would belong. */
+  function locate(rows: TableValue, keys: Record<string, Primitive>, binary = false) {
+    const fields = Object.keys(keys);
+    const value = (row: Primitive | StructureValue, field: string) => typeof row === "object" ? row[field] : row;
+    if (!binary) {
+      const index = rows.findIndex(row => fields.every(field => value(row, field) === keys[field]));
+      const checked = Array.from({ length: index >= 0 ? index + 1 : rows.length }, (_, i) => i + 1);
+      return { index, checked, insertAt: 0 };
+    }
+    const compare = (row: Primitive | StructureValue) => {
+      for (const field of fields) { const a = value(row, field), b = keys[field]; if (a < b) return -1; if (a > b) return 1; }
+      return 0;
+    };
+    const checked: number[] = [];
+    let lo = 0, hi = rows.length;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      checked.push(mid + 1);
+      if (compare(rows[mid]) < 0) lo = mid + 1; else hi = mid;
+    }
+    const found = lo < rows.length && compare(rows[lo]) === 0;
+    if (found && !checked.includes(lo + 1)) checked.push(lo + 1);
+    return { index: found ? lo : -1, checked, insertAt: lo + 1 };
+  }
+  /** Locate a table-expression row without copying it; records lookup metadata for the trace. */
+  function search(e: TableExpr, n: Node): { rows: TableValue; index: number } {
+    const rows = memory[e.table];
+    if (!Array.isArray(rows)) return error("type", n, e.table);
+    const keys = e.keys ? Object.fromEntries(e.keys.map(key => [key.field, get(key.value, n)])) : undefined;
+    const requestedIndex = e.index ? get(e.index, n) as number : undefined;
+    const located = keys ? locate(rows, keys) : undefined;
+    const index = requestedIndex !== undefined ? (requestedIndex > 0 && requestedIndex <= rows.length ? requestedIndex - 1 : -1) : located!.index;
+    pendingLookup = { table: e.table, target: "", found: index >= 0, index: index + 1, via: "expression", ...(located ? { checked: located.checked } : {}),
+      ...(keys ? { keys } : {}), ...(requestedIndex !== undefined ? { requestedIndex } : {}),
+      ...(e.fallback ? { fallback: e.fallback === "optional" ? "optional" : "default" } : {}) };
+    return { rows, index };
+  }
+  /** Evaluates any expression, including whole table rows (always copied). */
+  function value(e: Expr, n: Node): Primitive | StructureValue {
+    if (e.kind === "lineIndex") return search(e.target, n).index + 1;
+    if (e.kind === "lineExists") return search(e.target, n).index >= 0 ? 1 : 0;
+    if (e.kind === "tableExpr") {
+      const { rows, index } = search(e, n);
+      if (index < 0) {
+        if (e.fallback === "optional") return initialOf(types[e.table].slice(6));
+        if (e.fallback) {
+          const own = pendingLookup, fallback = value(e.fallback.default, n);
+          pendingLookup = own;
+          return structuredClone(fallback);
+        }
+        pendingLookup!.raised = true;
+        throw new LineNotFound(n, pendingLookup!);
+      }
+      const row = structuredClone(rows[index]);
+      return e.component ? (row as StructureValue)[e.component] : row;
+    }
+    if (e.kind === "ref" && !e.name.startsWith("sy-")) {
+      const v = readRef(e.name, n);
+      if (Array.isArray(v)) return error("type", n);
+      return structuredClone(v);
+    }
+    return get(e, n);
+  }
+  function describe(e: TableExpr) {
+    const spec = pendingLookup?.keys ? Object.entries(pendingLookup.keys).map(([field, v]) => `${field} = ${typeof v === "string" ? `'${v}'` : v}`).join(" ") : String(pendingLookup?.requestedIndex);
+    return `${e.table}[ ${spec} ]`;
+  }
   function get(e: Expr, n: Node): Primitive {
     if (e.kind === "literal") return e.value;
+    if (e.kind === "tableExpr" || e.kind === "lineIndex" || e.kind === "lineExists") {
+      const v = value(e, n);
+      if (typeof v === "object") return error("type", n);
+      return v;
+    }
     if (e.kind === "add") {
       const a = get(e.left, n),
         b = get(e.right, n);
@@ -663,6 +844,8 @@ export function execute(nodes: Node[], source: string): ExecutionEvent[] {
     filter?: ExecutionEvent["filter"],
   ) {
     if (events.length >= RUNTIME_LIMITS.trace) error("limit", n, "trace");
+    if (!lookup && pendingLookup) lookup = { ...pendingLookup, target: n.kind === "assign" ? n.target : "" };
+    pendingLookup = undefined;
     if ((JSON.stringify(memory).length + JSON.stringify(output).length) * 2 > RUNTIME_LIMITS.memoryBytes) error("limit", n, "memory");
     const loop = loopStack.at(-1);
     const tableContext = [...loopStack].reverse().find(context => context.kind === "loop" && context.row !== undefined);
@@ -701,6 +884,7 @@ export function execute(nodes: Node[], source: string): ExecutionEvent[] {
     };
     for (const n of list) {
       if (++steps > RUNTIME_LIMITS.steps) error("limit", n, "steps");
+      pendingLookup = undefined;
       if (n.kind === "define") {
         emit(n, "define", { key: "define", name: n.name });
       } else if (n.kind === "fieldSymbol") {
@@ -739,18 +923,19 @@ export function execute(nodes: Node[], source: string): ExecutionEvent[] {
           [n.name],
         );
       } else if (n.kind === "assign") {
-        const v = checked(get(n.value, n), n),
+        const raw = value(n.value, n);
+        const v = typeof raw === "object" ? raw : checked(raw, n),
           target = resolve(n.target, n),
           [base, field] = target.split("-");
-        if (field) (memory[base] as Record<string, Primitive>)[field] = v;
+        if (field) (memory[base] as Record<string, Primitive>)[field] = v as Primitive;
         else memory[base] = v;
         emit(
           n,
           "assign",
           {
-            key: n.value.kind === "add" ? "add" : "assign",
+            key: n.value.kind === "add" ? "add" : typeof v === "object" ? "assignRow" : "assign",
             name: n.target,
-            value: v,
+            value: typeof v === "object" ? undefined : v,
           },
           Array.from(new Set([n.target, target])),
         );
@@ -766,9 +951,8 @@ export function execute(nodes: Node[], source: string): ExecutionEvent[] {
         if (!Array.isArray(memory[n.table])) error("type", n);
         const rows = memory[n.table] as TableValue;
         if (rows.length >= RUNTIME_LIMITS.rows) error("limit", n, "rows");
-        const value = n.value.kind === "ref" && !n.value.name.startsWith("sy-") ? readRef(n.value.name, n) : get(n.value,n);
-        if (value === undefined || Array.isArray(value)) error("type",n);
-        rows.push(structuredClone(value as Primitive | StructureValue));
+        const appended = value(n.value, n);
+        rows.push(structuredClone(appended));
         emit(n,"append",{ key:"append",name:n.table },[n.table]);
       } else if (n.kind === "insert" || n.kind === "modify" || n.kind === "delete" || n.kind === "sort") {
         if (loopStack.some(context => context.table === n.table)) error("unsupported",n,"Changing an actively looped table is outside this subset");
@@ -790,13 +974,13 @@ export function execute(nodes: Node[], source: string): ExecutionEvent[] {
           index = get(n.index,n) as number;
           if (index <= 0) error("range",n,"Mutation INDEX must be positive");
           // Read the source before changing the table, even for an out-of-range index.
-          const value = n.kind === "delete" ? undefined : n.value.kind === "ref" && !n.value.name.startsWith("sy-") ? readRef(n.value.name,n) : get(n.value,n);
+          const source = n.kind === "delete" ? undefined : value(n.value, n);
           applied = index <= rows.length + (n.kind === "insert" ? 1 : 0);
           if (applied) {
             if (n.kind === "insert") {
               if (rows.length >= RUNTIME_LIMITS.rows) error("limit",n,"rows");
-              rows.splice(index-1,0,structuredClone(value as Primitive | StructureValue));
-            } else if (n.kind === "modify") rows[index-1] = structuredClone(value as Primitive | StructureValue);
+              rows.splice(index-1,0,structuredClone(source as Primitive | StructureValue));
+            } else if (n.kind === "modify") rows[index-1] = structuredClone(source as Primitive | StructureValue);
             else rows.splice(index-1,1);
           }
           subrc = applied ? 0 : 4;
@@ -809,18 +993,38 @@ export function execute(nodes: Node[], source: string): ExecutionEvent[] {
         const rows = memory[n.table] as TableValue;
         const keys = n.keys ? Object.fromEntries(n.keys.map(key => [key.field, get(key.value, n)])) : undefined;
         const requestedIndex = n.index ? get(n.index, n) as number : undefined;
-        const index = requestedIndex !== undefined ? (requestedIndex > 0 && requestedIndex <= rows.length ? requestedIndex - 1 : -1)
-          : rows.findIndex(row => Object.entries(keys!).every(([field,value]) => (typeof row === "object" ? row[field] : row) === value));
+        const located = keys ? locate(rows, keys, n.binary) : undefined;
+        const index = requestedIndex !== undefined ? (requestedIndex > 0 && requestedIndex <= rows.length ? requestedIndex - 1 : -1) : located!.index;
         const found = index >= 0;
-        subrc = found ? 0 : 4;
-        tabix = found ? index + 1 : 0;
+        // SAP: a failed BINARY SEARCH sets sy-subrc 4 and sy-tabix to the insert position, or 8 and lines + 1
+        // when the key is beyond the last row. A failed linear read shows sy-tabix 0 here (model convention).
+        subrc = found ? 0 : n.binary && located!.insertAt > rows.length ? 8 : 4;
+        tabix = found ? index + 1 : n.binary ? located!.insertAt : 0;
         // INTO copies a row; misses intentionally preserve the prior work-area value.
         if (found) memory[n.into] = structuredClone(rows[index]);
         memory["sy-subrc"] = subrc;
         memory["sy-tabix"] = tabix;
-        emit(n, "read", {key:found ? "readFound" : "readMissing", name:n.into},
+        emit(n, "read", {key:found ? "readFound" : n.binary ? "readMissingBinary" : "readMissing", name:n.into},
           [...(found ? [n.into] : []), "sy-subrc", "sy-tabix"], [], undefined, n.range,
-          {table:n.table, target:n.into, found, index:tabix, ...(keys ? {keys} : {}), ...(requestedIndex !== undefined ? {requestedIndex} : {})});
+          {table:n.table, target:n.into, found, index:found ? tabix : 0, ...(keys ? {keys} : {}), ...(requestedIndex !== undefined ? {requestedIndex} : {}),
+            ...(located ? {checked: located.checked} : {}), ...(n.binary ? {binary: true} : {}), subrc});
+      } else if (n.kind === "try") {
+        emit(n, "try", { key: "try" });
+        let control: "exit" | "continue" | undefined;
+        try {
+          control = run(n.body);
+        } catch (raised) {
+          if (!(raised instanceof LineNotFound)) throw raised;
+          // The statement that raised and every later statement in the TRY block are abandoned.
+          const skipped = n.body.filter(item => item.range.start >= raised.node.range.start).map(skippedRange);
+          emit(n, "catch", { key: "catch", name: raised.lookup.table }, [], skipped, undefined, n.catchRange, raised.lookup);
+          const handled = run(n.handler);
+          emit(n, "end", { key: "tryCaught" }, [], [], undefined, n.endRange);
+          if (handled) return propagate(n, handled);
+          continue;
+        }
+        if (control) return propagate(n, control);
+        emit(n, "end", { key: "trySkipped" }, [], [n.catchRange, ...(n.handlerRange ? [n.handlerRange] : [])], undefined, n.endRange);
       } else if (n.kind === "control") {
         const rest = list.slice(list.indexOf(n) + 1);
         emit(n,"control",{key:n.action},[],rest.map(skippedRange));
@@ -876,6 +1080,19 @@ export function execute(nodes: Node[], source: string): ExecutionEvent[] {
         const skipped: Range[] = [];
         for (let index = 0; index < branches.length; index++) {
           const branch = branches[index];
+          if (isPredicate(branch.op)) {
+            const target = (branch.left as Extract<Expr, { kind: "lineExists" }>).target;
+            const result = (get(branch.left, n) === 1) !== (branch.op === "!pred");
+            if (!result && branch.bodyRange) skipped.push(branch.bodyRange);
+            if (result) {
+              selected = index;
+              for (const later of branches.slice(index + 1)) { skipped.push(later.range); if (later.bodyRange) skipped.push(later.bodyRange); }
+              if (n.noRange) skipped.push(n.noRange);
+            }
+            emit(n, "condition", { key: "condition" }, [], [...skipped], { expression: `${branch.op === "!pred" ? "NOT " : ""}line_exists( ${describe(target)} )`, result }, branch.range);
+            if (result) { const control = run(branch.body); if (control) return propagate(n, control); break; }
+            continue;
+          }
           const a = get(branch.left, n),
             b = get(branch.right, n);
           const result =
@@ -922,8 +1139,17 @@ export function execute(nodes: Node[], source: string): ExecutionEvent[] {
       }
     }
   }
-  run(nodes);
+  try {
+    run(nodes);
+  } catch (raised) {
+    if (raised instanceof LineNotFound) throw new SimulationError("notfound", raised.node.range, raised.lookup.table);
+    throw raised;
+  }
   return events;
+}
+/** CX_SY_ITAB_LINE_NOT_FOUND raised by a table expression; caught by TRY or reported as a runtime error. */
+class LineNotFound {
+  constructor(public node: Node, public lookup: NonNullable<ExecutionEvent["lookup"]>) {}
 }
 export function simulate(source: string) {
   return execute(parse(source), source);
@@ -938,7 +1164,116 @@ export function evaluate(
     last = events.at(-1)!;
   let correct = false;
   let failure: ChallengeFailure | undefined;
-  if (id === "data-conditional-report") {
+  if (id === "data-manager-raise" || id === "data-manager-report") {
+    // Behavioral capstone grading: every probe replaces the supplied employees, lv_id and lv_raise.
+    const walk = (list:Node[]):Node[] => list.flatMap(n=>[n,...("body" in n ? walk(n.body) : []),...(n.kind === "try" ? walk(n.handler) : []),...(n.kind === "if" ? [...walk(n.yes),...walk(n.no),...(n.elseifs || []).flatMap(b=>walk(b.body))] : [])]);
+    const all = walk(nodes), raise = id === "data-manager-raise";
+    const shape = !all.some(n=>n.kind === "assign" && ["lv_id","lv_raise"].includes(n.target) || n.kind === "sort" || n.kind === "insert") &&
+      all.filter(n=>n.kind === "append").length === 3 &&
+      (raise ? all.some(n=>n.kind === "modify") && !all.some(n=>n.kind === "delete") : all.some(n=>n.kind === "delete") && all.some(n=>n.kind === "loop") && !all.some(n=>n.kind === "modify"));
+    const probes: [number,number,number[],string[],number[]][] = [
+      [102,500,[101,102,103],["Ahmed","Sara","Omar"],[5000,8000,6000]],
+      [101,1000,[101,102,103],["Ahmed","Sara","Omar"],[5000,8000,6000]],
+      [103,0,[101,102,103],["Ahmed","Sara","Omar"],[5000,8000,6000]],
+      [999,500,[101,102,103],["Ahmed","Sara","Omar"],[5000,8000,6000]],
+      [7,25,[5,6,7],["Ava","Ben","Chen"],[100,200,300]],
+      [41,10,[40,41,41],["Eli","Faye","Gus"],[700,800,900]],
+      [0,3,[9,8,0],["Hana","Ivo","Jin"],[1,2,3]],
+    ];
+    correct = shape && probes.every(([lookup,amount,ids,names,salaries])=>{
+      const tree = structuredClone(nodes); const seen = {id:0,name:0,salary:0};
+      for (const n of walk(tree)) {
+        if(n.kind === "data" && n.name === "lv_id") n.initial={kind:"literal",value:lookup};
+        if(n.kind === "data" && n.name === "lv_raise") n.initial={kind:"literal",value:amount};
+        for (const [field,values] of [["id",ids],["name",names],["salary",salaries]] as const)
+          if(n.kind === "assign" && n.target === `ls_employee-${field}` && n.value.kind === "literal" && seen[field]<3) n.value.value=values[seen[field]++];
+      }
+      if(seen.id!==3 || seen.name!==3 || seen.salary!==3) return false;
+      try {
+        const trace=execute(tree,source), final=trace.at(-1)!;
+        const rows=ids.map((rowId,i)=>({id:rowId,name:names[i],salary:salaries[i]}));
+        const position=rows.findIndex(r=>r.id===lookup); // first match, as line_index( ) returns
+        let expected: string[]; const after = structuredClone(rows);
+        if (raise) {
+          if (position >= 0) { after[position].salary += amount; expected=[String(after[position].salary)]; } else expected=["Not found"];
+        } else {
+          if (position >= 0) after.splice(position,1);
+          const total=after.reduce((sum,r)=>sum+r.salary,0);
+          expected=[...(position >= 0 ? [] : ["Not found"]),...after.map(r=>r.name),String(after.length),String(total)];
+          if (final.memory.lv_count !== after.length || final.memory.lv_total !== total) { failure={name:"lv_id",input:lookup,expected:expected.join("\n"),actual:final.output.join("\n")}; return false; }
+        }
+        const actual=final.output.join("\n");
+        const ok=actual===expected.join("\n") && JSON.stringify(final.memory.lt_employees)===JSON.stringify(after);
+        if(!ok) failure={name:"lv_id",input:lookup,expected:expected.join("\n"),actual};
+        return ok;
+      } catch(error) { if(!(error instanceof SimulationError)) throw error; return false; }
+    });
+  } else if (id === "data-performance-lookup") {
+    // Probes change the number of stored IDs (DO count) and the searched ID; IDs are stored newest first.
+    const walk = (list:Node[]):Node[] => list.flatMap(n=>[n,...("body" in n ? walk(n.body) : []),...(n.kind === "try" ? walk(n.handler) : []),...(n.kind === "if" ? [...walk(n.yes),...walk(n.no),...(n.elseifs || []).flatMap(b=>walk(b.body))] : [])]);
+    const all = walk(nodes);
+    const sorts = all.filter((n):n is Extract<Node,{kind:"sort"}>=>n.kind === "sort");
+    const reads = all.filter((n):n is Extract<Node,{kind:"read"}>=>n.kind === "read");
+    const shape = sorts.length === 1 && sorts[0].table === "lt_ids" && sorts[0].fields.length === 1 && sorts[0].fields[0].field === "table_line" && sorts[0].fields[0].direction === "ascending" &&
+      reads.length === 1 && reads[0].binary === true && reads[0].table === "lt_ids" && reads[0].keys?.length === 1 && reads[0].keys[0].field === "table_line" && reads[0].keys[0].value.kind === "ref" && reads[0].keys[0].value.name === "lv_search" &&
+      sorts[0].range.start < reads[0].range.start && all.filter(n=>n.kind === "do").length === 1 &&
+      !all.some(n=>["delete","modify","loop","while","append"].includes(n.kind) || n.kind === "insert" && n.range.start > sorts[0].range.start || n.kind === "assign" && n.target === "lv_search");
+    const probes: [number,number][] = [[16,101],[16,116],[16,108],[16,200],[16,50],[5,103],[1,101],[1,102],[32,117],[32,132],[0,101]];
+    correct = shape && probes.every(([count,search])=>{
+      const tree = structuredClone(nodes);
+      for (const n of walk(tree)) {
+        if(n.kind === "do" && n.count.kind === "literal") n.count={kind:"literal",value:count};
+        if(n.kind === "data" && n.name === "lv_search") n.initial={kind:"literal",value:search};
+      }
+      try {
+        const trace=execute(tree,source), final=trace.at(-1)!;
+        const position = search > 100 && search <= 100 + count ? search - 100 : 0;
+        const expected = position ? String(position) : "Not found", actual = final.output.join("\n");
+        const read = trace.find(e=>e.operation === "read");
+        const ok = actual === expected && JSON.stringify(final.memory.lt_ids) === JSON.stringify(Array.from({length:count},(_,i)=>101+i)) &&
+          !!read?.lookup?.binary && read.lookup.checked!.length <= Math.ceil(Math.log2(count + 1)) + 1;
+        if(!ok) failure={name:"lv_search",input:search,expected,actual};
+        return ok;
+      } catch(error) { if(!(error instanceof SimulationError)) throw error; return false; }
+    });
+  } else if (id === "data-expression-lookup") {
+    // Walk statements (including TRY bodies/handlers) and every expression they contain.
+    const walk = (list:Node[]):Node[] => list.flatMap(n=>[n,...("body" in n ? walk(n.body) : []),...(n.kind === "try" ? walk(n.handler) : []),...(n.kind === "if" ? [...walk(n.yes),...walk(n.no),...(n.elseifs || []).flatMap(b=>walk(b.body))] : [])]);
+    const exprs = (e:Expr):Expr[] => [e,...(e.kind === "add" ? [...exprs(e.left),...exprs(e.right)] : e.kind === "lineIndex" || e.kind === "lineExists" ? exprs(e.target) : e.kind === "tableExpr" ? [...(e.index ? exprs(e.index) : []),...(e.keys || []).flatMap(k=>exprs(k.value)),...(e.fallback && e.fallback !== "optional" ? exprs(e.fallback.default) : [])] : [])];
+    const nodeExprs = (n:Node):Expr[] => n.kind === "assign" || n.kind === "write" || n.kind === "append" ? exprs(n.value) : n.kind === "if" ? [n.left,n.right,...(n.elseifs || []).flatMap(b=>[b.left,b.right])].flatMap(exprs) : [];
+    const byId = (e:Expr) => e.kind === "tableExpr" && e.table === "lt_employees" && !e.index && e.keys?.length === 1 && e.keys[0].field === "id" && e.keys[0].value.kind === "ref" && e.keys[0].value.name === "lv_id";
+    const all = walk(nodes), tries = all.filter((n):n is Extract<Node,{kind:"try"}>=>n.kind === "try");
+    const shape = tries.length >= 1 && tries.some(tr=>walk(tr.body).some(n=>nodeExprs(n).some(e=>byId(e) && e.kind === "tableExpr" && !e.fallback))) &&
+      all.some(n=>n.kind === "assign" && n.target === "lv_position" && n.value.kind === "lineIndex" && byId(n.value.target)) &&
+      !all.some(n=>["read","loop","do","while","insert","modify","delete","sort"].includes(n.kind) || n.kind === "assign" && ["lv_id","lv_position"].includes(n.target) && !(n.target === "lv_position" && n.value.kind === "lineIndex"));
+    const probes: [number,number[],string[],number[]][] = [
+      [102,[101,102,103],["Ahmed","Sara","Omar"],[5000,8000,6000]],
+      [101,[101,102,103],["Ahmed","Sara","Omar"],[5000,8000,6000]],
+      [999,[101,102,103],["Ahmed","Sara","Omar"],[5000,8000,6000]],
+      [7,[5,6,7],["Ava","Ben","Chen"],[1,2,3]],
+      [42,[40,41,43],["Eli","Faye","Gus"],[700,800,900]],
+      [0,[0,9,8],["Hana","Ivo","Jin"],[10,0,30]],
+    ];
+    correct = !!shape && probes.every(([lookup,ids,names,salaries])=>{
+      const tree = structuredClone(nodes); const seen = {id:0,name:0,salary:0};
+      for (const n of walk(tree)) {
+        if(n.kind === "data" && n.name === "lv_id") n.initial={kind:"literal",value:lookup};
+        for (const [field,values] of [["id",ids],["name",names],["salary",salaries]] as const)
+          if(n.kind === "assign" && n.target === `ls_employee-${field}` && n.value.kind === "literal" && seen[field]<3) n.value.value=values[seen[field]++];
+      }
+      if(seen.id!==3 || seen.name!==3 || seen.salary!==3) return false;
+      try {
+        const trace=execute(tree,source), final=trace.at(-1)!;
+        const rows=ids.map((rowId,i)=>({id:rowId,name:names[i],salary:salaries[i]})), position=rows.findIndex(r=>r.id===lookup)+1;
+        const expected=(position ? [names[position-1],String(salaries[position-1])] : ["Not found"]).concat(String(position)).join("\n"), actual=final.output.join("\n");
+        const ok=actual===expected && JSON.stringify(final.memory.lt_employees)===JSON.stringify(rows) && final.memory.lv_position===position &&
+          trace.some(e=>e.lookup?.via === "expression" && !e.lookup.fallback && e.lookup.keys?.id === lookup && e.lookup.found === !!position) &&
+          (position > 0 || trace.some(e=>e.operation === "catch"));
+        if(!ok) failure={name:"lv_id",input:lookup,expected,actual};
+        return ok;
+      } catch(error) { if(!(error instanceof SimulationError)) throw error; return false; }
+    });
+  } else if (id === "data-conditional-report") {
     const walk = (list:Node[]):Node[] => list.flatMap(n=>[n,...("body" in n ? walk(n.body) : n.kind === "if" ? [...walk(n.yes),...walk(n.no),...(n.elseifs || []).flatMap(b=>walk(b.body))] : [])]);
     const all = walk(nodes), loops = all.filter((n):n is Extract<Node,{kind:"loop"}>=>n.kind === "loop");
     const loop = loops[0];
