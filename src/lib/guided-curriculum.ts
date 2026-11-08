@@ -2,11 +2,12 @@ import { hasRequiredTranslations } from "./language-policy";
 import type { Mission } from "./curriculum";
 import type { GuidedDefinition } from "./guided-types";
 import { guidedDataDefinitions } from "./guided-data-definitions";
+import { guidedDictionaryDefinitions } from "./guided-dictionary-definitions";
 import { guidedDevelopmentDefinitions } from "./guided-development-definitions";
 import { guidedCloudProjectDefinitions } from "./guided-cloud-project-definitions";
 
 export const guidedDefinitions: GuidedDefinition[] = [
-  ...guidedDataDefinitions, ...guidedDevelopmentDefinitions, ...guidedCloudProjectDefinitions,
+  ...guidedDataDefinitions, ...guidedDictionaryDefinitions, ...guidedDevelopmentDefinitions, ...guidedCloudProjectDefinitions,
 ];
 
 /** One registration pipeline; guided reference code never enters the interpreter. */

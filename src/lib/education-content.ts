@@ -1,4 +1,9 @@
 import { conditionalLoopEducation } from "./conditional-loop-mission";
+import { tableExpressionsEducation } from "./table-expressions-mission";
+import { dictionaryEducation } from "./dictionary-education";
+import { sqlEducation } from "./sql-missions";
+import { tablePerformanceEducation } from "./table-performance-mission";
+import { employeeManagerEducation } from "./employee-manager-mission";
 import type { Text } from "./curriculum";
 
 const t = (en: string, ar: string): Text => ({ en, ar });
@@ -24,6 +29,11 @@ export const educationExampleFragments: Record<string, string> = {
 
 export const educationContent: Record<string, EducationSpec> = {
   "data-conditional-loop": conditionalLoopEducation,
+  ...dictionaryEducation,
+  ...sqlEducation,
+  "data-table-expressions": tableExpressionsEducation,
+  "data-table-performance": tablePerformanceEducation,
+  "data-employee-manager": employeeManagerEducation,
   orientation: {
     what: t("ABAP programs are made of instructions. A period ends each instruction.", "تتكون برامج ABAP من تعليمات. تنهي النقطة كل تعليمة."),
     why: t("Learn how to read, edit and trace a small program before solving a business task.", "تعلّم قراءة برنامج صغير وتعديله وتتبع تنفيذه قبل حل مهمة عمل."),

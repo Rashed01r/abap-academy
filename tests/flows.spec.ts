@@ -3,8 +3,8 @@ import { localizedText } from "../src/lib/language-policy";
 import { test, expect } from '@playwright/test';
 import { missions, structureExample } from '../src/lib/curriculum';
 import { ui } from '../src/lib/i18n';
-import { treeCopy } from '../src/lib/tree-copy';
-import { openLesson, tab, answerQuiz, edit, gradeAll, completion } from './academy-helpers';
+import { roadmapCopy } from '../src/lib/tree-copy';
+import { openLesson, tab, answerQuiz, edit, gradeAll, completion, openPath, roadmapNode } from './academy-helpers';
 import { matchAnatomy, finishLearn } from './anatomy-helpers';
 for (const lang of enabledLocales)
     for (const theme of ['light', 'dark'] as const)
@@ -142,10 +142,11 @@ test('system appearance follows OS and future topics have connected previews', a
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
     await page.emulateMedia({ colorScheme: 'light' });
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
-    await page.locator('[data-tree-id=projects]').click();
-    await page.locator('.future-topic').first().click();
-    await expect(page.locator('[data-lesson-node]')).toContainText(treeCopy.en.preview);
+    await openPath(page, 'projects');
+    await page.locator('[data-node^="planned:projects:"] .card, [data-mobile-node^="planned:projects:"]').first().click();
+    await expect(page.locator('[data-drawer]')).toContainText(roadmapCopy('en').plannedText);
     await expect(page.getByRole('tab')).toHaveCount(0);
-    await page.getByRole('button', { name: treeCopy.en.root, exact: true }).click();
-    await expect(page.locator('[data-lesson-node]')).toHaveCount(0);
+    await roadmapNode(page, 'abap').click();
+    await expect(page.locator('[data-drawer].open')).toHaveCount(0);
+    await expect(roadmapNode(page, 'learn')).toHaveAttribute('aria-expanded', 'false');
 });

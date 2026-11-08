@@ -28,7 +28,8 @@ import {
 } from "@/lib/progress";
 import { LearningWorkspace } from "@/components/learning-workspace";
 import { glossary } from "@/lib/glossary";
-import { KnowledgeTree } from "@/components/knowledge-tree";
+import { RoadmapHome } from "@/features/roadmap/RoadmapHome";
+import { LessonView } from "@/features/roadmap/LessonView";
 import "./knowledge-tree.css";
 import "./teaching-trace.css";
 import "./lesson-header.css";
@@ -42,7 +43,8 @@ export default function Academy() {
     [progressStorageReady, setProgressStorageReady] = useState(false),
     [storage, setStorage] = useState(true),
     [view, setView] = useState("home"),
-    [example, setExample] = useState(0);
+    [example, setExample] = useState(0),
+    [lastLesson, setLastLesson] = useState<string>();
   const lang = resolveLocale(preference);
   const t = ui[lang],
     theme =
@@ -119,12 +121,15 @@ export default function Academy() {
   }
   function open(id: string) {
     if (id !== "home" && !unlocked(id, progress)) return;
-    if (id !== "home") setProgress((p) => visitMission(p, id));
+    if (id !== "home") {
+      setProgress((p) => visitMission(p, id));
+      setLastLesson(id);
+    }
     navigate(id);
     window.scrollTo({ top: 0 });
   }
   return (
-    <div className={`app ${view !== "simulator" ? "immersive-academy" : ""}`}>
+    <div className={`app ${view !== "simulator" ? "immersive-academy" : ""} ${view === "home" ? "roadmap-home" : ""}`}>
       <a className="skip" href="#main">
         {t.skip}
       </a>
@@ -158,9 +163,9 @@ export default function Academy() {
             {t.playground}
           </button>
         </nav>
-        {view !== "simulator" && <div id="academy-header-search" />}
+        {view === "home" && <div id="academy-header-search" />}
         <div className="header-settings">
-          {view !== "simulator" && <span className="header-xp pill">{earnedXP(progress)} XP</span>}
+          {view !== "simulator" && <span className="header-xp pill" key={earnedXP(progress)}>{earnedXP(progress)} XP</span>}
           <label className="theme-select">
             <span className="sr-only">{t.appearance}</span>
             {appearance === "system" ? (
@@ -191,7 +196,12 @@ export default function Academy() {
         {view !== "simulator" && <AcademyGlossary lang={lang} compact />}
       </header>
       <main id="main">
-        {view !== "simulator" ? <KnowledgeTree selected={unlocked(view) ? view : undefined} open={open} lang={lang} theme={theme} progress={progress} setProgress={setProgress} ready={ready}/> : (
+        {view === "home" ? (
+          <RoadmapHome lang={lang} progress={progress} setProgress={setProgress} ready={ready} focusMission={lastLesson} onOpenLesson={open} />
+        ) : view !== "simulator" ? (
+          <LessonView id={view} lang={lang} theme={theme} progress={progress} setProgress={setProgress} ready={ready}
+            onBack={() => { setLastLesson(view); navigate("home"); window.scrollTo({ top: 0 }); }} onNavigate={open} />
+        ) : (
               <section className="simulator-page">
                 <span className="eyebrow">{t.limit}</span>
                 <h1>{t.playground}</h1>

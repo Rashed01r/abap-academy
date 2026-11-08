@@ -56,4 +56,9 @@ export const diagnosticAdvice = {
     hint: text("Declare a compatible field symbol, then execute ASSIGN object TO <symbol>. before accessing it. A skipped ASSIGN does not create a binding.", "عرّف رمز حقل بنوع متوافق، ثم نفّذ ASSIGN object TO <symbol>. قبل استخدامه. لا تنشئ ASSIGN ربطًا إذا تجاوزها التنفيذ."),
     example: "DATA lv_count TYPE i VALUE 5.\nFIELD-SYMBOLS <count> TYPE i.\nASSIGN lv_count TO <count>.\n<count> = <count> + 1.\nWRITE lv_count.",
   },
+  notfound: {
+    why: text("A table expression either returns a row or raises the exception CX_SY_ITAB_LINE_NOT_FOUND. Unlike READ TABLE, it does not report a miss in sy-subrc."),
+    hint: text("Wrap the read in TRY … CATCH cx_sy_itab_line_not_found … ENDTRY, test line_exists( ) first when you only need a yes/no answer, or use VALUE #( itab[ … ] OPTIONAL ) to accept an initial row."),
+    example: "TRY.\n    ls_employee = lt_employees[ id = lv_id ].\n    WRITE ls_employee-name.\n  CATCH cx_sy_itab_line_not_found.\n    WRITE 'Not found'.\nENDTRY.",
+  },
 } satisfies Record<ErrorCode, { why: ReturnType<typeof text>; hint: ReturnType<typeof text>; example: string }>;

@@ -56,7 +56,10 @@
 .add-words > div { display: grid; grid-template-columns: minmax(6.5rem, max-content) minmax(0, 1fr); gap: .75rem; align-items: baseline; }
 .add-words code { padding: .1rem .45rem; border: 1px solid var(--line); border-radius: 6px; background: var(--code); white-space: nowrap; }
 .add-words dd { margin: 0; color: var(--muted); }
-.add-side { display: grid; gap: 1rem; align-content: start; }
+.add-side { display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; gap: 1rem; align-content: start; }
+/* Database tables in SQL lessons scroll inside their own box instead of widening the runner. */
+.sql-database, .sql-summary { min-width: 0; max-width: 100%; }
+.sql-database .table-scroll, .sql-summary .table-scroll { overflow-x: auto; }
 .add-memory { margin: 0; padding: 1rem; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: .4rem; border: 1px solid var(--line); border-radius: 10px; background: var(--surface2); }
 .add-memory figcaption { grid-column: 1 / -1; }
 .add-box { min-width: 0; padding: .7rem .4rem; display: grid; justify-items: center; gap: .2rem; border: 2px solid transparent; border-radius: 10px; background: var(--accent-soft); }

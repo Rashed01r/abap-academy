@@ -4,7 +4,7 @@ import { loader, OnMount } from "@monaco-editor/react";
 import { useCallback, useEffect, useRef } from "react";
 import type { editor, IDisposable } from "monaco-editor";
 import { ExecutionEvent, SimulationError, Range, Locale } from "@/lib/engine";
-import { ui, errors } from "@/lib/i18n";
+import { ui, errorMessage } from "@/lib/i18n";
 loader.config({ paths: { vs: "/monaco/vs" } });
 const Editor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
 export function CodeEditor({
@@ -89,7 +89,7 @@ export function CodeEditor({
                 endLineNumber: error.range.endLine,
                 endColumn: error.range.endColumn,
                 severity: m.MarkerSeverity.Error,
-                message: errors[lang][error.code],
+                message: errorMessage(error.code, lang),
               },
             ]
           : [],

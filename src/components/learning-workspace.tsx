@@ -22,13 +22,14 @@ import {
   ChallengeFailure,
   Range,
 } from "@/lib/engine";
-import { ui, errors, explain } from "@/lib/i18n";
+import { ui, errorMessage, explain } from "@/lib/i18n";
 import { diagnosticAdvice } from "@/lib/diagnostics";
 import { TechnicalText } from "./technical-text";
 import { TableMemory } from "./table-memory";
 import { LoopVisualizer } from "./loop-visualizer";
 import { FieldSymbolMemory } from "./field-symbol-memory";
 import { LookupSummary } from "./lookup-summary";
+import { SqlSummary } from "./sql-summary";
 import { TableChangeSummary } from "./table-change-summary";
 import { treeCopy } from "@/lib/tree-copy";
 const workspaceSessions = new Map<string, {code: string; events: ExecutionEvent[]; index: number; feedback: "correct" | "wrong" | ""; failure?: ChallengeFailure; error?: SimulationError; hint: boolean; field: string; speed: number}>();
@@ -195,7 +196,7 @@ export function LearningWorkspace({
           {hint && hintText && <div className="hint-panel"><p>{hintText}</p></div>}
           {error && (
             <div role="alert" className="feedback error">
-              <strong><TechnicalText>{errors[lang][error.code]}</TechnicalText></strong>
+              <strong><TechnicalText>{errorMessage(error.code, lang)}</TechnicalText></strong>
               {error.detail && <code dir="ltr"> {error.detail}</code>}
               <p><TechnicalText>{localizedText(diagnosticAdvice[error.code].hint, lang)}</TechnicalText></p>
               <details><summary>{t.explainWhy}</summary><p>{localizedText(diagnosticAdvice[error.code].why, lang)}</p><pre dir="ltr">{diagnosticAdvice[error.code].example}</pre></details>
@@ -300,6 +301,7 @@ export function LearningWorkspace({
           {event && <LoopVisualizer event={event} lang={lang} />}
           {event && <FieldSymbolMemory event={event} previous={events[index - 1]} lang={lang} />}
           {event && <LookupSummary event={event} previous={events[index - 1]} lang={lang} />}
+          {event && <SqlSummary event={event} />}
           {event && <TableChangeSummary event={event} lang={lang} />}
           <div className="memory-heading">
             <h3>{t.memory}</h3>

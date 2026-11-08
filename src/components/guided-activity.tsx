@@ -10,6 +10,7 @@ import { TechnicalText } from "./technical-text";
 const DictionaryDesigner = dynamic(() => import("./dictionary-designer").then(m => m.DictionaryDesigner));
 const SqlFoundationLab = dynamic(() => import("./sql-foundation-lab").then(m => m.SqlFoundationLab));
 const ObjectExplorer = dynamic(() => import("./object-explorer").then(m => m.ObjectExplorer));
+const DictionaryLab = dynamic(() => import("./dictionary-labs").then(m => m.DictionaryLab));
 
 /** sqlLab=false when the lesson's picture (VisualClassroom) already shows the SQL lab on the same tab. */
 export function GuidedExplorer({definition: d, lang, sqlLab = true}: {definition: GuidedDefinition; lang: Locale; sqlLab?: boolean}) {
@@ -20,6 +21,7 @@ export function GuidedExplorer({definition: d, lang, sqlLab = true}: {definition
     {d.id === "dictionary-introduction" && <DictionaryDesigner lang={lang}/>}
     {d.id === "database-fundamentals" && sqlLab && <SqlFoundationLab lang={lang}/>}
     {d.id === "oop-introduction" && <ObjectExplorer lang={lang}/>}
+    {d.id.startsWith("dictionary-") && d.id !== "dictionary-introduction" && <DictionaryLab id={d.id}/>}
     <section className="learn-card artifact-explorer" aria-label={localizedText(d.activityTitle, lang)}>
       <h2>{localizedText(d.activityTitle, lang)}</h2>
       <p><TechnicalText>{localizedText(d.activityIntro, lang)}</TechnicalText></p>

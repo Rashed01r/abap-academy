@@ -14,6 +14,7 @@ import { LessonFlow } from "./lesson-concepts";
 import { getAnatomy } from "@/lib/anatomy-content";
 import { simulate, type Memory, type MemoryValue } from "@/lib/engine";
 import "./addition-lesson.css";
+import { DatabaseState } from "./sql-summary";
 
 // Syntax Orientation is not a mission, so it gets the few mission fields these components read.
 const orientationLesson = { id: "orientation", title: { en: ui.en.orientation }, goal: { en: treeCopy.en.orientationGoal }, example: orientationExamples.en, expected: "5\n8", tokens: orientation, guided: undefined, challenges: undefined };
@@ -140,6 +141,7 @@ export function LessonRunner({ id, code: example }: { id: string; code: string }
             ? <div className="add-box" key={event!.changed.includes(name) ? `${name}-${step}` : name} data-changed={event!.changed.includes(name)}><code>{name}</code><strong dir="ltr">{show(memory[name])}</strong><small>{kindLabel(memory[name])}</small></div>
             : <div className="add-box" data-empty key={name}><code>{name}</code><strong>–</strong><small>not created yet</small></div>)}
         </figure>
+        {event?.database && <DatabaseState event={event}/>}
         <section className="add-screen" aria-label="Screen">
           <span className="eyebrow">Screen</span>
           {event?.output.length ? <pre dir="ltr">{event.output.join("\n")}</pre> : <p>Nothing on the screen yet.</p>}

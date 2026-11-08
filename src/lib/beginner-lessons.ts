@@ -290,6 +290,54 @@ export const beginnerLessons: Record<string, BeginnerLesson> = {
     ],
     challenge: { title: "Build the selected-employee report", must: ["LOOP AT lt_employees INTO ls_employee WHERE salary >= lv_min_salary.", "Inside: show the name, add 1 to lv_count and the salary to lv_total.", "After ENDLOOP, show the count, then the total: Sara, Omar, 2, 14000."], hints: ["WHERE chooses rows; it does not delete any. Use >= so exactly 6000 counts.", "WRITE / ls_employee-name. inside the loop. WRITE / lv_count. and WRITE / lv_total. after ENDLOOP."] },
   },
+  "data-table-expressions": {
+    goal: { give: "look for ID 102, then ID 999", shows: "Sara, 2 · then Not found, 0" },
+    ideas: [["Brackets read one row.", "lt_employees[ 3 ] is a position; lt_employees[ id = lv_id ] searches by ID."], ["A miss is an exception, not sy-subrc.", "TRY … CATCH cx_sy_itab_line_not_found handles a missing ID."], ["Ask without reading.", "line_exists( ) answers yes or no; line_index( ) gives the position, or 0."]],
+    mistakes: [
+      { title: "Checking sy-subrc after a table expression", wrong: "ls_employee = lt_employees[ id = lv_id ].\nIF sy-subrc <> 0.\n  WRITE / 'Not found'.\nENDIF.", right: "TRY.\n    ls_employee = lt_employees[ id = lv_id ].\n  CATCH cx_sy_itab_line_not_found.\n    WRITE / 'Not found'.\nENDTRY.", why: "A table expression never sets sy-subrc. A missing ID raises an exception instead, and without TRY the program stops." },
+      { title: "Putting the ID where a position goes", wrong: "ls_employee = lt_employees[ lv_id ].", right: "ls_employee = lt_employees[ id = lv_id ].", why: "[ lv_id ] asks for row 102. Name the field to search by ID." },
+      { title: "Reading the same row twice", wrong: "IF line_exists( lt_employees[ id = lv_id ] ).\n  ls_employee = lt_employees[ id = lv_id ].\nENDIF.", right: "TRY.\n    ls_employee = lt_employees[ id = lv_id ].\n  CATCH cx_sy_itab_line_not_found.\nENDTRY.", why: "When you need the row, read it once inside TRY. line_exists( ) is for yes-or-no questions." },
+    ],
+    check: { question: "lv_id is 999. What does lv_position = line_index( lt_employees[ id = lv_id ] ). store?", options: ["0", "The program stops with an exception", "4"], answer: 0, explanation: "line_index( ) never raises the exception. It returns 0 when no row matches." },
+    experiments: [
+      { title: "Look for Ahmed", why: "ID 101 is at position 1, so the TRY block shows Ahmed and line_index( ) returns 1.", from: "DATA lv_id TYPE i VALUE 102.", to: "DATA lv_id TYPE i VALUE 101." },
+      { title: "Look for a missing ID", why: "No row has ID 999. The TRY block jumps to CATCH and writes Not found; line_index( ) returns 0.", from: "DATA lv_id TYPE i VALUE 102.", to: "DATA lv_id TYPE i VALUE 999." },
+      { title: "Read a different position", why: "[ 1 ] is the first row, so lv_name becomes Ahmed instead of Omar.", from: "lv_name = lt_employees[ 3 ]-name.", to: "lv_name = lt_employees[ 1 ]-name." },
+    ],
+    challenge: { title: "Look up an employee safely", must: ["Inside TRY: ls_employee = lt_employees[ id = lv_id ]. then show the name and the salary.", "CATCH cx_sy_itab_line_not_found and show exactly Not found.", "After ENDTRY: lv_position = line_index( lt_employees[ id = lv_id ] ). and show it. With lv_id = 102: Sara, 8000, 2."], hints: ["Search by key: lt_employees[ id = lv_id ]. A missing ID raises an exception, so the read goes inside TRY.", "Put both WRITE lines for the employee inside TRY, after the read. line_index( ) goes after ENDTRY and returns 0 for a missing ID."] },
+  },
+  "data-table-performance": {
+    goal: { give: "16 IDs, newest first; find 101", shows: "16 checks one by one, 5 with BINARY SEARCH" },
+    ideas: [["One by one checks every row.", "Finding 101 at the bottom of 16 rows takes 16 checks."], ["BINARY SEARCH halves the rows.", "Look at the middle, keep the right half, repeat: about 5 checks."], ["Sort first, by the same field.", "On an unsorted list BINARY SEARCH can miss a row that is there."]],
+    mistakes: [
+      { title: "BINARY SEARCH without SORT", wrong: "READ TABLE lt_ids INTO lv_found WITH KEY table_line = lv_search BINARY SEARCH.", right: "SORT lt_ids BY table_line.\nREAD TABLE lt_ids INTO lv_found WITH KEY table_line = lv_search BINARY SEARCH.", why: "The IDs are newest first. Without SORT, the search heads the wrong way and says Not found." },
+      { title: "Sorting by a different field", wrong: "SORT lt_employees BY name.\nREAD TABLE lt_employees INTO ls_employee WITH KEY id = lv_id BINARY SEARCH.", right: "SORT lt_employees BY id.\nREAD TABLE lt_employees INTO ls_employee WITH KEY id = lv_id BINARY SEARCH.", why: "BINARY SEARCH needs the rows in order of the field you search, here id." },
+      { title: "Sorting before every read", wrong: "SORT lt_ids BY table_line.\nREAD TABLE … BINARY SEARCH.\nSORT lt_ids BY table_line.\nREAD TABLE … BINARY SEARCH.", right: "SORT lt_ids BY table_line.\nREAD TABLE … BINARY SEARCH.\nREAD TABLE … BINARY SEARCH.", why: "Sorting is the expensive step. Do it once, then read as often as you need." },
+    ],
+    check: { question: "The sorted list grows from 16 to 32 IDs. How many more checks does BINARY SEARCH need?", options: ["About one more", "Twice as many", "Exactly the same"], answer: 0, explanation: "Doubling the rows adds just one halving step. A one-by-one search would need up to twice as many checks." },
+    experiments: [
+      { title: "Look for the newest ID", why: "116 is at the top, so the one-by-one search finds it at once and shows 1. After SORT it is the last row, so the binary search shows 16.", from: "DATA lv_search TYPE i VALUE 101.", to: "DATA lv_search TYPE i VALUE 116." },
+      { title: "Forget to sort", why: "Without SORT the list is newest first, so BINARY SEARCH heads the wrong way and shows Not found, even though 101 is there.", from: "SORT lt_ids BY table_line.", to: "* SORT lt_ids BY table_line." },
+      { title: "Double the list", why: "The one-by-one search now needs 32 checks and shows 32. The binary search needs only one more check and still shows 1.", from: "DO 16 TIMES.", to: "DO 32 TIMES." },
+    ],
+    challenge: { title: "Find an ID with BINARY SEARCH", must: ["SORT lt_ids BY table_line. once, before the read.", "READ TABLE lt_ids INTO lv_found WITH KEY table_line = lv_search BINARY SEARCH.", "If sy-subrc = 0 show sy-tabix, otherwise show exactly Not found. With lv_search = 101 the screen shows 1."], hints: ["The IDs start newest first. BINARY SEARCH needs them sorted, so SORT comes first.", "BINARY SEARCH is the last part of the READ TABLE line. Then IF sy-subrc = 0. WRITE / sy-tabix. ELSE. WRITE / 'Not found'. ENDIF."] },
+  },
+  "data-employee-manager": {
+    goal: { give: "a raise of 500 for Sara; remove Ahmed", shows: "8500, then Sara, Omar, 2, 14500" },
+    ideas: [["Find the position first.", "line_index( ) gives the row number, or 0 when the ID is missing."], ["Change a copy, then MODIFY.", "The table only changes when MODIFY writes the copy back."], ["Report after the changes.", "DELETE first, then LOOP, so the count and total match the table."]],
+    mistakes: [
+      { title: "Forgetting MODIFY", wrong: "ls_employee-salary = ls_employee-salary + lv_raise.\nWRITE / ls_employee-salary.", right: "ls_employee-salary = ls_employee-salary + lv_raise.\nMODIFY lt_employees FROM ls_employee INDEX lv_position.", why: "Without MODIFY only the copy has the raise; the table keeps the old salary." },
+      { title: "Using position 0", wrong: "lv_position = line_index( lt_employees[ id = lv_id ] ).\nDELETE lt_employees INDEX lv_position.", right: "lv_position = line_index( lt_employees[ id = lv_id ] ).\nIF lv_position > 0.\n  DELETE lt_employees INDEX lv_position.\nENDIF.", why: "0 means the employee is missing. Only change the table when the position is greater than 0." },
+      { title: "Writing the totals inside the loop", wrong: "  lv_total = lv_total + ls_employee-salary.\n  WRITE / lv_total.\nENDLOOP.", right: "  lv_total = lv_total + ls_employee-salary.\nENDLOOP.\nWRITE / lv_total.", why: "Inside the loop the total is shown once per employee. After ENDLOOP it is shown once." },
+    ],
+    check: { question: "lv_id is 999. What happens to the table during the raise step?", options: ["Nothing changes; Not found is shown", "The first employee gets the raise", "The program stops"], answer: 0, explanation: "line_index( ) returns 0, so the IF skips the copy, the raise and the MODIFY." },
+    experiments: [
+      { title: "Raise Omar instead", why: "Omar is 103, so he gets the raise: 6500 is shown and the total becomes 14500 with Sara at 8000.", from: "DATA lv_id TYPE i VALUE 102.", to: "DATA lv_id TYPE i VALUE 103." },
+      { title: "Use a missing ID", why: "No employee is 999, so Not found is shown, nobody gets a raise and the total is 14000.", from: "DATA lv_id TYPE i VALUE 102.", to: "DATA lv_id TYPE i VALUE 999." },
+      { title: "Give a bigger raise", why: "Sara's salary becomes 9000 and the total grows to 15000.", from: "DATA lv_raise TYPE i VALUE 500.", to: "DATA lv_raise TYPE i VALUE 1000." },
+    ],
+    challenge: { title: "Run the Employee Data Manager", must: ["Challenge 1: find lv_id with line_index( ), copy the row, add lv_raise, MODIFY it back and show the new salary (Not found if missing). With lv_id = 102: 8500.", "Challenge 2: remove lv_id with DELETE … INDEX (Not found if missing), then LOOP to show each remaining name, the count and the total. With lv_id = 102: Ahmed, Omar, 2, 11000.", "Only change the table when the position is greater than 0."], hints: ["Both challenges start the same way: lv_position = line_index( lt_employees[ id = lv_id ] ). then IF lv_position > 0.", "Raise: ls_employee = lt_employees[ lv_position ]. add the raise, MODIFY … INDEX lv_position. Report: DELETE first, LOOP after, totals after ENDLOOP."] },
+  },
   "dictionary-introduction": {
     ideas: [["A domain is the technical shape.", "Type, length and allowed values, defined once."], ["A data element gives meaning.", "Labels such as “Employee status” that users see."], ["A database table stores rows.", "Its key fields identify each row."]],
     mistakes: [
@@ -299,6 +347,162 @@ export const beginnerLessons: Record<string, BeginnerLesson> = {
     ],
     check: { question: "Where does the field label “Employee status” belong?", options: ["In the data element", "In the domain", "In the table key"], answer: 0, explanation: "The data element gives a field its business meaning and labels. The domain only holds the technical shape." },
     challenge: { title: "Two apps share employee status: decide where each rule lives", must: ["Decide what belongs in the domain: type, length and allowed values.", "Decide what belongs in the data element: meaning and labels.", "Decide what the table stores and how its key identifies a row."], hints: ["Separate how a value is stored from what users call it.", "Type, length and fixed values → domain. Labels → data element. Rows and key → database table."] },
+  },
+  "database-abap-sql": {
+    goal: { give: "the ID 103", shows: "Omar, 9500" },
+    ideas: [["ABAP SQL talks to the database.", "SELECT reads, INSERT/UPDATE/DELETE change."], ["@ marks program variables.", "WHERE employee_id = @lv_id uses the value of lv_id."], ["sy-subrc tells you if it worked.", "0 found, 4 not found."]],
+    mistakes: [
+      { title: "Forgetting the @", wrong: "WHERE employee_id = lv_id", right: "WHERE employee_id = @lv_id", why: "Without @ the database looks for a column called lv_id." },
+      { title: "Using the work area without checking", wrong: "SELECT SINGLE … INTO @ls_employee.\nWRITE / ls_employee-employee_name.", right: "SELECT SINGLE … INTO @ls_employee.\nIF sy-subrc = 0.\n  WRITE / ls_employee-employee_name.\nENDIF.", why: "If nothing is found, the work area still holds old data." },
+      { title: "INTO in the middle", wrong: "SELECT SINGLE FROM zaca_employee\n  INTO @ls_employee\n  WHERE employee_id = @lv_id.", right: "SELECT SINGLE FROM zaca_employee\n  FIELDS *\n  WHERE employee_id = @lv_id\n  INTO @ls_employee.", why: "In modern ABAP SQL, INTO comes last." },
+    ],
+    check: { question: "No employee has ID 999. What is sy-subrc after SELECT SINGLE?", options: ["4", "0", "999"], answer: 0, explanation: "4 means no row was found. The work area is not changed." },
+    experiments: [
+      { title: "Read another employee", why: "ID 101 is Ahmed, who earns 8000.", from: "DATA lv_id TYPE i VALUE 103.", to: "DATA lv_id TYPE i VALUE 101." },
+      { title: "Look for a missing ID", why: "No row has ID 999, so sy-subrc is 4 and the screen shows Not found.", from: "DATA lv_id TYPE i VALUE 103.", to: "DATA lv_id TYPE i VALUE 999." },
+      { title: "Show a different column", why: "The work area holds every column, so you can show the department instead of the salary: IT.", from: "  WRITE / ls_employee-salary.", to: "  WRITE / ls_employee-department." },
+    ],
+    challenge: { title: "Read one employee from the database", must: ["SELECT SINGLE FROM zaca_employee with WHERE employee_id = @lv_id INTO @ls_employee.", "If sy-subrc = 0, show the name and then the department.", "Otherwise show exactly Not found. With lv_id = 103: Omar, IT."], hints: ["Clause order: FROM, FIELDS, WHERE, INTO.", "Check sy-subrc right after the SELECT."] },
+  },
+  "database-select": {
+    goal: { give: "the employee table", shows: "4, Ahmed, Huda, Omar, Sara" },
+    ideas: [["Without SINGLE you get every matching row.", "INTO TABLE copies them into an internal table."], ["FIELDS picks the columns.", "The result only has what you asked for."], ["ORDER BY decides the order.", "sy-dbcnt says how many rows came back."]],
+    mistakes: [
+      { title: "INTO without TABLE for many rows", wrong: "INTO @DATA(lt_employees).", right: "INTO TABLE @DATA(lt_employees).", why: "Without TABLE, ABAP expects a single row." },
+      { title: "Expecting a fixed order", wrong: "\" no ORDER BY: names come\n\" back alphabetically", right: "ORDER BY employee_name", why: "Only ORDER BY guarantees an order." },
+      { title: "Selecting every column", wrong: "FIELDS *", right: "FIELDS employee_id, employee_name", why: "Read only what you use; less data travels from the database." },
+    ],
+    check: { question: "FIELDS employee_id, employee_name. How many components does the result row have?", options: ["2", "4", "1"], answer: 0, explanation: "One component per selected column." },
+    experiments: [
+      { title: "Sort by ID", why: "Now the order is Ahmed, Sara, Omar, Huda: by employee_id.", from: "  ORDER BY employee_name", to: "  ORDER BY employee_id" },
+      { title: "Sort backwards", why: "DESCENDING reverses the order: Sara, Omar, Huda, Ahmed.", from: "  ORDER BY employee_name", to: "  ORDER BY employee_name DESCENDING" },
+      { title: "Show the IDs", why: "lt_employees also holds employee_id, so you can show it instead of the name.", from: "  WRITE / ls_employee-employee_name.", to: "  WRITE / ls_employee-employee_id." },
+    ],
+    challenge: { title: "List salaries from high to low", must: ["Read employee_name and salary into a table, ORDER BY salary DESCENDING.", "LOOP and show each name, then its salary.", "After ENDLOOP show sy-dbcnt: Omar 9500 … Huda 6800, then 4."], hints: ["INTO TABLE @DATA(lt_employees) comes last.", "LOOP does not change sy-dbcnt, so you can show it after ENDLOOP."] },
+  },
+  "database-where": {
+    goal: { give: "IT and a minimum of 9000", shows: "Omar" },
+    ideas: [["WHERE keeps only matching rows.", "The database does the filtering."], ["AND needs both, OR needs one.", "IT AND at least 9000 leaves only Omar."], ["No match is normal.", "sy-subrc 4 and an empty table."]],
+    mistakes: [
+      { title: "A comma instead of AND", wrong: "WHERE department = @lv_department,\n  salary >= @lv_min_salary", right: "WHERE department = @lv_department\n  AND salary >= @lv_min_salary", why: "Conditions are joined with AND or OR." },
+      { title: "Text without quotes", wrong: "WHERE department = IT", right: "WHERE department = 'IT'", why: "Text literals need quotes; IT alone is read as a column name." },
+      { title: "Showing old data on no match", wrong: "LOOP AT lt_result INTO DATA(ls_result).\n  WRITE / ls_result-employee_name.\nENDLOOP.", right: "IF sy-subrc = 0.\n  LOOP …\nELSE.\n  WRITE / 'No match'.\nENDIF.", why: "Tell the user when nothing matched instead of showing nothing." },
+    ],
+    check: { question: "WHERE department = 'IT' OR salary >= 9000. Who comes back?", options: ["Ahmed and Omar", "Only Omar", "Everyone"], answer: 0, explanation: "OR keeps a row when either is true: Ahmed and Omar are in IT." },
+    experiments: [
+      { title: "Lower the minimum", why: "Ahmed earns 8000, so he now passes too: Ahmed and Omar.", from: "DATA lv_min_salary TYPE i VALUE 9000.", to: "DATA lv_min_salary TYPE i VALUE 5000." },
+      { title: "A department with nobody", why: "Nobody works in LEGAL, so sy-subrc is 4 and the screen shows No match.", from: "DATA lv_department TYPE string VALUE 'IT'.", to: "DATA lv_department TYPE string VALUE 'LEGAL'." },
+      { title: "Use OR instead of AND", why: "Now a row passes if it is in IT or earns at least 9000: Ahmed and Omar.", from: "    AND salary >= @lv_min_salary", to: "    OR salary >= @lv_min_salary" },
+    ],
+    challenge: { title: "Filter by department and salary", must: ["WHERE department = @lv_department AND salary >= @lv_min_salary.", "ORDER BY salary DESCENDING; show each name, then its salary.", "If nothing matches, show exactly No match. With IT and 9000: Omar, 9500."], hints: ["Both filter values are host variables, so they need @.", "Check sy-subrc after the SELECT to choose between the LOOP and No match."] },
+  },
+  "database-joins": {
+    goal: { give: "departments and employees", shows: "Human resources Sara, Sales Huda, Technology Ahmed, Technology Omar" },
+    ideas: [["A join reads two tables at once.", "ON says which columns must match."], ["Aliases name the tables.", "d~department_name comes from the department table."], ["INNER keeps pairs, LEFT OUTER keeps every left row.", "Legal has nobody, so only LEFT OUTER shows it."]],
+    mistakes: [
+      { title: "Columns without the alias", wrong: "FIELDS department_name, employee_name", right: "FIELDS d~department_name, e~employee_name", why: "In a join, say which table each column comes from." },
+      { title: "A dot or dash instead of ~", wrong: "ON d-department = e-department", right: "ON d~department = e~department", why: "SQL uses ~ to pick a column of a table alias." },
+      { title: "The wrong table on the left", wrong: "FROM zaca_employee AS e\n  LEFT OUTER JOIN zaca_department AS d …", right: "FROM zaca_department AS d\n  LEFT OUTER JOIN zaca_employee AS e …", why: "LEFT OUTER keeps every row of the left table. To keep every department, start from departments." },
+    ],
+    check: { question: "With INNER JOIN, why is Legal missing?", options: ["No employee matches it", "It is not in the department table", "ORDER BY removed it"], answer: 0, explanation: "INNER JOIN only returns matching pairs." },
+    experiments: [
+      { title: "Keep every department", why: "LEFT OUTER JOIN keeps Legal, with an empty employee name.", from: "  INNER JOIN zaca_employee AS e ON d~department = e~department", to: "  LEFT OUTER JOIN zaca_employee AS e ON d~department = e~department" },
+      { title: "Sort by employee", why: "Now the rows are ordered by employee name: Ahmed, Huda, Omar, Sara.", from: "  ORDER BY d~department_name, e~employee_name", to: "  ORDER BY e~employee_name" },
+      { title: "Only one department", why: "A WHERE on the joined rows keeps only IT: Technology with Ahmed and Omar.", from: "  ORDER BY d~department_name, e~employee_name", to: "  WHERE d~department = 'IT'\n  ORDER BY d~department_name, e~employee_name" },
+    ],
+    challenge: { title: "Report every department and its staff", must: ["FROM zaca_department AS d LEFT OUTER JOIN zaca_employee AS e ON d~department = e~department.", "FIELDS d~department_name, e~employee_name, ordered by both.", "Show each department name, then the employee name (empty for Legal)."], hints: ["Start from the departments so every department is kept.", "LEFT OUTER JOIN fills missing employee columns with empty values."] },
+  },
+  "database-aggregates": {
+    goal: { give: "four employees", shows: "HR 1 7200, IT 2 17500, SALES 1 6800" },
+    ideas: [["The database can count and add.", "COUNT(*), SUM( ), MIN( ), MAX( )."], ["GROUP BY makes one row per group.", "Here one row per department."], ["Name each result with AS.", "COUNT(*) AS headcount."]],
+    mistakes: [
+      { title: "Counting in a loop", wrong: "LOOP AT lt_employees INTO DATA(ls).\n  lv_count = lv_count + 1.\nENDLOOP.", right: "FIELDS COUNT(*) AS headcount", why: "Let the database count instead of loading every row." },
+      { title: "A plain column missing from GROUP BY", wrong: "FIELDS department, COUNT(*) AS headcount", right: "FIELDS department, COUNT(*) AS headcount\n  GROUP BY department", why: "Each group needs one department value." },
+      { title: "An aggregate without a name", wrong: "FIELDS department, COUNT(*)", right: "FIELDS department, COUNT(*) AS headcount", why: "The result table needs a component name for every column." },
+    ],
+    check: { question: "GROUP BY department for IT, IT, HR, SALES gives how many rows?", options: ["3", "4", "1"], answer: 0, explanation: "One row per distinct department." },
+    experiments: [
+      { title: "Find the lowest salary", why: "MIN( salary ) gives each department's lowest salary instead of the total: IT shows 8000.", from: "  FIELDS department, COUNT(*) AS headcount, SUM( salary ) AS total", to: "  FIELDS department, COUNT(*) AS headcount, MIN( salary ) AS total" },
+      { title: "Biggest department first", why: "Sort by headcount, highest first: IT comes first with 2.", from: "  ORDER BY department", to: "  ORDER BY headcount DESCENDING" },
+      { title: "Only well-paid employees", why: "WHERE runs before grouping, so only salaries of at least 7000 are counted: HR 1, IT 2.", from: "  GROUP BY department", to: "  WHERE salary >= 7000\n  GROUP BY department" },
+    ],
+    challenge: { title: "Summarize each department", must: ["FIELDS department, COUNT(*) AS headcount, MAX( salary ) AS top_salary.", "GROUP BY department, ORDER BY department.", "Show department, headcount, top_salary for each group: HR 1 7200, IT 2 9500, SALES 1 6800."], hints: ["MAX( salary ) needs spaces inside the brackets.", "department is not an aggregate, so list it in GROUP BY."] },
+  },
+  "database-sql-mutations": {
+    goal: { give: "a new employee, a raise and a removal", shows: "0, 4, 2, 1" },
+    ideas: [["INSERT adds, UPDATE changes, DELETE removes.", "MODIFY adds or overwrites."], ["A duplicate key is not added.", "sy-subrc becomes 4."], ["WHERE limits the change.", "sy-dbcnt says how many rows changed."]],
+    mistakes: [
+      { title: "UPDATE without WHERE", wrong: "UPDATE zaca_employee SET salary = salary + 500.", right: "UPDATE zaca_employee SET salary = salary + 500\n  WHERE department = 'IT'.", why: "Without WHERE every employee gets the raise." },
+      { title: "Inserting an existing key", wrong: "INSERT zaca_employee FROM @ls_employee.\n\" Lina, 105, again", right: "MODIFY zaca_employee FROM @ls_employee.", why: "INSERT refuses a duplicate key (sy-subrc 4); MODIFY overwrites it." },
+      { title: "Reading sy-dbcnt too late", wrong: "UPDATE … WHERE ….\nSELECT … INTO ….\nWRITE / sy-dbcnt.", right: "UPDATE … WHERE ….\nWRITE / sy-dbcnt.", why: "The next SQL statement overwrites sy-dbcnt." },
+    ],
+    check: { question: "DELETE FROM zaca_employee WHERE department = 'LEGAL'. Nobody is in LEGAL. sy-subrc?", options: ["4", "0", "1"], answer: 0, explanation: "No row was deleted, so sy-subrc is 4 and sy-dbcnt 0." },
+    experiments: [
+      { title: "Raise a department with nobody", why: "No employee is in LEGAL, so UPDATE changes 0 rows: the third line shows 0.", from: "UPDATE zaca_employee SET salary = salary + 500 WHERE department = 'IT'.", to: "UPDATE zaca_employee SET salary = salary + 500 WHERE department = 'LEGAL'." },
+      { title: "Overwrite instead of insert", why: "MODIFY finds ID 105 and overwrites it, so the second line shows 0 instead of 4.", from: "WRITE / sy-subrc.\nINSERT zaca_employee FROM @ls_employee.", to: "WRITE / sy-subrc.\nMODIFY zaca_employee FROM @ls_employee." },
+      { title: "Delete a whole department", why: "Both IT employees are removed, so the last line shows 2.", from: "DELETE FROM zaca_employee WHERE employee_id = 101.", to: "DELETE FROM zaca_employee WHERE department = 'IT'." },
+    ],
+    challenge: { title: "Give a department a raise", must: ["UPDATE zaca_employee SET salary = salary + @lv_raise WHERE department = @lv_department.", "Show sy-dbcnt right after the UPDATE.", "Read SUM( salary ) for the department INTO @lv_total and show it: 2, then 18500."], hints: ["Both the raise and the department are host variables, so they need @.", "A SELECT with only an aggregate returns one row, so INTO @lv_total works without SINGLE."] },
+  },
+  "dictionary-domains": {
+    ideas: [["A domain is the shape of a value.", "Type CHAR, length 1, allowed values A and I."], ["Many data elements can share it.", "Employee status and supplier status use the same domain."], ["Fixed values guide screens.", "They do not stop a program from storing another value."]],
+    mistakes: [
+      { title: "Typing a variable with the domain", wrong: "DATA lv_status TYPE zaca_status_domain.", right: "DATA lv_status TYPE zaca_employee_status.", why: "Programs use data elements. A domain is only reused by data elements." },
+      { title: "One domain per field", wrong: "ZACA_EMP_STATUS_DOMAIN: CHAR(1), A / I\nZACA_SUP_STATUS_DOMAIN: CHAR(1), A / I", right: "ZACA_STATUS_DOMAIN: CHAR(1), A / I\n(used by both data elements)", why: "The same shape twice means two places to change. Reuse one domain." },
+      { title: "Trusting fixed values to protect data", wrong: "\" the domain allows A and I,\n\" so status can never be X", right: "\" check the value in the program\n\" before saving it", why: "Fixed values are not a database rule. A program can still store X." },
+    ],
+    check: { question: "Which object can type an ABAP variable?", options: ["A data element", "A domain", "A fixed value"], answer: 0, explanation: "DATA … TYPE uses data elements. Domains only give data elements their shape." },
+    challenge: { title: "Design the status domain", must: ["Decide what the domain holds.", "Decide how supplier status reuses it.", "Decide what happens when a program stores an unlisted value."], hints: ["A domain is about shape: type, length, allowed values.", "Meanings and labels live in data elements; fixed values only guide screens."] },
+  },
+  "dictionary-data-elements": {
+    ideas: [["A data element gives meaning.", "ZACA_EMPLOYEE_STATUS means the status of an employee."], ["Its type comes from a domain or is typed directly.", "With a domain, length and values are shared."], ["Labels have four sizes.", "10, 20, 40 and 55 characters."]],
+    mistakes: [
+      { title: "A short label that is too long", wrong: "Short label: Employee status", right: "Short label: Status", why: "The short label holds 10 characters. 15 characters are cut to “Employee s”." },
+      { title: "Labels in every program", wrong: "WRITE: 'Employee status', lv_status.", right: "\" the field label comes from\n\" ZACA_EMPLOYEE_STATUS", why: "Keep the label in the data element so every screen shows the same text." },
+      { title: "Typing with a raw built-in type", wrong: "DATA lv_status TYPE abap.char(1).", right: "DATA lv_status TYPE zaca_employee_status.", why: "abap.char is a Dictionary built-in type, not an ABAP type. Use the data element." },
+    ],
+    check: { question: "Where do the labels of the status column come from?", options: ["The data element", "The domain", "The table key"], answer: 0, explanation: "Field labels are part of the data element's meaning." },
+    challenge: { title: "Describe the employee status field", must: ["Choose where the column header text is set.", "Pick a short label that fits 10 characters.", "Pick the correct ABAP declaration."], hints: ["Meaning and labels belong to the data element.", "Count characters, including spaces; programs type variables with the data element."] },
+  },
+  "dictionary-structures": {
+    ideas: [["A structure is a record type.", "ZACA_ADDRESS groups street, city and country."], ["It stores no rows.", "DATA ls_address TYPE zaca_address makes one record in memory."], ["Names must be unique.", "Include another structure with a suffix if names repeat."]],
+    mistakes: [
+      { title: "Expecting rows in a structure", wrong: "SELECT * FROM zaca_address INTO TABLE @DATA(lt_addresses).", right: "DATA ls_address TYPE zaca_address.", why: "A structure is a type, not a table. Only database tables can be read with SELECT." },
+      { title: "Including a repeated name", wrong: "city : abap.char(30);\ninclude zaca_address;", right: "city : abap.char(30);\ninclude zaca_address with suffix _home;", why: "Both have city. The suffix renames the included one to city_home." },
+      { title: "Forgetting the semicolon", wrong: "street : abap.char(40)\ncity   : abap.char(30);", right: "street : abap.char(40);\ncity   : abap.char(30);", why: "Each component ends with a semicolon in define structure." },
+    ],
+    check: { question: "What does DATA ls_address TYPE zaca_address. create?", options: ["One empty address record in memory", "A database table of addresses", "A new structure"], answer: 0, explanation: "The structure is the type; DATA creates one variable of that type." },
+    challenge: { title: "Reuse the address", must: ["Decide where addresses are stored.", "Fix a repeated component name.", "Create one address record in ABAP."], hints: ["A structure is a type, like TYPES … BEGIN OF.", "A suffix renames included components; DATA … TYPE creates a variable."] },
+  },
+  "dictionary-database-tables": {
+    ideas: [["A database table keeps its rows.", "They are still there after the program ends."], ["Key fields come first.", "client + employee_id identify each employee."], ["Activation creates an empty table.", "Programs insert the rows later."]],
+    mistakes: [
+      { title: "Using the name as the key", wrong: "key name : abap.char(40) not null;", right: "key employee_id : zaca_employee_id not null;", why: "Names repeat and change. An assigned ID stays the same." },
+      { title: "Key fields after normal fields", wrong: "name : abap.char(40);\nkey employee_id : zaca_employee_id not null;", right: "key employee_id : zaca_employee_id not null;\nname : abap.char(40);", why: "Key fields must come first in the table." },
+      { title: "Inserting a changed row again", wrong: "\" insert Sara (1002) again\n\" with status I", right: "\" update Sara's existing row\n\" to status I", why: "The key 100/1002 already exists, so a second insert is refused." },
+    ],
+    check: { question: "Which fields should form the key of ZACA_EMPLOYEE?", options: ["client and employee_id", "client and name", "status"], answer: 0, explanation: "The client and the assigned employee ID identify each employee for good." },
+    challenge: { title: "Design the employee table", must: ["Choose the primary key.", "Predict what happens to a duplicate key.", "Say what activation creates."], hints: ["A key must be unique and never change.", "Same key means the same row; activation creates the empty container."] },
+  },
+  "dictionary-foreign-keys": {
+    ideas: [["A check table holds valid values.", "ZACA_DEPARTMENT lists HR, IT and SALES."], ["The foreign key links the field to it.", "Every key field of the check table gets a partner."], ["Screens check; the database does not.", "Programs must check values themselves."]],
+    mistakes: [
+      { title: "Swapping the two tables", wrong: "check table: ZACA_EMPLOYEE", right: "check table: ZACA_DEPARTMENT", why: "The check table is the one that holds the valid values." },
+      { title: "Mapping only part of the key", wrong: "where department_id = zaca_employee.department", right: "where client = zaca_employee.client\n  and department_id = zaca_employee.department", why: "The check table key is client + department_id, so both need a partner." },
+      { title: "Relying on the database to refuse bad values", wrong: "INSERT zaca_employee FROM @ls_employee.\n\" FIN will be refused", right: "\" read ZACA_DEPARTMENT first and\n\" stop if the department is missing", why: "The foreign key is not a database constraint. A program can save FIN." },
+    ],
+    check: { question: "A program saves department FIN, which is not in the check table. What happens?", options: ["It is saved", "The database refuses it", "FIN is added to the check table"], answer: 0, explanation: "Foreign keys stay in the ABAP Dictionary and only check classic screen input." },
+    challenge: { title: "Link employees to departments", must: ["Name the check table.", "Predict what a program write does.", "Choose which fields the foreign key maps."], hints: ["The check table holds the valid departments.", "The database does not enforce foreign keys; map every check table key field."] },
+  },
+  "dictionary-search-helps": {
+    ideas: [["F4 opens a list of valid values.", "Users pick instead of typing an ID."], ["The list comes from a selection method.", "Here the department table."], ["Only EXPORT values go back.", "The ID is copied; the name only helps choose."]],
+    mistakes: [
+      { title: "Exporting the name", wrong: "NAME  IMPORT yes  EXPORT yes", right: "DEPARTMENT_ID  EXPORT yes\nNAME           EXPORT no", why: "The field needs the ID. The name is shown, not copied." },
+      { title: "A search help per program", wrong: "\" build the F4 list again\n\" in every program", right: "\" attach ZACA_SH_DEPARTMENT to the\n\" data element ZACA_DEPARTMENT_ID", why: "Attached to the data element, every field typed with it gets the list." },
+      { title: "Using search helps in ABAP Cloud", wrong: "\" create search help ZACA_SH_DEPARTMENT\n\" for the Fiori app", right: "@Consumption.valueHelpDefinition: [{ entity: { name: 'ZACA_I_DEPARTMENT', element: 'DepartmentId' } }]", why: "ABAP Cloud has no search helps; CDS value helps replace them." },
+    ],
+    check: { question: "The user picks “IT · Information technology”. What lands in the field?", options: ["IT", "Information technology", "Both"], answer: 0, explanation: "Only DEPARTMENT_ID is an EXPORT parameter." },
+    challenge: { title: "Help users pick a department", must: ["Say what is copied back to the field.", "Choose where to attach the search help.", "Choose the ABAP Cloud replacement."], hints: ["Look at which parameter is EXPORT.", "Attach to the shared data element; ABAP Cloud uses CDS value helps."] },
   },
   "database-fundamentals": {
     ideas: [["FROM picks the table.", "zaca_employee is where the rows live."], ["FIELDS picks columns.", "Only ID and name come back."], ["WHERE picks rows.", "Only IT employees come back."]],
@@ -381,5 +585,14 @@ export const challengeBriefs: Record<string, ChallengeBrief> = {
   "data-read-table": { intro: "Find an employee by ID. If the ID does not exist, say so instead of showing an old name.", boxes: [["lv_id", "102"], "→", ["Screen shows", "Sara"]], start: "Both employees and lv_id are ready. Add the READ TABLE line and the sy-subrc check." },
   "data-table-mutations": { intro: "Update an employee list in three steps: insert Sara, rename her to Sarah, then remove Ahmed.", boxes: [["Start", "Ahmed, Omar"], "→", ["Screen shows", "Sarah, Omar"]], start: "The two employees and the three input values are ready. Add INSERT, MODIFY, DELETE and the loop." },
   "data-sorting-filtering": { intro: "Show the employees who earn at least 6000, highest salary first, without deleting anyone.", boxes: [["Minimum", "6000"], "→", ["Screen shows", "Sara, Omar"]], start: "The three employees and lv_min_salary are ready. Add SORT, then the loop with IF." },
+  "database-abap-sql": { intro: "Read one employee from the database by ID. If the ID does not exist, say so.", boxes: [["lv_id", "103"], "→", ["Screen shows", "Omar, IT"]], start: "lv_id and a work area typed like the table are ready. Add SELECT SINGLE and the sy-subrc check." },
+  "database-select": { intro: "Read every employee's name and salary from the database, highest salary first, then show how many rows you read.", boxes: [["Database", "4 employees"], "→", ["Screen shows", "Omar 9500 … Huda 6800, 4"]], start: "The editor is empty: write the SELECT, the LOOP and the final WRITE." },
+  "database-where": { intro: "Read only the employees of one department who earn at least a minimum salary, highest first.", boxes: [["IT, at least 9000", ""], "→", ["Screen shows", "Omar, 9500"]], start: "lv_department and lv_min_salary are ready. Add the SELECT with WHERE, ORDER BY and the No match branch." },
+  "database-joins": { intro: "List every department with its employees, and keep departments that have nobody yet.", boxes: [["4 departments", "4 employees"], "→", ["Screen shows", "Legal with an empty name too"]], start: "The editor is empty: write one SELECT with a LEFT OUTER JOIN and a LOOP." },
+  "database-aggregates": { intro: "Let the database count the employees and find the highest salary in each department.", boxes: [["4 employees", ""], "→", ["Screen shows", "HR 1 7200, IT 2 9500, SALES 1 6800"]], start: "The editor is empty: write one SELECT with COUNT(*), MAX( ) and GROUP BY, then a LOOP." },
+  "database-sql-mutations": { intro: "Give one department a raise with a single UPDATE, then read the department's new total salary.", boxes: [["IT, raise 500", ""], "→", ["Screen shows", "2, 18500"]], start: "lv_department, lv_raise and lv_total are ready. Add UPDATE … SET … WHERE, then a SELECT with SUM." },
+  "data-table-performance": { intro: "Find one ID in a list of 16 using as few checks as possible: sort the list once, then use BINARY SEARCH.", boxes: [["lv_search", "101"], "→", ["Screen shows", "1"]], start: "The 16 IDs are stored newest first and lv_search is ready. Add SORT, the BINARY SEARCH read and the sy-subrc check." },
+  "data-employee-manager": { intro: "Run the two jobs of an employee manager: give one employee a raise, then remove one and report who is left.", boxes: [["Challenge 1", "8500"], ["Challenge 2", "Ahmed, Omar, 2, 11000"]], start: "Ahmed, Sara and Omar, lv_id and lv_raise are ready. Start each challenge by finding the position with line_index( )." },
+  "data-table-expressions": { intro: "Find an employee by ID with a table expression. If the ID does not exist, say Not found instead of stopping, then report the row position.", boxes: [["lv_id", "102"], "→", ["Screen shows", "Sara, 8000, 2"]], start: "The employees, lv_id and lv_position are ready. Add TRY … CATCH around the read, then line_index( )." },
   "data-conditional-loop": { intro: "Report only the employees earning at least 6000, then show how many there are and their total salary.", boxes: [["Minimum", "6000"], "→", ["Screen shows", "Sara, Omar, 2, 14000"]], start: "The employees and the zeroed counters are ready. Add LOOP … WHERE and the final WRITE lines." },
 };

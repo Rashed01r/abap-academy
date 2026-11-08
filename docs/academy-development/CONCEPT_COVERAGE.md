@@ -55,6 +55,18 @@ Each concept has a stable lesson-qualified ID, English name/explanation with pre
 | data-sorting-filtering | Working with Data | data-sorting-filtering/identity-after-sort | group:salary-first, group:salary-sort | trace | concept-check |
 | data-conditional-loop | Working with Data | data-conditional-loop/selection | group:select, token:loop-where | trace | data-conditional-report, knowledge-check |
 | data-conditional-loop | Working with Data | data-conditional-loop/aggregate | group:aggregate, group:report, token:selected-total | trace | data-conditional-report, concept-check |
+| data-table-expressions | Working with Data | data-table-expressions/expression-read | group:by-position, group:by-key, token:table-expression | trace | data-expression-lookup, concept-check |
+| data-table-expressions | Working with Data | data-table-expressions/not-found | group:by-key, token:line-not-found | trace | data-expression-lookup, knowledge-check |
+| data-table-expressions | Working with Data | data-table-expressions/exists-index | group:position, group:exists | trace | data-expression-lookup, knowledge-check |
+| data-table-expressions | Working with Data | data-table-expressions/optional-default | group:optional | trace | concept-check |
+| data-table-performance | Working with Data | data-table-performance/linear-search | group:linear, token:binary-search | trace | data-performance-lookup, concept-check |
+| data-table-performance | Working with Data | data-table-performance/binary-search | group:binary, token:binary-search | trace | data-performance-lookup, knowledge-check |
+| data-table-performance | Working with Data | data-table-performance/sort-first | group:sort, token:sort-first | trace | data-performance-lookup, knowledge-check |
+| data-table-performance | Working with Data | data-table-performance/choose-category | token:sort-first | trace | knowledge-check |
+| data-employee-manager | Working with Data | data-employee-manager/find-first | group:find, group:missing, token:find-change-save | trace | data-manager-raise, knowledge-check |
+| data-employee-manager | Working with Data | data-employee-manager/copy-save | group:raise, token:find-change-save | trace | data-manager-raise, concept-check |
+| data-employee-manager | Working with Data | data-employee-manager/remove-shift | group:remove, token:remove-report | trace | data-manager-report, concept-check |
+| data-employee-manager | Working with Data | data-employee-manager/report-current | group:report, group:totals, token:remove-report | trace | data-manager-report, knowledge-check |
 | dictionary-introduction | ABAP Dictionary | dictionary-introduction/domain | artifact:domain | guided | status-technical |
 | dictionary-introduction | ABAP Dictionary | dictionary-introduction/data-element | artifact:element | guided | status-semantics |
 | dictionary-introduction | ABAP Dictionary | dictionary-introduction/structure-table | artifact:structure, artifact:table | guided | persistence-choice |
