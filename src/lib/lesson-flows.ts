@@ -1,0 +1,30 @@
+// "The whole lesson in one line": each step is [code, plain meaning, isDecision?]. English only while ENABLE_ARABIC = false.
+export type FlowStep = readonly [code: string, say: string, decision?: true];
+
+export const lessonFlows: Record<string, readonly FlowStep[]> = {
+  orientation: [["WRITE 'Hi'", "an instruction"], [".", "the period ends it"], ["\" note", "a comment, never printed"], ["Build trace", "run it and watch"]],
+  addition: [["DATA", "make the boxes"], ["a + b", "add"], ["=", "store in lv_result"], ["WRITE", "show it"]],
+  structures: [["TYPES", "describe the shape"], ["DATA ls", "create one record"], ["ls-name =", "fill a field"], ["WRITE ls-name", "show a field"]],
+  conditions: [["IF amount >= 1000", "true or false?", true], ["IF block", "runs when true"], ["ELSE block", "runs when false"], ["ENDIF", "only one block ran"]],
+  do: [["DO 10 TIMES", "repeat 10 passes"], ["count + 1", "work on each pass"], ["ENDDO", "back to the top"], ["after ENDDO", "runs once, at the end"]],
+  while: [["WHILE count <= 8", "still true?", true], ["WRITE", "do the work"], ["count + 1", "change what is checked"], ["ENDWHILE", "check again, stop when false"]],
+  tables: [["DATA lt", "an empty table"], ["APPEND 10", "add a row at the end"], ["APPEND 20, 30", "more rows, in order"], ["lt", "3 rows of the same type"]],
+  "loop-at": [["LOOP AT lt", "start at row 1"], ["INTO lv", "copy the current row"], ["total + lv", "use the copy"], ["ENDLOOP", "next row, until none left"]],
+  "loop-control": [["DO", "start a pass"], ["CONTINUE", "skip the rest of this pass", true], ["EXIT", "leave the loop now", true], ["after ENDDO", "the program goes on"]],
+  employees: [["TYPES", "the employee shape"], ["APPEND", "load each employee"], ["IF salary >= 5000", "count this one?", true], ["WRITE total", "show after the loop"]],
+  "data-table-model": [["TYPES", "the row blueprint"], ["DATA lt, ls", "a table and one work area"], ["APPEND ls", "save a copy"], ["change ls", "saved rows stay the same"]],
+  "data-table-categories": [["STANDARD", "input order, duplicates ok"], ["SORTED", "always in key order"], ["HASHED", "unique key, fast lookup"], ["choose", "by order and access need", true]],
+  "data-keys": [["key fields", "what identifies a row"], ["index", "only a position"], ["UNIQUE KEY", "rejects a repeat"], ["all key fields", "compare them to find every match"]],
+  "data-work-areas-field-symbols": [["DATA ls", "a record you own"], ["APPEND ls", "saves a copy"], ["ASSIGN ls TO <fs>", "another name for ls"], ["<fs>-name =", "changes ls itself"]],
+  "data-read-table": [["READ TABLE … WITH KEY", "look for one row"], ["INTO ls", "copy it if found"], ["sy-subrc = 0?", "0 found, 4 not found", true], ["use ls", "only when it was found"]],
+  "data-table-mutations": [["APPEND / INSERT", "add a row"], ["MODIFY", "save the edited row"], ["DELETE", "remove, later rows move up"], ["sy-subrc", "check after each change", true]],
+  "data-sorting-filtering": [["SORT BY salary", "reorder whole rows"], ["LOOP AT", "visit each row"], ["IF salary >= min", "show this row?", true], ["WRITE", "report, other rows stay stored"]],
+  "data-conditional-loop": [["LOOP AT … WHERE", "does this row match?", true], ["INTO ls", "only matches are copied"], ["count, total", "update for matches"], ["WRITE", "show totals after ENDLOOP"]],
+  "dictionary-introduction": [["Domain", "technical type and length"], ["Data element", "business meaning and labels"], ["Structure", "grouped fields, no rows"], ["Database table", "stores the rows"]],
+  "database-fundamentals": [["FROM", "which table"], ["FIELDS", "which columns"], ["WHERE", "which rows", true], ["ORDER BY", "which order"], ["INTO TABLE", "a local copy of the result"]],
+  "oop-introduction": [["CLASS", "the blueprint"], ["NEW", "create an object"], ["->increment( )", "call a method"], ["mv_value", "each object keeps its own value"]],
+  "applications-reports": [["INITIALIZATION", "set defaults"], ["AT SELECTION-SCREEN", "is the input valid?", true], ["START-OF-SELECTION", "produce the main list"], ["END-OF-SELECTION", "finish normally"]],
+  "modern-syntax": [["VALUE #( … )", "build a table"], ["lt[ id = 10 ]", "read one row"], ["DATA( … )", "declare where used"], ["|{ … }|", "put values in text"]],
+  "cloud-introduction": [["Table", "stores records"], ["CDS", "business data model"], ["Behavior", "operations and rules"], ["Projection", "the consumer view"], ["Service", "expose and bind"]],
+  "projects-employee-management": [["UUID table", "stable identity"], ["Root + behavior", "the business object"], ["Projection", "the consumer shape"], ["Authorization", "who may read or write", true], ["Service + tests", "prove it in SAP"]],
+};

@@ -5,7 +5,7 @@ import {test,expect} from "@playwright/test";
 import {workAreaMission as m, workAreaExample} from "../src/lib/work-area-mission";
 import {missions} from "../src/lib/curriculum";
 import {ui} from "../src/lib/i18n";
-import {matchAnatomy} from "./anatomy-helpers";
+import {matchAnatomy, finishLearn, runnerTo } from "./anatomy-helpers";
 
 for(const lang of enabledLocales) for(const theme of ["light","dark"] as const) {
   test(`${lang}/${theme}: work-area fields, live aliases, diagnostics and both persisted assessments`,async({page})=>{
@@ -28,23 +28,32 @@ for(const lang of enabledLocales) for(const theme of ["light","dark"] as const) 
     await page.reload();
     await expect(page.locator(".lesson-summary h1")).toHaveText(localizedText(m.title, lang));
     expect(await page.evaluate(()=>JSON.parse(localStorage.getItem("abap2-master-progress")!).missions)).toEqual(["data-keys"]);
-    const code=page.locator(".syntax-lab .anatomy-code"), panel=page.locator(".syntax-lab .anatomy-explanation");
-    await code.locator('[data-group="fill"]').click();
-    await expect(code.locator(".anatomy-selected-line")).toHaveCount(2);
-    await expect(panel.locator(".anatomy-field-active")).toHaveCount(2);
-    await expect(panel).toContainText("Ahmed");
-    await code.locator('[data-group="declare"]').click();
-    await expect(panel.locator(".alias-connection")).toHaveText("<employee>→∅");
-    await code.locator('[data-group="bind"]').focus();await page.keyboard.press("Enter");
-    await expect(panel.locator(".alias-connection")).toHaveText("<employee>→ls_employee");
-    await code.locator('[data-group="change"]').click();
-    await expect(panel.getByTestId("alias-value")).toContainText("Sara");
-    await expect(panel.locator(".anatomy-memory-card").filter({hasText:"lt_employees"})).toContainText("Ahmed");
-    await expect(panel.locator(".alias-values")).toContainText("Ahmed");
+    if(lang === "en") {
+      // The runner shows the alias changing the work area while the saved row keeps Ahmed.
+      let run=await runnerTo(page,"Assign Values to the Fields");
+      await expect(run.locator(".add-box").filter({hasText:"ls_employee"})).toContainText("101");
+      run=await runnerTo(page,"Change the Assigned Employee");
+      await expect(run.locator(".add-box").filter({hasText:"ls_employee"})).toContainText("Sara");
+      await expect(run.locator(".add-box").filter({hasText:"lt_employees"})).toContainText("Ahmed");
+    } else {
+      const code=page.locator(".syntax-lab .anatomy-code"), panel=page.locator(".syntax-lab .anatomy-explanation");
+      await code.locator('[data-group="fill"]').click();
+      await expect(code.locator(".anatomy-selected-line")).toHaveCount(2);
+      await expect(panel.locator(".anatomy-field-active")).toHaveCount(2);
+      await expect(panel).toContainText("Ahmed");
+      await code.locator('[data-group="declare"]').click();
+      await expect(panel.locator(".alias-connection")).toHaveText("<employee>→∅");
+      await code.locator('[data-group="bind"]').focus();await page.keyboard.press("Enter");
+      await expect(panel.locator(".alias-connection")).toHaveText("<employee>→ls_employee");
+      await code.locator('[data-group="change"]').click();
+      await expect(panel.getByTestId("alias-value")).toContainText("Sara");
+      await expect(panel.locator(".anatomy-memory-card").filter({hasText:"lt_employees"})).toContainText("Ahmed");
+      await expect(panel.locator(".alias-values")).toContainText("Ahmed");
+    }
     expect(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
     if(lang === "ar") await page.locator(".syntax-lab .anatomy-layout").screenshot({path:test.info().outputPath(`aliases-anatomy-ar-${theme}.png`)});
     await matchAnatomy(page,m.id,lang);
-    await page.getByRole("button",{name:t.syntaxDone,exact:true}).click();
+    await finishLearn(page, lang);
     await tab(page,lang,"visualize");
     await page.getByRole("button",{name:t.run,exact:true}).click();
     const timeline=page.getByRole("tabpanel").locator(".timeline");
@@ -71,7 +80,6 @@ for(const lang of enabledLocales) for(const theme of ["light","dark"] as const) 
     await tab(page,lang,"challenge");
     // Browsing or completing the lab does not pass either mission assessment.
     await tab(page,lang,"challenge");
-    await page.getByRole("tabpanel").locator(".quiz .answer-options button").nth(m.answer).click();
     await expect(page.getByRole("button",{name:t.complete,exact:true})).toBeDisabled();
     await tab(page,lang,"challenge");
     for(const [i,challenge] of m.challenges!.entries()) {
@@ -91,12 +99,11 @@ for(const lang of enabledLocales) for(const theme of ["light","dark"] as const) 
     await expect(page.locator(".lesson-summary .pill")).toHaveText(t.completed.charAt(0).toUpperCase() + t.completed.slice(1));
     const progress=await page.evaluate(()=>JSON.parse(localStorage.getItem("abap2-master-progress")!));
     expect(progress.version).toBe(2);expect(progress.missions).toEqual(["data-keys",m.id]);
-    expect(progress.labs).toEqual(["structures",m.id]);expect(progress.results.while).toEqual({attempts:4,passed:false});
+    expect(progress.labs).toEqual(lang==="en"?["structures"]:["structures",m.id]);expect(progress.results.while).toEqual({attempts:4,passed:false});
     expect(progress.passedChallenges).toEqual(expect.arrayContaining(m.challenges!.map(c=>c.id)));
     await page.goto(`/?mission=${m.id}`);
     await expect(page.locator(".lesson-summary h1")).toHaveText(localizedText(m.title, lang));
     await tab(page,lang,"challenge");
-    await page.getByRole("tabpanel").locator(".quiz .answer-options button").nth(m.answer).click();
     await page.getByRole("button",{name:t.completed,exact:true}).click();
     await expect(page.locator(".header-xp")).toContainText("540");
     expect(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();

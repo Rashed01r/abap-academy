@@ -1,3 +1,4 @@
+import { runnerTo } from "./anatomy-helpers";
 import { enabledLocales } from "../src/lib/language-policy";
 import { localizedText } from "../src/lib/language-policy";
 import { test, expect } from "@playwright/test";
@@ -15,10 +16,17 @@ for (const m of [tableMutationsMission, sortingFilteringMission]) for (const lan
       if (!localStorage.getItem("abap2-master-progress")) localStorage.setItem("abap2-master-progress", JSON.stringify({version:2, missions:["structures"], labs:["structures"], current:"structures", results:{structures:{attempts:2,passed:true}}}));
     }, lang);
     await page.goto(`/?mission=${m.id}`); await openLesson(page,m.id,lang);
-    await page.locator(`.anatomy-group[data-group="${sorting ? "salary-sort" : "insert"}"]`).click();
-    const anatomy = page.locator(".anatomy-explanation");
-    await expect(anatomy.getByTestId("table-change-before")).toContainText("Ahmed");
-    await expect(anatomy.getByTestId("table-change-after")).toContainText("Sara");
+    if (lang === "en") {
+      // The beginner runner shows the table after the change: Sara and Ahmed are both still stored.
+      const run = await runnerTo(page, sorting ? "Reorder the complete rows" : "Insert before Omar");
+      await expect(run.locator(".add-box").filter({hasText: "lt_employees"})).toContainText("Sara");
+      await expect(run.locator(".add-box").filter({hasText: "lt_employees"})).toContainText("Ahmed");
+    } else {
+      await page.locator(`.anatomy-group[data-group="${sorting ? "salary-sort" : "insert"}"]`).click();
+      const anatomy = page.locator(".anatomy-explanation");
+      await expect(anatomy.getByTestId("table-change-before")).toContainText("Ahmed");
+      await expect(anatomy.getByTestId("table-change-after")).toContainText("Sara");
+    }
     await tab(page,lang,"visualize"); await page.getByRole("button",{name:t.run,exact:true}).click();
     const panel = page.getByRole("tabpanel"), timeline = panel.locator(".timeline");
     if (sorting) {

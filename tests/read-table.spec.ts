@@ -1,3 +1,4 @@
+import { runnerTo } from "./anatomy-helpers";
 import { enabledLocales } from "../src/lib/language-policy";
 import { localizedText } from "../src/lib/language-policy";
 import { test, expect } from "@playwright/test";
@@ -12,15 +13,24 @@ for (const lang of enabledLocales) test(`${lang}: typed READ TABLE found/missing
     if (!localStorage.getItem("abap2-master-progress")) localStorage.setItem("abap2-master-progress", JSON.stringify({version:2, missions:["structures"], labs:["structures"], current:"structures", results:{structures:{attempts:2,passed:true}}}));
   }, lang);
   await page.goto(`/?mission=${m.id}`); await openLesson(page, m.id, lang);
-  await page.locator('.anatomy-group[data-group="key-found"]').click();
-  const anatomy = page.locator(".anatomy-explanation");
-  await expect(anatomy.getByTestId("lookup-status")).toHaveText(lang === "en" ? "Matching row copied" : "نُسخ الصف المطابق");
-  await expect(anatomy.locator(".active-row")).toHaveCount(1);
-  await expect(anatomy.locator(".active-row")).toContainText("Sara");
-  await page.locator('.anatomy-group[data-group="key-missing"]').click();
-  await expect(anatomy.getByTestId("lookup-status")).toHaveText(lang === "en" ? "No matching row; target unchanged" : "لا يوجد صف مطابق؛ بقيت الوجهة دون تغيير");
-  await expect(anatomy.locator(".active-row")).toHaveCount(0);
-  await expect(anatomy.locator(".lookup-targets")).toContainText("Sara");
+  if (lang === "en") {
+    // The beginner runner shows the found read, then the failed read that keeps Sara in the work area.
+    let run = await runnerTo(page, "Find the matching ID");
+    await expect(run.locator(".add-box").filter({hasText: "ls_employee"})).toContainText("Sara");
+    run = await runnerTo(page, "Observe a failed read");
+    await expect(run.locator(".add-say")).toContainText("sy-subrc becomes 4");
+    await expect(run.locator(".add-box").filter({hasText: "ls_employee"})).toContainText("Sara");
+  } else {
+    await page.locator('.anatomy-group[data-group="key-found"]').click();
+    const anatomy = page.locator(".anatomy-explanation");
+    await expect(anatomy.getByTestId("lookup-status")).toHaveText(String(lang) === "en" ? "Matching row copied" : "نُسخ الصف المطابق");
+    await expect(anatomy.locator(".active-row")).toHaveCount(1);
+    await expect(anatomy.locator(".active-row")).toContainText("Sara");
+    await page.locator('.anatomy-group[data-group="key-missing"]').click();
+    await expect(anatomy.getByTestId("lookup-status")).toHaveText(String(lang) === "en" ? "No matching row; target unchanged" : "لا يوجد صف مطابق؛ بقيت الوجهة دون تغيير");
+    await expect(anatomy.locator(".active-row")).toHaveCount(0);
+    await expect(anatomy.locator(".lookup-targets")).toContainText("Sara");
+  }
   await tab(page, lang, "visualize"); await page.getByRole("button", {name:t.run, exact:true}).click();
   const panel = page.getByRole("tabpanel"), timeline = panel.locator(".timeline");
   await timeline.getByRole("button").filter({hasText:"READ TABLE lt_employees INTO ls_employee WITH KEY id = lv_id."}).first().click();
@@ -39,7 +49,9 @@ for (const lang of enabledLocales) test(`${lang}: typed READ TABLE found/missing
   await page.getByRole("button",{name:t.check,exact:true}).click();
   await expect(panel.locator(".feedback.warning")).toBeVisible(); await expect(completion(page,lang)).toBeDisabled();
   await edit(page, challenge.solution); await page.getByRole("button",{name:t.check,exact:true}).click();
-  await expect(panel.locator(".feedback.success")).toBeVisible(); await expect(completion(page,lang)).toBeDisabled();
+  await expect(panel.locator(".feedback.success")).toBeVisible();
+  // English challenges have no quick check: passing the challenge alone enables completion.
+  await expect(completion(page,lang)).toBeEnabled();
   await answerQuiz(page,m.answer); await completion(page,lang).click();
   await expect.poll(async () => page.evaluate(() => JSON.parse(localStorage.getItem("abap2-master-progress")!).missions.includes("data-read-table"))).toBe(true);
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem("abap2-master-progress")!));

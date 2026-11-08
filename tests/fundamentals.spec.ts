@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 import { missions } from '../src/lib/curriculum';
 import { ui } from '../src/lib/i18n';
 import { openLesson, answerQuiz, edit, gradeAll, completion } from './academy-helpers';
-import { matchAnatomy } from './anatomy-helpers';
+import { matchAnatomy, finishLearn } from './anatomy-helpers';
 for (const lang of enabledLocales)
     test(`${lang}: returning learner completes Missions 04-09 and retains results`, async ({ page }) => {
         const t = ui[lang], errors: string[] = [];
@@ -15,7 +15,7 @@ for (const lang of enabledLocales)
         for (const m of missions.slice(3, 9)) {
             await openLesson(page, m.id, lang);
             await matchAnatomy(page, m.id, lang);
-            await page.getByRole('button', { name: t.syntaxDone, exact: true }).click();
+            await finishLearn(page, lang);
             await page.getByRole('button', { name: t.run, exact: true }).click();
             await page.getByRole('tabpanel').locator('.execution-controls').getByRole('button', { name: t.next, exact: true }).click();
             await expect(page.getByRole('tabpanel').locator('.execution-pointer')).toHaveCount(1);
@@ -27,7 +27,8 @@ for (const lang of enabledLocales)
             await page.getByRole('tabpanel').locator('.timeline li>button').last().click();
             await expect(page.getByRole('tabpanel').locator('.editor-shell')).toHaveAttribute('dir', 'ltr');
             await gradeAll(page, m, lang);
-            await expect(completion(page, lang)).toBeDisabled();
+            // English challenges have no quick check: passing the challenge alone enables completion.
+            await expect(completion(page, lang)).toBeEnabled();
             await answerQuiz(page, m.answer);
             await completion(page, lang).click();
         }

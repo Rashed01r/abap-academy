@@ -1,6 +1,6 @@
 "use client";
 import { localizedText } from "../lib/language-policy";
-import { type Dispatch, type SetStateAction } from "react";
+import { type Dispatch, type SetStateAction, useState } from "react";
 import { useTopicSession } from "@/lib/use-topic-session";
 import { missions, orientation, paths } from "@/lib/curriculum";
 import { getAnatomy, orientationExamples } from "@/lib/anatomy-content";
@@ -22,7 +22,9 @@ import { ObjectStorageDiagram, ReportFlowDiagram } from "./guided-concept-diagra
 import { VisualClassroom } from "./visual-classroom";
 import type { ClassroomSelection } from "./trace-classroom";
 
+import { AdditionLearn, AdditionExplore, AdditionChallengeIntro } from "./addition-lesson";
 import { LessonHeader } from "./lesson-header";
+import { LessonStart, LessonRunner, LessonMistakes, LessonRemember, LessonExplore, LessonChallengeIntro } from "./lesson-beginner";
 
 type Tab = "learn" | "visualize" | "challenge";
 const tabs: Tab[] = ["learn", "visualize", "challenge"];
@@ -40,6 +42,11 @@ export function ConnectedLesson({id, lang, theme, progress, setProgress, onNavig
   const code = m?.example || localizedText(orientationExamples, lang);
   const next = recommendedLesson(id, progress.missions, progress.labs);
   const [classroomSelection,setClassroomSelection] = useTopicSession<ClassroomSelection>(`${id}:classroom-selection`,{});
+  const additionPilot = id === "addition" && lang === "en";
+  const tabLabel = (name: Tab) => c[name];
+  // The beginner layout (start, picture, run, mistakes, remember, experiments, brief) for English lessons; addition keeps its hand-written version.
+  const beginner = lang === "en" && (!!m || id === "orientation") && !additionPilot;
+  const [exploreCode, setExploreCode] = useState(code);
   const prerequisite = m?.prerequisite;
   const prerequisiteLesson = missions.find(lesson => lesson.id === prerequisite);
   const moduleInfo = paths.find(path => path.id === (m?.pathId || paths[0].id));
@@ -52,7 +59,7 @@ export function ConnectedLesson({id, lang, theme, progress, setProgress, onNavig
     }));
   }
   return <div className="connected-lesson" dir={lang === "ar" ? "rtl" : "ltr"}>
-    <LessonHeader key={id} lang={lang} onNavigate={onNavigate} lesson={{
+    <LessonHeader key={id} objectivesAlwaysVisible={additionPilot || beginner} lang={lang} onNavigate={onNavigate} lesson={{
       id, title:localizedText(m?.title,lang) || t.orientation,
       subtitle:m ? localizedText(m.subtitle,lang) : c.orientationIntro,
       level:m ? m.difficulty : "beginner", minutes:m ? m.minutes : 4, xp:m ? m.xp : 25,
@@ -72,11 +79,17 @@ export function ConnectedLesson({id, lang, theme, progress, setProgress, onNavig
         event.preventDefault();
         const next = tabs[event.key === "Home" ? 0 : event.key === "End" ? 2 : (i + offset + 3) % 3];
         select(next); document.getElementById(`${id}-${next}-tab`)?.focus();
-      }}>{c[name]}</button>)}
+      }}>{tabLabel(name)}</button>)}
     </div>
     {tabs.map(name => <section key={name} id={`${id}-${name}-panel`} role="tabpanel" aria-labelledby={`${id}-${name}-tab`} hidden={tab !== name} tabIndex={0}>
-      {visited.includes(name) && (name === "learn" ? <>
-        {tab === "learn" && <VisualClassroom id={id} lang={lang} theme={theme} selection={classroomSelection} onSelect={setClassroomSelection}/>}
+      {visited.includes(name) && (name === "learn" ? additionPilot ? <AdditionLearn onExplore={() => select("visualize")} /> : <>
+        {beginner && <LessonStart id={id}/>}
+        {tab === "learn" && !beginner && <VisualClassroom id={id} lang={lang} theme={theme} selection={classroomSelection} onSelect={setClassroomSelection}/>}
+        {beginner ? <>
+          <LessonRunner id={id} code={code}/>
+          <LessonMistakes id={id}/>
+          <LessonRemember id={id} onExplore={() => select("visualize")}/>
+        </> : <>
         <h2 className="classroom-code-heading">{lang === "en" ? m?.activity === "table-categories" || id === "data-work-areas-field-symbols" ? "Browser practice: the executable subset" : "Understand the code" : m?.activity === "table-categories" || id === "data-work-areas-field-symbols" ? "تدريب المتصفح: المجموعة التنفيذية المدعومة" : "افهم الأكواد"}</h2>
         {m?.guided ? <>
           <p className="pill guided-boundary"><TechnicalText>{localizedText(m.guided.boundary, lang)}</TechnicalText></p>
@@ -88,8 +101,15 @@ export function ConnectedLesson({id, lang, theme, progress, setProgress, onNavig
         }}/>}
         {tab === "learn" && <LessonAlternatives id={id} lang={lang} theme={theme}/>}
         <LessonConcepts id={id} lang={lang} onConceptSelect={ref=>{const [kind,key]=ref.split(":");if(kind === "group") selectGroup(key);else if(kind === "artifact") setClassroomSelection({artifact:key});}}/>
+        </>}
         {m && <details><summary>{c.deeper}</summary><p>{localizedText(m.brief, lang)}</p><p>{localizedText(m.practice, lang)}</p>{m.references?.map(ref => <p key={ref}><a href={ref} target="_blank" rel="noreferrer">{ref}</a></p>)}</details>}
-      </> : name === "visualize" ? <>
+      </> : name === "visualize" ? additionPilot ? <AdditionExplore theme={theme} onChallenge={() => select("challenge")} /> : beginner ? <>
+        {/* Like Add two numbers: one card with the experiments and the editor (SAP-only lessons: the design explorer). */}
+        <LessonExplore id={id} code={exploreCode}>
+          {m?.guided ? tab === "visualize" && <GuidedExplorer definition={m.guided} lang={lang}/> : <LearningWorkspace initialCode={code} lang={lang} theme={theme} storageKey={`abap2-workspace:${id}:visualize`} onCodeChange={setExploreCode}/>}
+        </LessonExplore>
+        <div className="addition-pilot-next"><p className="muted">Next: write a program like this one on your own.</p><button className="primary" onClick={() => select("challenge")}>Try the challenge →</button></div>
+      </> : <>
         <p className="instruction"><TechnicalText>{localizedText(m?.visual, lang) || c.orientationIntro}</TechnicalText></p>
         <p className="pill">{m?.guided ? localizedText(m.guided.boundary, lang) : t.limit}</p>
         {tab === "visualize" && (id === "data-table-categories" || id === "data-work-areas-field-symbols") && <VisualClassroom id={id} lang={lang} theme={theme} selection={classroomSelection} onSelect={setClassroomSelection}/>}
@@ -101,8 +121,10 @@ export function ConnectedLesson({id, lang, theme, progress, setProgress, onNavig
         {m?.activity === "table-keys" && <TableKeyExplorer sessionKey={`${id}:visual-model`} lang={lang} assessment={false} onPass={() => {}}/>}
         {m?.guided ? tab === "visualize" && <GuidedExplorer definition={m.guided} lang={lang}/> : <LearningWorkspace initialCode={code} lang={lang} theme={theme} storageKey={`abap2-workspace:${id}:visualize`}/>}
       </> : <>
-        <p className="instruction"><TechnicalText>{localizedText(m?.goal, lang) || c.orientationGoal}</TechnicalText></p>
-        <p>{c.help} <button className="text-button" onClick={() => select("learn")}>{c.learn}</button> · <button className="text-button" onClick={() => select("visualize")}>{c.visualize}</button></p>
+        {additionPilot ? <AdditionChallengeIntro onLearn={() => select("learn")} onExplore={() => select("visualize")} /> : beginner ? <LessonChallengeIntro id={id} onLearn={() => select("learn")} onExplore={() => select("visualize")}/> : <>
+          <p className="instruction"><TechnicalText>{localizedText(m?.goal, lang) || c.orientationGoal}</TechnicalText></p>
+          <p>{c.help} <button className="text-button" onClick={() => select("learn")}>{c.learn}</button> · <button className="text-button" onClick={() => select("visualize")}>{tabLabel("visualize")}</button></p>
+        </>}
         {m?.activity === "table-categories" && <TableCategoryExplorer sessionKey={`${id}:assessment-model`} lang={lang} assessment completed={progress.passedChallenges?.includes("data-category-choice")} onPass={() => attempt("data-category-choice", true)}/>}
         {m?.activity === "table-keys" && <TableKeyExplorer sessionKey={`${id}:assessment-model`} lang={lang} assessment completed={progress.passedChallenges?.includes("data-key-design")} onPass={() => attempt("data-key-design", true)}/>}
         {m?.guided ? <>
@@ -118,9 +140,9 @@ export function ConnectedLesson({id, lang, theme, progress, setProgress, onNavig
           const writes = events.filter(e => e.operation === "write");
           return writes.length === 2 && JSON.stringify(events.at(-1)?.output) === JSON.stringify(["5", "8"]);
         }} onResult={(correct, checked) => {setOrientationPassed(correct); if (checked) setProgress(p => startMission(p, id));}}/>}
-        <Quiz sessionKey={`${id}:quiz-choice`} lang={lang} question={localizedText(m?.quiz, lang) || c.orientationQuestion} options={m?.options.map(o => localizedText(o, lang)) || [c.orientationAnswer, c.orientationWrong]} answer={m?.answer || 0} explanation={localizedText(m?.quizExplanation, lang) || c.orientationExplanation} onCorrect={() => setQuiz(true)}/>
+        {lang !== "en" && <Quiz sessionKey={`${id}:quiz-choice`} lang={lang} question={localizedText(m?.quiz, lang) || c.orientationQuestion} options={m?.options.map(o => localizedText(o, lang)) || [c.orientationAnswer, c.orientationWrong]} answer={m?.answer || 0} explanation={localizedText(m?.quizExplanation, lang) || c.orientationExplanation} onCorrect={() => setQuiz(true)}/>}
         <p>{t.assessmentRequired}</p>
-        <button className="primary" disabled={!quiz || (m ? !allChallengesPassed(progress, id) : !orientationPassed)} onClick={() => setProgress(p => m ? completeMission(p, id, true) : {...p, labs: Array.from(new Set([...p.labs, id]))})}>{complete ? t.completed : t.complete}</button>
+        <button className="primary" disabled={(lang !== "en" && !quiz) || (m ? !allChallengesPassed(progress, id) : !orientationPassed)} onClick={() => setProgress(p => m ? completeMission(p, id, true) : {...p, labs: Array.from(new Set([...p.labs, id]))})}>{complete ? t.completed : t.complete}</button>
       </>)}
     </section>)}
     {complete && next && onNavigate && <aside className="lesson-recommendation"><p>{lang === "en" ? "Suggested next step: build on this topic. Every implemented lesson remains open." : "الخطوة التالية المقترحة: ابنِ على هذا الموضوع. تظل جميع الدروس المنفّذة متاحة."}</p><button className="secondary" onClick={() => onNavigate(next.id)}>{lang === "en" ? "Explore next: " : "استكشف التالي: "}{localizedText(next.title, lang)}</button></aside>}

@@ -67,7 +67,8 @@ test('direct edge/corner resizing, cancellation, keyboard, persistence and adapt
   await page.getByRole('button',{name:treeCopy.en.resizeWidth,exact:true}).focus();
   for(let i=0;i<30;i++)await page.keyboard.press('Shift+ArrowLeft');
   expect((await size(page)).width).toBe(440);
-  await expect(page.locator('.anatomy-layout')).toHaveCSS('grid-template-columns',/^\d+(\.\d+)?px$/);
+  // At the narrowest width the Learn runner stacks code and memory in one column.
+  await expect(page.locator('[data-lesson-runner] .add-run')).toHaveCSS('grid-template-columns',/^\d+(\.\d+)?px$/);
   await page.getByRole('button',{name:treeCopy.en.resetSize,exact:true}).click();
   expect((await size(page)).width).toBe(900);
   await page.getByRole('button',{name:treeCopy.en.collapsePanel,exact:true}).click();

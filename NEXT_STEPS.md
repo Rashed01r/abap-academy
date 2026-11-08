@@ -1,5 +1,13 @@
 # Resume academy development
 
+## Addition-only lesson layout pilot (2026-11-08)
+
+User-requested pilot applies only to `addition` in English. Learn / Explore code / Challenge keeps the existing internal `visualize` ID and all draft/session keys. Objectives remain visible on every visit; Learn shows a simulator-derived input/result illustration, an explicit three-step approach and all existing essential explanations, examples and checks. Explore code reuses Visual Code Anatomy with section navigation and real interpreter snapshots, compact memory values, the original matching/syntax exercise and the existing independently editable saved sandbox. The duplicate optional anatomy editor is suppressed only in this pilot. Narrow code lines wrap within the panel. Challenge, progress v2, XP, IDs and all other lessons remain unchanged. Arabic resources are preserved; no Arabic authoring or UI checks ran.
+
+Verification: final production build (no CSS warnings), standalone lint/typecheck, education/curriculum validation and 111/111 unit tests passed. Initial targeted browser checks passed 4/4. Initial full regression passed 145/150 in 2.9m; the five failures were obsolete addition anatomy placement/header-height/trace-fixture assertions, subsequently corrected without weakening assessment or reward checks. Final fresh production browser regression passed **150/150 in 2.8m with three workers**, with no skipped tests. No application source changed after this run. Desktop/light and mobile/dark actual screenshots were inspected; final mobile source overflow measured 0px. Logs/screenshots are under ignored `build/addition-*`.
+
+Preview: http://localhost:3034/?mission=addition. Await user review before applying this layout to any other lesson. No mission status changed; next curriculum mission remains **data-table-expressions**.
+
 ## Latest presentation checkpoint - shared lesson headers (2026-11-07)
 
 All 25 lessons now use one data-driven LessonHeader. Lesson content, routes, progress/XP, drafts and assessment behavior remain intact. First-visit objectives, accessible toggling, module icon defaults, status/stat tiles and linked recommended-first lessons are implemented. Missing-field audit: no displayed subtitle/objective gaps; Orientation uses existing fallback strings; all 25 lack explicit icons and use module defaults. See [the header contract/audit](docs/academy-development/LESSON_HEADERS.md) and [verification ledger](docs/academy-development/IMPLEMENTATION_PROGRESS.md).

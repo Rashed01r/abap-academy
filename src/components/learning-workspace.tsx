@@ -44,6 +44,7 @@ export function LearningWorkspace({
   storageKey,
   checkAnswer,
   hintText,
+  onCodeChange,
 }: {
   initialCode: string;
   lang: Locale;
@@ -56,6 +57,8 @@ export function LearningWorkspace({
   storageKey?: string;
   checkAnswer?: (code: string, events: ExecutionEvent[]) => boolean;
   hintText?: string;
+  /** Reports the editor's current source, including the restored draft and resets. */
+  onCodeChange?: (code: string) => void;
 }) {
   const [saved] = useState(() => storageKey ? workspaceSessions.get(storageKey) : undefined);
   const [draftStorage, setDraftStorage] = useState(true);
@@ -83,6 +86,7 @@ export function LearningWorkspace({
     workspaceSessions.set(storageKey, {code, events, index, error, feedback, failure, hint, field, speed});
     try { localStorage.setItem(storageKey, code); } catch { queueMicrotask(() => setDraftStorage(false)); }
   }, [storageKey, code, events, index, error, feedback, failure, hint, field, speed]);
+  useEffect(() => { onCodeChange?.(code); }, [code, onCodeChange]);
   useEffect(() => {
     if (!playing) return;
     const timer = setTimeout(() => {

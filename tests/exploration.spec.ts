@@ -16,10 +16,7 @@ for (const lang of enabledLocales)
             await expect(page.locator('.tree-paths>button')).toHaveCount(paths.length);
             await expect(page.locator('.header-xp')).toContainText('0');
             await openLesson(page, m.id, lang);
-            const objectives = page.getByRole('button', { name: c.objectives, exact: true });
-            await expect(objectives).toHaveAttribute('aria-expanded', 'true');
-            await objectives.click();
-            await expect(objectives).toHaveAttribute('aria-expanded', 'false');
+            await expect(page.getByRole('heading', { name: 'What you’ll learn' })).toBeVisible();
             await expect(page.locator('.lesson-header-prerequisite')).toContainText(t.recommendedFirst);
             await tab(page, lang, 'challenge');
             const state = () => page.evaluate(() => JSON.parse(localStorage.getItem('abap2-master-progress')!));

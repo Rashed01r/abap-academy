@@ -11,13 +11,14 @@ const DictionaryDesigner = dynamic(() => import("./dictionary-designer").then(m 
 const SqlFoundationLab = dynamic(() => import("./sql-foundation-lab").then(m => m.SqlFoundationLab));
 const ObjectExplorer = dynamic(() => import("./object-explorer").then(m => m.ObjectExplorer));
 
-export function GuidedExplorer({definition: d, lang}: {definition: GuidedDefinition; lang: Locale}) {
+/** sqlLab=false when the lesson's picture (VisualClassroom) already shows the SQL lab on the same tab. */
+export function GuidedExplorer({definition: d, lang, sqlLab = true}: {definition: GuidedDefinition; lang: Locale; sqlLab?: boolean}) {
   const [selected, setSelected] = useTopicSession(`${d.id}:artifact`, d.artifacts[0].id);
   const artifact = d.artifacts.find(a => a.id === selected) || d.artifacts[0];
   const related = d.relations.filter(r => r.from === artifact.id || r.to === artifact.id);
   return <div className="guided-explorer">
     {d.id === "dictionary-introduction" && <DictionaryDesigner lang={lang}/>}
-    {d.id === "database-fundamentals" && <SqlFoundationLab lang={lang}/>}
+    {d.id === "database-fundamentals" && sqlLab && <SqlFoundationLab lang={lang}/>}
     {d.id === "oop-introduction" && <ObjectExplorer lang={lang}/>}
     <section className="learn-card artifact-explorer" aria-label={localizedText(d.activityTitle, lang)}>
       <h2>{localizedText(d.activityTitle, lang)}</h2>

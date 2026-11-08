@@ -16,8 +16,12 @@ export async function openLesson(page: Page, id: string, lang: Locale = "en") {
         await expand.click();
     await tab(page, lang, 'learn');
 }
+/** Lesson pictures (VisualClassroom and alternatives) live on Explore code, below the editor. */
+export async function openPictures(page: Page, id: string) {
+    if (id !== "addition") await tab(page, "en", "visualize");
+}
 export async function tab(page: Page, lang: Locale, name: 'learn' | 'visualize' | 'challenge') {
-    await page.getByRole('tab', { name: treeCopy[lang][name], exact: true }).click();
+    await page.locator(`[role=tab][id$="-${name}-tab"]`).click();
 }
 export async function edit(page: Page, source: string) {
     const editor = page.getByRole('textbox').first();
@@ -32,6 +36,8 @@ export async function selectChallenge(page: Page, m: Mission, index: number, lan
         await page.getByRole('group', { name: treeCopy[lang].challenge, exact: true }).getByRole('button').nth(index).click();
 }
 export async function answerQuiz(page: Page, answer: number) {
+    // English challenges no longer have a quick check; completion needs only the challenge.
+    if (!(await page.getByRole("tabpanel").locator(".quiz").count())) return;
     await page.getByRole('tabpanel').locator('.quiz .answer-options button').nth(answer).click();
 }
 export function completion(page: Page, lang: Locale) { return page.getByRole('button', { name: ui[lang].complete, exact: true }); }

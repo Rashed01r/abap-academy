@@ -1,3 +1,4 @@
+import { runnerTo } from "./anatomy-helpers";
 import { enabledLocales } from "../src/lib/language-policy";
 import { localizedText } from "../src/lib/language-policy";
 import { test, expect } from "@playwright/test";
@@ -19,10 +20,17 @@ for (const lang of enabledLocales) for (const [index, d] of guidedDefinitions.en
     const expand = page.getByRole("button", {name: treeCopy[lang].expandWorkspace, exact: true});
     if ((page.viewportSize()?.width || 0) >= 768) await expand.click();
     await expect(page.locator(".guided-boundary")).toContainText(localizedText(d.boundary, lang));
-    await expect(page.locator(".anatomy-group")).toHaveCount(d.groups.length);
-    await page.locator(".anatomy-group").last().focus(); await page.keyboard.press("Enter");
-    await expect(page.locator(".anatomy-explanation h3")).toHaveText(localizedText(d.groups.at(-1)!.title, lang));
-    await expect(page.getByRole("button", {name: ui[lang].watchAnatomy, exact: true})).toHaveCount(0);
+    if (lang === "en") {
+      // Reference code is explained part by part, with no simulated memory or screen.
+      const run = await runnerTo(page, localizedText(d.groups.at(-1)!.title, lang));
+      await expect(run.locator(".add-progress")).toContainText(`Part ${d.groups.length} of ${d.groups.length}`);
+      await expect(run.locator(".beg-memory")).toHaveCount(0);
+    } else {
+      await expect(page.locator(".anatomy-group")).toHaveCount(d.groups.length);
+      await page.locator(".anatomy-group").last().focus(); await page.keyboard.press("Enter");
+      await expect(page.locator(".anatomy-explanation h3")).toHaveText(localizedText(d.groups.at(-1)!.title, lang));
+      await expect(page.getByRole("button", {name: ui[lang].watchAnatomy, exact: true})).toHaveCount(0);
+    }
     let saved = await page.evaluate(() => JSON.parse(localStorage.getItem("abap2-master-progress")!));
     expect(saved.missions).toEqual(["structures"]); expect(saved.started).not.toContain(d.id);
     await tab(page, lang, "visualize");
@@ -43,8 +51,8 @@ for (const lang of enabledLocales) for (const [index, d] of guidedDefinitions.en
     await expect(complete).toBeDisabled();
     for (const decision of d.decisions) await assessment.locator(`[data-decision="${decision.id}"] select`).selectOption(decision.correct);
     await check.click(); await expect(assessment.getByTestId("guided-result")).toHaveClass(/success-text/);
-    await expect(complete).toBeDisabled();
-    await page.getByRole("tabpanel").locator(".quiz .answer-options button").nth(d.answer).click();
+    // English challenges have no quick check: passing the challenge alone enables completion.
+    await expect(page.getByRole("tabpanel").locator(".quiz")).toHaveCount(0);
     await expect(complete).toBeEnabled(); await complete.click();
     await expect.poll(async () => page.evaluate(() => JSON.parse(localStorage.getItem("abap2-master-progress")!).missions.includes(new URLSearchParams(location.search).get("mission")))).toBe(true);
     await page.getByRole("button", {name: ui[lang].completed, exact: true}).click();

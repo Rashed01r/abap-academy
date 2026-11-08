@@ -9,6 +9,8 @@ import {matchAnatomy} from "./anatomy-helpers";
 
 for(const lang of enabledLocales) for(const theme of ["light","dark"] as const) {
   test(`${lang} ${theme}: six-part structure anatomy, matching and separate Monaco highlights`,async({page})=>{
+    // English lessons teach the code with the beginner runner (beginner-layout.spec); this lab remains for Arabic.
+    test.skip(lang === "en", "English lessons no longer show the code-anatomy lab");
     const t=ui[lang],m=missions.find(m=>m.id === "structures")!;
     const errors:string[]=[];page.on("pageerror",e=>errors.push(e.message));
     await page.addInitScript(({lang,theme})=>{localStorage.setItem("abap2-language",lang);localStorage.setItem("abap2-appearance",theme);},{lang,theme});
@@ -85,11 +87,14 @@ for(const lang of enabledLocales) for(const theme of ["light","dark"] as const) 
   });
 }
 for(const lang of enabledLocales) test(`${lang}: grouped matching works across every implemented lab`,async({page})=>{
+  test.skip(lang === "en", "No English lesson shows the code-anatomy lab any more");
   test.setTimeout(180000);
   const t=ui[lang];
   await page.addInitScript(lang=>{localStorage.setItem("abap2-language",lang);},lang);
   await page.goto("/");
   for(const id of ["orientation",...missions.map(m=>m.id)]) {
+    // English lessons teach with the beginner runner; only the orientation keeps its code-anatomy lab.
+    if (lang === "en" && id !== "orientation") continue;
     await openLesson(page,id,lang);
     const source=id === "orientation" ? localizedText(orientationExamples, lang) : missions.find(m=>m.id === id)!.example;
     await expect(page.locator(".syntax-lab .anatomy-group, .primary-code-anatomy .anatomy-group")).toHaveCount(getAnatomy(id,source).groups.length);
@@ -103,6 +108,7 @@ for(const lang of enabledLocales) test(`${lang}: grouped matching works across e
   expect((await page.evaluate(()=>JSON.parse(localStorage.getItem("abap2-master-progress")!))).missions).toEqual([]);
 });
 test("optional keyword path and legacy lab completion remain usable",async({page})=>{
+  test.skip(true, "Syntax Orientation now uses the beginner layout, without the keyword lab");
   await page.goto("/");await openLesson(page,"orientation","en");
   await page.locator('.anatomy-group[data-group="comment"]').click();
   await page.getByRole("button",{name:ui.en.exploreSyntax,exact:true}).click();

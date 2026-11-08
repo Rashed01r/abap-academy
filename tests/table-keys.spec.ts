@@ -4,7 +4,7 @@ import {openLesson,tab} from "./academy-helpers";
 import { test, expect } from "@playwright/test";
 import { missions } from "../src/lib/curriculum";
 import { ui } from "../src/lib/i18n";
-import { matchAnatomy } from "./anatomy-helpers";
+import { matchAnatomy, finishLearn, runnerTo } from "./anatomy-helpers";
 
 for (const lang of enabledLocales) for (const theme of ["light", "dark"] as const) {
   test(`${lang}/${theme}: key policy, meaningful assessments, persistence and accessible exploration`, async ({ page }) => {
@@ -24,11 +24,15 @@ for (const lang of enabledLocales) for (const theme of ["light", "dark"] as cons
     await expect(page.locator(".lesson-summary h1")).toHaveText(localizedText(m.title, lang));
     expect(await page.evaluate(() => JSON.parse(localStorage.getItem("abap2-master-progress")!).missions)).toEqual(["structures"]);
     await matchAnatomy(page, m.id, lang);
-    await expect(page.locator('.anatomy-group[data-group="output"]')).toBeVisible();
-    await page.locator('.anatomy-group[data-group="duplicate"]').click();
-    await expect(page.locator(".anatomy-explanation")).toContainText("Noura");
-    await page.getByRole("button", {name:t.syntaxDone,exact:true}).click();
-    await tab(page,lang,"visualize");
+    if (lang === "en") await expect((await runnerTo(page, "Keep a Duplicate Identity")).locator(".add-say")).toContainText("Noura");
+    else {
+      await expect(page.locator('.anatomy-group[data-group="output"]')).toBeVisible();
+      await page.locator('.anatomy-group[data-group="duplicate"]').click();
+      await expect(page.locator(".anatomy-explanation")).toContainText("Noura");
+    }
+    await finishLearn(page, lang);
+    // The practice diagram now lives only on Challenge (with its graded questions); Explore code is experiments + editor.
+    await tab(page,lang,"challenge");
     const explorer = page.getByRole("tabpanel").locator(".key-explorer");
     const add = explorer.getByRole("button", {name:lang === "en" ? "Try next incoming row" : "جرّب الصف الوارد التالي",exact:true});
     const reset = explorer.getByRole("button", {name:lang === "en" ? "Restart incoming rows" : "أعد تسلسل الصفوف الواردة",exact:true});
@@ -70,7 +74,6 @@ for (const lang of enabledLocales) for (const theme of ["light", "dark"] as cons
     await page.getByRole("button", {name:t.check,exact:true}).click();
     await expect(page.locator(".feedback.success").filter({visible:true})).toBeVisible();
     await tab(page,lang,"challenge");
-    await page.getByRole("tabpanel").locator(".quiz .answer-options button").nth(m.answer).click();
     await expect(page.getByRole("button", {name:t.complete,exact:true})).toBeDisabled();
     await tab(page,lang,"challenge");
     await department.check(); await id.check(); await name.uncheck(); await unique.check();
@@ -93,7 +96,7 @@ for (const lang of enabledLocales) for (const theme of ["light", "dark"] as cons
     const progress = await page.evaluate(() => JSON.parse(localStorage.getItem("abap2-master-progress")!));
     expect(progress.version).toBe(2);
     expect(progress.missions).toEqual(["structures", m.id]);
-    expect(progress.labs).toEqual(["addition", m.id]);
+    expect(progress.labs).toEqual(lang === "en" ? ["addition"] : ["addition", m.id]);
     expect(progress.results.while).toEqual({attempts:3,passed:false});
     expect(progress.passedChallenges).toEqual(expect.arrayContaining(["data-key-design", "data-key-matches"]));
     // A new tab has no page-scoped initialization hook and uses genuine returning-learner storage.
@@ -102,7 +105,6 @@ for (const lang of enabledLocales) for (const theme of ["light", "dark"] as cons
       await expect(returning.locator(".header-xp")).toContainText(String(priorXP + m.xp));
       await openLesson(returning,m.id,lang);
       await tab(returning,lang,"challenge");
-      await returning.getByRole("tabpanel").locator(".quiz .answer-options button").nth(m.answer).click();
       await returning.getByRole("button",{name:t.completed,exact:true}).click();
       await expect(returning.locator(".header-xp")).toContainText(String(priorXP + m.xp));
       expect(await returning.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();

@@ -5,7 +5,7 @@ import { missions, structureExample } from '../src/lib/curriculum';
 import { ui } from '../src/lib/i18n';
 import { treeCopy } from '../src/lib/tree-copy';
 import { openLesson, tab, answerQuiz, edit, gradeAll, completion } from './academy-helpers';
-import { matchAnatomy } from './anatomy-helpers';
+import { matchAnatomy, finishLearn } from './anatomy-helpers';
 for (const lang of enabledLocales)
     for (const theme of ['light', 'dark'] as const)
         test(`${lang} ${theme}: complete orientation, missions and persist rewards`, async ({ page }, info) => {
@@ -19,7 +19,7 @@ for (const lang of enabledLocales)
             await expect(page.getByRole('dialog')).toHaveCount(0);
             await openLesson(page, 'orientation', lang);
             await matchAnatomy(page, 'orientation', lang);
-            await page.getByRole('button', { name: t.finishOrientation, exact: true }).click();
+            await finishLearn(page, lang);
             await expect(page.locator('.header-xp')).toContainText('0');
             await tab(page, lang, 'challenge');
             await edit(page, 'WRITE 5.\nWRITE 8.');
@@ -30,8 +30,12 @@ for (const lang of enabledLocales)
             await expect(page.locator('.header-xp')).toContainText('25');
             for (const [i, m] of missions.slice(0, 2).entries()) {
                 await openLesson(page, m.id, lang);
-                await matchAnatomy(page, m.id, lang);
-                await page.getByRole('button', { name: t.syntaxDone, exact: true }).click();
+                // The English addition pilot has no code-anatomy lab; its sandbox is on Explore code.
+                if (m.id === 'addition' && lang === 'en') await page.getByRole('tab', { name: 'Explore code', exact: true }).click();
+                else {
+                    await matchAnatomy(page, m.id, lang);
+                    await finishLearn(page, lang);
+                }
                 await page.getByRole('button', { name: t.run, exact: true }).click();
                 const active = page.getByRole('tabpanel');
                 await expect(active.locator('.execution-pointer')).toHaveCount(1);
@@ -49,7 +53,8 @@ for (const lang of enabledLocales)
             }
             await expect(page.locator('.header-xp')).toContainText('275');
             const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('abap2-master-progress')!));
-            expect(saved.labs).toEqual(expect.arrayContaining(['orientation', 'addition', 'structures']));
+            // English lessons teach the code with the Learn runner, which has no optional lab tick.
+            expect(saved.labs).toEqual(expect.arrayContaining(lang === 'en' ? ['orientation'] : ['orientation', 'structures']));
             expect(saved.missions).toEqual(['addition', 'structures']);
             await page.reload();
             await expect(page.locator('.header-xp')).toContainText('275');

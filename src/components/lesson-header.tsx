@@ -35,8 +35,8 @@ const moduleIcons: Record<string, LucideIcon> = {
 export const lessonObjectivesSeenKey = (id: string) => `abap2-lesson-header:${id}:objectives-seen`;
 
 /** Presentation only; the caller owns lesson content, achievements and navigation. */
-export function LessonHeader({ lesson, lang, onNavigate }: {
-  lesson: LessonHeaderData; lang: Locale; onNavigate?: (id: string) => void;
+export function LessonHeader({ lesson, lang, onNavigate, objectivesAlwaysVisible = false }: {
+  lesson: LessonHeaderData; lang: Locale; onNavigate?: (id: string) => void; objectivesAlwaysVisible?: boolean;
 }) {
   const locale = resolveLocale(lang), t = ui[locale], copy = treeCopy[locale];
   const objectives = lesson.learningObjectives?.filter(value => value.trim()) || [];
@@ -47,10 +47,10 @@ export function LessonHeader({ lesson, lang, onNavigate }: {
     catch { return true; }
   });
   useEffect(() => {
-    if (!objectives.length) return;
+    if (!objectives.length || objectivesAlwaysVisible) return;
     try { localStorage.setItem(lessonObjectivesSeenKey(lesson.id), "seen"); }
     catch { /* Objective visibility remains usable without persistent storage. */ }
-  }, [lesson.id, objectives.length]);
+  }, [lesson.id, objectives.length, objectivesAlwaysVisible]);
 
   const Icon = lesson.icon || moduleIcons[lesson.moduleId || ""] || BookOpen;
   const completed = lesson.status === "completed";
@@ -95,10 +95,10 @@ export function LessonHeader({ lesson, lang, onNavigate }: {
     </dl>}
 
     {!!objectives.length && <div className="lesson-header-objectives">
-      <button type="button" className="lesson-objectives-toggle" aria-expanded={objectivesOpen} aria-controls={objectivesId} onClick={() => setObjectivesOpen(open => !open)}>
+      {objectivesAlwaysVisible ? <h2 className="lesson-objectives-toggle">What you’ll learn</h2> : <button type="button" className="lesson-objectives-toggle" aria-expanded={objectivesOpen} aria-controls={objectivesId} onClick={() => setObjectivesOpen(open => !open)}>
         <ChevronDown size={15} className="lesson-objectives-chevron" aria-hidden="true" />{copy.objectives}
-      </button>
-      <ul id={objectivesId} hidden={!objectivesOpen}>
+      </button>}
+      <ul id={objectivesId} hidden={!objectivesAlwaysVisible && !objectivesOpen}>
         {objectives.map((objective,index) => <li key={`${index}:${objective}`}>
           {completed ? <CheckCircle2 size={15} aria-hidden="true" /> : <Circle size={15} aria-hidden="true" />}
           <span><TechnicalText>{objective}</TechnicalText></span>

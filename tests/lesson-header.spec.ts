@@ -22,23 +22,22 @@ test("every lesson uses the shared header, real metadata and accessible objectiv
     await expect(header.locator('[data-stat="reward"] dd')).toHaveText(`${lesson?.xp ?? 25} XP`);
     await expect(header.locator('[data-stat="level"] dd')).toHaveText(ui.en[lesson?.difficulty || "beginner"]);
     await expect(header.locator('.lesson-level-dots [data-filled="true"]')).toHaveCount({beginner:1,intermediate:2,advanced:3}[lesson?.difficulty || "beginner"]);
-    const toggle=header.getByRole("button",{name:treeCopy.en.objectives,exact:true});
-    await expect(toggle).toHaveAttribute("aria-expanded","true");
+    // Every English lesson shows its objectives openly, as "What you'll learn" (no collapsible toggle).
     await expect(header.locator(".lesson-header-objectives li")).toHaveText(lesson?.objectives.map(o=>o.en) || [treeCopy.en.orientationObjective]);
-    await toggle.focus();await page.keyboard.press("Enter");
-    await expect(toggle).toHaveAttribute("aria-expanded","false");
-    await expect(header.locator(".lesson-header-objectives ul")).toBeHidden();
+    await expect(header.getByRole("heading",{name:"What you’ll learn"})).toBeVisible();
+    await expect(header.locator(".lesson-header-objectives ul")).toBeVisible();
+    await expect(header.getByRole("button",{name:treeCopy.en.objectives,exact:true})).toHaveCount(0);
     expect(await header.evaluate(el=>getComputedStyle(el).position)).toBe("static");
     expect(await header.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
-    if(info.project.name==="desktop") expect((await header.boundingBox())!.height).toBeLessThanOrEqual(270);
+    // Open objectives add one line each: Add two numbers (2 objectives) fits in 330px.
+    if(info.project.name==="desktop") expect((await header.boundingBox())!.height).toBeLessThanOrEqual(250+40*(lesson?.objectives.length ?? 1));
     await tab(page,"en","visualize");await expect(header).toHaveCount(1);
     await tab(page,"en","challenge");await expect(header).toHaveCount(1);
   }
   await openLesson(page,"structures");
-  await expect(page.getByRole("button",{name:treeCopy.en.objectives,exact:true})).toHaveAttribute("aria-expanded","false");
   await page.reload();
-  await expect(page.getByRole("button",{name:treeCopy.en.objectives,exact:true})).toHaveAttribute("aria-expanded","false");
+  await expect(page.locator(".lesson-header-objectives ul")).toBeVisible();
   const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem("abap2-master-progress")!));
   expect(saved.missions).toEqual([]);expect(saved.labs).toEqual([]);expect(saved.passedChallenges).toEqual([]);
   await page.screenshot({path:info.outputPath("shared-header.png"),animations:"disabled"});
@@ -74,8 +73,6 @@ test("header stays in flow, mirrors logical direction and respects reduced motio
   await page.goto("/?mission=structures");
   const header=page.locator(".lesson-header");
   await expect(header).toBeVisible();
-  const toggle=header.getByRole("button",{name:treeCopy.en.objectives,exact:true});
-  await expect(toggle.locator("svg")).toHaveCSS("transition-duration","0s");
   await page.locator(".connected-lesson").evaluate(el=>el.setAttribute("dir","rtl"));
   const icon=await header.locator(".lesson-header-icon").boundingBox();
   const title=await header.locator("h1").boundingBox();

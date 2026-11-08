@@ -9,6 +9,16 @@ import { useTopicSession } from "@/lib/use-topic-session";
 import { TechnicalText } from "./technical-text";
 import { Quiz } from "./syntax-lab";
 import { VisualCodeAnatomy } from "./visual-code-anatomy";
+import { lessonFlows } from "@/lib/lesson-flows";
+
+/** "The whole lesson in one line": the lesson's steps as code chips joined by arrows. */
+export function LessonFlow({id}: {id: string}) {
+  const steps = lessonFlows[id];
+  if (!steps) return null;
+  return <ol className="lesson-flow" aria-label={steps.map(s => s[1]).join(", then ")}>
+    {steps.map(([code, say, decision]) => <li key={code} data-decision={decision || undefined}><code dir="ltr">{code}</code><span>{say}</span></li>)}
+  </ol>;
+}
 
 export function LessonConcepts({id, lang,onConceptSelect}: {id: string; lang: Locale;onConceptSelect?:(ref:string)=>void}) {
   const spec = educationContent[id];
@@ -40,6 +50,7 @@ export function LessonConcepts({id, lang,onConceptSelect}: {id: string; lang: Lo
   const answer = spec.concepts.indexOf(concept) % 2;
   const options = answer ? [concept.misconception, concept.explanation] : [concept.explanation, concept.misconception];
   return <section className="lesson-concepts" aria-label={labels.concepts}>
+    {lang === "en" && lessonFlows[id] && <><span className="eyebrow">Remember</span><h2>The whole lesson in one line</h2><LessonFlow id={id}/></>}
     <h2>{labels.concepts}</h2>
     <div className="concept-choices" role="group" aria-label={labels.concepts}>
       {spec.concepts.map(c => <button className="secondary" key={c.id} aria-label={localizedText(c.name, lang)} aria-pressed={c.id === concept.id} aria-controls={`${id}-concept-detail`} onClick={() => {setSelected(c.id);onConceptSelect?.(c.learn[0]);}}><TechnicalText>{localizedText(c.name, lang)}</TechnicalText></button>)}

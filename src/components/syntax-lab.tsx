@@ -68,6 +68,7 @@ export function SyntaxLab({
   theme = "light",
   selectedGroup,
   onGroupSelect,
+  walkthrough = false,
 }: {
   id: string;
   tokens: SyntaxToken[];
@@ -78,6 +79,7 @@ export function SyntaxLab({
   theme?: "light" | "dark";
   selectedGroup?: string;
   onGroupSelect?: (id: string) => void;
+  walkthrough?: boolean;
 }) {
   const [selected, setSelected] = useState(0),
     [understood, setUnderstood] = useState<string[]>([]),
@@ -124,7 +126,7 @@ export function SyntaxLab({
           {completed ? t.completed : t.selectGroup}
         </span>
       </div>
-      <VisualCodeAnatomy doc={getAnatomy(id,example)} lang={lang} theme={theme} selectedGroup={selectedGroup} onGroupSelect={onGroupSelect} onMatched={()=>setMatched(true)} references={missions.find(m=>m.id === id)?.references} onExplore={refs=>{
+      <VisualCodeAnatomy walkthrough={walkthrough} doc={getAnatomy(id,example)} lang={lang} theme={theme} selectedGroup={selectedGroup} onGroupSelect={onGroupSelect} onMatched={()=>setMatched(true)} references={missions.find(m=>m.id === id)?.references} onExplore={refs=>{
         const found=tokens.findIndex(token=>refs.includes(token.id));
         if(found>=0) setSelected(found);
         setDetailsOpen(true);

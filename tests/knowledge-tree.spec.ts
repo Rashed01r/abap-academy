@@ -82,31 +82,23 @@ test("viewport workspace anchors header search while graph moves in enabled lang
   }
 });
 
-test("topic return restores active tab, anatomy selection and execution step", async ({page}) => {
+// The English Learn tab no longer has a selectable code anatomy, so only the tab and execution step are restored.
+test("topic return restores active tab and execution step", async ({page}) => {
   await page.goto('/?mission=structures');
-  await page.locator('.anatomy-group').last().click();
-  const group = await page.locator('.anatomy-group[aria-pressed=true]').getAttribute('data-group');
-  await page.getByRole('tab', {name:'Visualize', exact:true}).click();
+  await page.getByRole('tab', {name:'Explore code', exact:true}).click();
   await page.getByRole('button', {name:ui.en.run, exact:true}).click();
   await page.locator('.execution-controls').getByRole('button', {name:ui.en.next, exact:true}).click();
   const statement = await page.locator('.active-statement').textContent();
   await page.getByPlaceholder(treeCopy.en.search).fill('Syntax Orientation');
   await page.locator('.tree-search-results button').first().click();
   await page.goBack();
-  await expect(page.getByRole('tab', {name:'Visualize', exact:true})).toHaveAttribute('aria-selected','true');
+  await expect(page.getByRole('tab', {name:'Explore code', exact:true})).toHaveAttribute('aria-selected','true');
   await expect(page.locator('.active-statement')).toHaveText(statement!);
-  await page.getByRole('tab', {name:'Learn', exact:true}).click();
-  await expect(page.locator('.anatomy-group[aria-pressed=true]')).toHaveAttribute('data-group',group!);
   await page.getByRole('tab', {name:'Challenge', exact:true}).click();
-  const m = missions.find(m => m.id === 'structures')!;
-  const wrong = m.options.find((_, index) => index !== m.answer)!.en;
-  await page.getByRole('button', {name:wrong, exact:true}).click();
   await page.getByPlaceholder(treeCopy.en.search).fill('Syntax Orientation');
   await page.locator('.tree-search-results button').first().click();
   await page.goBack();
   await expect(page.getByRole('tab', {name:'Challenge', exact:true})).toHaveAttribute('aria-selected','true');
-  await expect(page.getByRole('button', {name:wrong, exact:true})).toHaveAttribute('aria-pressed','true');
-  await expect(page.locator('.quiz .error-text')).toBeVisible();
 });
 
 test("guided assessment restores partial predictions and feedback after topic return", async ({page}) => {
@@ -183,7 +175,6 @@ test("tree completion retains legacy rewards, requires assessment and avoids dup
   const before = earnedXP(await readProgress());
   expect(before).toBe(175);
   await page.getByRole('tab', {name:'Challenge', exact:true}).click();
-  await page.getByRole('button', {name:m.options[m.answer].en, exact:true}).click();
   await expect(page.getByRole('button', {name:ui.en.complete, exact:true})).toBeDisabled();
   await edit(page, "WRITE 30.");
   await page.getByRole('button', {name:ui.en.check, exact:true}).click();
@@ -211,8 +202,10 @@ for (const lang of enabledLocales) test(`${lang}: orientation tabs, simulation, 
   await expect(page.getByRole('tab', {name:c.visualize, exact:true})).toHaveAttribute('aria-selected', 'true');
   await page.keyboard.press('Home');
   await expect(page.getByRole('tab', {name:c.learn, exact:true})).toBeFocused();
-  await page.locator('.anatomy-group').last().click();
-  const selectedGroup = await page.locator('.anatomy-group[aria-pressed=true]').getAttribute('data-group');
+  // Learn's runner keeps its position while the learner visits the other tabs.
+  const runner = page.locator('[data-lesson-runner]');
+  await runner.getByRole('button', {name:'Run next line', exact:true}).click();
+  await expect(runner.locator('.add-progress')).toContainText('Line 1 of 1');
   await page.getByRole("tab", {name:c.visualize, exact:true}).click();
   await page.getByRole("button", {name:t.run, exact:true}).click();
   await expect(page.locator('.active-statement')).toBeVisible();
@@ -221,10 +214,9 @@ for (const lang of enabledLocales) test(`${lang}: orientation tabs, simulation, 
   await page.getByRole("button", {name:t.check, exact:true}).click();
   await expect(page.locator('.feedback.success')).toBeVisible();
   await page.getByRole("tab", {name:c.learn, exact:true}).click();
-  await expect(page.locator('.anatomy-group[aria-pressed=true]')).toHaveAttribute('data-group', selectedGroup!);
+  await expect(runner.locator('.add-progress')).toContainText('Line 1 of 1');
   await page.getByRole("tab", {name:c.challenge, exact:true}).click();
   await expect(page.locator('.feedback.success')).toBeVisible();
-  await page.getByRole("button", {name:c.orientationAnswer, exact:true}).click();
   await page.getByRole("button", {name:t.complete, exact:true}).click();
   await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('abap2-master-progress')!).labs)).toContain("orientation");
   await page.getByLabel(t.appearance, {exact:true}).selectOption('dark');
@@ -247,7 +239,7 @@ for (const id of ["structures", "conditions", "do", "data-table-model", "data-ke
   await page.goto(`/?mission=${id}`);
   await expect(page.locator('.lesson-summary h1')).toHaveText(m!.title.en);
   if (info.project.name === 'desktop') await geometry(page);
-  await page.getByRole("tab", {name:'Visualize', exact:true}).click();
+  await page.getByRole("tab", {name:'Explore code', exact:true}).click();
   await page.getByRole("button", {name:ui.en.run, exact:true}).click();
   await expect(page.locator('.active-statement')).toBeVisible();
   if (id === 'structures') {

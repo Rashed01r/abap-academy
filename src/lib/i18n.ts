@@ -24,7 +24,7 @@ export const ui = {
     allTopics: "Explore All Topics", noLessons: "No available lessons match these filters.", comingSoon: "Coming Soon",
     learnSyntax: "Learn Syntax", startChallenge: "Start Challenge", reviewExample: "Review Example",
     optionalLab: "Syntax Labs are recommended preparation. You can explore any stage without completing them.",
-    assessmentRequired: "Pass every challenge and the knowledge check to complete this mission. Syntax Lab completion is optional.",
+    assessmentRequired: "Pass every challenge to complete this mission.",
     explorationNote: "Explore in any order. Recommendations guide your learning; assessments earn completion and XP.",
     allAvailableDone: "All Available Missions Completed",
     path: "Learning roadmap",

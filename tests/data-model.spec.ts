@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 import { missions } from '../src/lib/curriculum';
 import { ui } from '../src/lib/i18n';
 import { openLesson, edit, gradeAll, answerQuiz, completion } from './academy-helpers';
-import { matchAnatomy } from './anatomy-helpers';
+import { matchAnatomy, finishLearn } from './anatomy-helpers';
 for (const lang of enabledLocales)
     test(`${lang}: returning learner completes the data table model and retains results`, async ({ page }) => {
         const t = ui[lang], errors: string[] = [];
@@ -21,7 +21,7 @@ for (const lang of enabledLocales)
         const m = missions.find(m => m.id === 'data-table-model')!;
         await openLesson(page, m.id, lang);
         await matchAnatomy(page, m.id, lang);
-        await page.getByRole('button', { name: t.syntaxDone, exact: true }).click();
+        await finishLearn(page, lang);
         await edit(page, m.example);
         await page.getByRole('button', { name: t.run, exact: true }).click();
         const controls = page.getByRole('tabpanel').locator('.execution-controls');
@@ -32,7 +32,8 @@ for (const lang of enabledLocales)
         await expect(page.getByRole('tabpanel').locator('.active-statement')).toBeVisible();
         await expect(page.getByRole('tabpanel').locator('.editor-shell')).toHaveAttribute('dir', 'ltr');
         await gradeAll(page, m, lang, "WRITE 'Keyboard'. WRITE 'Keyboard'.");
-        await expect(completion(page, lang)).toBeDisabled();
+        // English challenges have no quick check: passing the challenge alone enables completion.
+        await expect(completion(page, lang)).toBeEnabled();
         await answerQuiz(page, m.answer);
         await completion(page, lang).click();
         const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('abap2-master-progress')!));

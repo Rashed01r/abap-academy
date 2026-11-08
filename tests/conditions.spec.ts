@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 import { missions } from "../src/lib/curriculum";
 import { ui } from "../src/lib/i18n";
 import { openLesson, answerQuiz, edit, selectChallenge, completion } from "./academy-helpers";
-import { matchAnatomy } from "./anatomy-helpers";
+import { matchAnatomy, finishLearn } from "./anatomy-helpers";
 for (const lang of enabledLocales)
     for (const theme of ["light", "dark"] as const)
         test(`${lang} ${theme}: existing foundation migrates into all three Conditions challenges`, async ({ page }, info) => {
@@ -15,9 +15,9 @@ for (const lang of enabledLocales)
             await page.goto('/');
             await expect(page.locator('.header-xp')).toContainText('275');
             await openLesson(page, m.id, lang);
-            await expect(page.getByRole('button', { name: t.syntaxDone, exact: true })).toBeDisabled();
+            if (lang !== "en") await expect(page.getByRole('button', { name: t.syntaxDone, exact: true })).toBeDisabled();
             await matchAnatomy(page, m.id, lang);
-            await page.getByRole('button', { name: t.syntaxDone, exact: true }).click();
+            await finishLearn(page, lang);
             await page.getByRole('button', { name: t.run, exact: true }).click();
             const controls = page.getByRole('tabpanel').locator('.execution-controls');
             await controls.getByRole('button', { name: t.next, exact: true }).click();
@@ -48,7 +48,8 @@ for (const lang of enabledLocales)
                     await page.screenshot({ path: info.outputPath('conditions.png') });
                 }
             }
-            await expect(completion(page, lang)).toBeDisabled();
+            // English challenges have no quick check: passing the challenge alone enables completion.
+            await expect(completion(page, lang)).toBeEnabled();
             await answerQuiz(page, m.answer);
             await completion(page, lang).click();
             await expect(page.locator('.header-xp')).toContainText('475');

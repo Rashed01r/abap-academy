@@ -90,5 +90,6 @@ export function useResizablePanel(viewport: RefObject<HTMLDivElement | null>, re
     const next = clamp({width:size.width+x,height:size.height+y},bounds);
     setCustom(next);persist(next);
   }
-  return {size,bounds,collapsed,collapse,reset,resizing,storageAvailable,start,move,finish,keyboard};
+  const initial = clamp(defaultSize,bounds), isDefault = size.width === initial.width && size.height === initial.height;
+  return {size,bounds,collapsed,collapse,reset,isDefault,resizing,storageAvailable,start,move,finish,keyboard};
 }

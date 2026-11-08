@@ -13,8 +13,8 @@ import { LookupSummary } from "./lookup-summary";
 import { TableChangeSummary } from "./table-change-summary";
 import { useTopicSession } from "@/lib/use-topic-session";
 
-export function VisualCodeAnatomy({doc,lang,theme,onExplore,onMatched,references=[],selectedGroup,onGroupSelect}: {
-  doc:CodeAnatomy;lang:Locale;theme:"light"|"dark";onExplore?:(refs:string[])=>void;onMatched:()=>void;references?:string[];selectedGroup?:string;onGroupSelect?:(id:string)=>void;
+export function VisualCodeAnatomy({doc,lang,theme,onExplore,onMatched,references=[],selectedGroup,onGroupSelect,walkthrough=false}: {
+  doc:CodeAnatomy;lang:Locale;theme:"light"|"dark";onExplore?:(refs:string[])=>void;onMatched:()=>void;references?:string[];selectedGroup?:string;onGroupSelect?:(id:string)=>void;walkthrough?:boolean;
 }) {
   const [selectedId,setSelectedId]=useTopicSession(`${doc.id}:anatomy-group`,doc.groups[0].id);
   const [field,setField]=useTopicSession<string | undefined>(`${doc.id}:anatomy-field`,undefined);
@@ -36,6 +36,11 @@ export function VisualCodeAnatomy({doc,lang,theme,onExplore,onMatched,references
   const prompt=doc.groups.find(g=>g.id === doc.checks[question])!;
   function select(id:string) {setSelectedId(id);onGroupSelect?.(id);setField(undefined);setFeedback(undefined);}
   return <div className="visual-code-anatomy">
+    {walkthrough && <div className="explore-actions" role="group" aria-label="Walkthrough sections">
+      <button className="secondary" disabled={doc.groups.indexOf(group) === 0} onClick={()=>select(doc.groups[doc.groups.indexOf(group)-1].id)}>Previous</button>
+      <output aria-live="polite">Section {doc.groups.indexOf(group)+1} of {doc.groups.length}</output>
+      <button className="secondary" disabled={doc.groups.indexOf(group) === doc.groups.length-1} onClick={()=>select(doc.groups[doc.groups.indexOf(group)+1].id)}>Next</button>
+    </div>}
     <div className="anatomy-layout">
       <div className="anatomy-code" dir="ltr" aria-label={t.anatomy}>
         {doc.groups.map((item,index)=>{
@@ -61,6 +66,7 @@ export function VisualCodeAnatomy({doc,lang,theme,onExplore,onMatched,references
             {snapshot.condition && <p className="anatomy-condition" dir="ltr">{snapshot.condition.expression} → {String(snapshot.condition.result)}</p>}
             {snapshot.loop && <p>{t.iteration}: <b>{snapshot.loop.iteration}</b></p>}
             <div className="anatomy-memory">{Object.entries(snapshot.memory).map(([name,value])=><div key={name} className="anatomy-memory-card"><code dir="ltr">{name}</code>{doc.id === "structures" && name === "ls_employee" && <h4>{t.employeeRecord}</h4>}{Array.isArray(value) ? <pre dir="ltr">{JSON.stringify(value,null,2)}</pre> : typeof value === "object" ? <dl>{Object.entries(value).map(([key,v])=><div key={key} className={changes.has(`${name}-${key}`) ? "anatomy-field-active" : ""}><dt><code>{key}</code></dt><dd><bdi dir="ltr">{v === "" ? '""' : String(v)}</bdi></dd></div>)}</dl> : <strong dir="ltr">{value === "" ? '""' : String(value)}</strong>}</div>)}</div>
+            {walkthrough && !snapshot.output.length && <div className="anatomy-output"><h4>{t.output}</h4><p>Nothing displayed yet.</p></div>}
             {!!snapshot.output.length && <div className={`anatomy-output ${visits.some(e=>e.operation === "write") ? "anatomy-field-active" : ""}`}><h4>{t.output}</h4><pre dir="ltr">{snapshot.output.join("\n")}</pre></div>}
             <FieldSymbolMemory event={snapshot} previous={events[snapshot.id - 1]} lang={lang} />
             <LookupSummary event={snapshot} previous={events[snapshot.id - 1]} lang={lang} showTable />
@@ -86,8 +92,8 @@ export function VisualCodeAnatomy({doc,lang,theme,onExplore,onMatched,references
       {feedback && <p role="status" className={feedback === "right" ? "success-text" : "error-text"}>{feedback === "right" ? t.matchRight : t.matchWrong}</p>}
       {matched.length === doc.checks.length && <p className="success-text">{t.matchReady}</p>}
     </section>
-    {!doc.referenceOnly && <div className="anatomy-execution-toggle"><button className="secondary" aria-expanded={showTrace} onClick={()=>setShowTrace(!showTrace)}>{showTrace ? t.hideAnatomy : t.watchAnatomy}</button></div>}
-    {!doc.referenceOnly && showTrace && <div className="anatomy-trace"><p>{t.selectionHelp}</p><LearningWorkspace initialCode={doc.source} lang={lang} theme={theme} teachingRange={learningRange} teachingSource={doc.source} onSourceLine={line=>{const selected=groupAtLine(doc,line);if(selected) select(selected.id);}}/></div>}
+    {!doc.referenceOnly && !walkthrough && <div className="anatomy-execution-toggle"><button className="secondary" aria-expanded={showTrace} onClick={()=>setShowTrace(!showTrace)}>{showTrace ? t.hideAnatomy : t.watchAnatomy}</button></div>}
+    {!doc.referenceOnly && !walkthrough && showTrace && <div className="anatomy-trace"><p>{t.selectionHelp}</p><LearningWorkspace initialCode={doc.source} lang={lang} theme={theme} teachingRange={learningRange} teachingSource={doc.source} onSourceLine={line=>{const selected=groupAtLine(doc,line);if(selected) select(selected.id);}}/></div>}
     {!!references.length && <details className="anatomy-references"><summary>{t.referenceLinks}</summary><ul>{references.map((url,i)=><li key={url}><a href={url} target="_blank" rel="noreferrer">SAP · {i+1}</a></li>)}</ul></details>}
   </div>;
 }

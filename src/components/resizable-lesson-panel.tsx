@@ -37,7 +37,8 @@ export function ResizableLessonPanel({children,title,lang,focused,onFocus,viewpo
       <strong title={title}>{title}</strong>
       <div className="panel-actions" role="group" aria-label={c.panelActions}>
         <button type="button" title={focused?c.restoreSize:c.expandWorkspace} aria-label={focused?c.restoreSize:c.expandWorkspace} onClick={() => {if(layout.collapsed)layout.collapse(false);onFocus();}}>{focused?<Minimize2 size={16}/>:<Maximize2 size={16}/>}</button>
-        <button type="button" title={c.resetSize} aria-label={c.resetSize} onClick={() => {onResizeStart();layout.reset();reframe();}}><RotateCcw size={16}/></button>
+        {/* Disabled at the default size, where a reset would change nothing. */}
+        <button type="button" title={c.resetSize} aria-label={c.resetSize} disabled={layout.isDefault} onClick={() => {onResizeStart();layout.reset();reframe();}}><RotateCcw size={16}/></button>
         <button type="button" data-panel-collapse title={layout.collapsed?c.reopenPanel:c.collapsePanel} aria-label={layout.collapsed?c.reopenPanel:c.collapsePanel} aria-expanded={!layout.collapsed} onClick={toggleCollapse}>{layout.collapsed?<PanelTopOpen size={16}/>:<Minus size={16}/>}</button>
       </div>
     </div>

@@ -2,8 +2,7 @@ import { test, expect } from "@playwright/test";
 import { educationLessonIds } from "../src/lib/education-quality";
 import { conditionalLoopMission } from "../src/lib/conditional-loop-mission";
 import { openLesson, tab, gradeAll, answerQuiz, completion } from "./academy-helpers";
-import { matchAnatomy } from "./anatomy-helpers";
-import { ui } from "../src/lib/i18n";
+import { matchAnatomy, finishLearn } from "./anatomy-helpers";
 
 async function expectEnglish(page: import("@playwright/test").Page) {
   await expect(page.locator("html")).toHaveAttribute("lang","en");
@@ -46,20 +45,9 @@ for(const theme of ["light","dark"] as const)test(`legacy Arabic preference: all
 
 test("new English-only mission has a working assessment and once-only rewards",async({page})=>{
   await page.goto("/?mission=data-conditional-loop");
-  const flow=page.locator(".educational-flowchart");
-  await expect(flow).toHaveCount(1);
-  const overlaps=await flow.evaluate(el=>{
-    const nodes=Array.from(el.querySelectorAll<SVGGraphicsElement>(".flow-svg-node > rect,.flow-svg-node > polygon")).map(n=>n.getBBox());
-    return Array.from(el.querySelectorAll<SVGGraphicsElement>(".flow-edge-label > rect")).some(label=>{
-      const b=label.getBBox();
-      return nodes.some(n=>b.x<n.x+n.width && b.x+b.width>n.x && b.y<n.y+n.height && b.y+b.height>n.y);
-    });
-  });
-  expect(overlaps).toBe(false);
-  await flow.locator('[data-flow-node="body"]').click();
-  await expect(page.locator(".visual-classroom .trace-code-line.current")).toContainText("WRITE / ls_employee-name.");
+  // The lesson's flowchart picture is no longer shown in English; Learn's runner teaches the code.
   await matchAnatomy(page,"data-conditional-loop","en");
-  await page.getByRole("button",{name:ui.en.syntaxDone,exact:true}).click();
+  await finishLearn(page, "en");
   await gradeAll(page,conditionalLoopMission,"en","WRITE 14000.");
   await answerQuiz(page,conditionalLoopMission.answer);
   await completion(page,"en").click();

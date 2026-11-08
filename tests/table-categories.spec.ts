@@ -1,6 +1,6 @@
 import { enabledLocales } from "../src/lib/language-policy";
 import {openLesson,tab} from "./academy-helpers";
-import {matchAnatomy} from "./anatomy-helpers";
+import {matchAnatomy, finishLearn } from "./anatomy-helpers";
 import {test, expect} from "@playwright/test";
 import {missions} from "../src/lib/curriculum";
 import {ui} from "../src/lib/i18n";
@@ -12,13 +12,14 @@ for (const lang of enabledLocales) test(`${lang}: category comparison and both a
   await page.goto("/");
   await expect(page.locator(".tree-paths>button")).toHaveCount(9);
   await openLesson(page,m.id,lang);
-  await tab(page,lang,"visualize");
+  // The practice diagram now lives only on Challenge (with its graded questions); Explore code is experiments + editor.
+  await tab(page,lang,"challenge");
   const explorer=page.getByRole("tabpanel").locator(".category-explorer");
   for (let i=0;i<3;i++) await explorer.locator(".primary").click();
   await expect(page.getByTestId("category-rows")).toHaveText("30, 10, 30");
-  await explorer.getByRole("button",{name:"SORTED",exact:true}).click();
+  await explorer.getByRole("group",{name:"Compare table categories"}).getByRole("button",{name:"SORTED",exact:true}).click();
   await expect(page.getByTestId("category-rows")).toHaveText("10, 30, 30");
-  await explorer.getByRole("button",{name:"HASHED",exact:true}).click();
+  await explorer.getByRole("group",{name:"Compare table categories"}).getByRole("button",{name:"HASHED",exact:true}).click();
   await expect(page.getByTestId("category-rows")).toHaveText("30, 10");
   await expect(explorer.locator('[role="status"]')).toContainText(lang === "en" ? "duplicate key" : "يتكرر المفتاح");
   if(lang === "ar") await page.screenshot({path:test.info().outputPath("arabic-category-comparison.png"),fullPage:true});
@@ -29,7 +30,6 @@ for (const lang of enabledLocales) test(`${lang}: category comparison and both a
   await page.getByRole("button",{name:t.check,exact:true}).click();
   await expect(page.locator(".feedback.success").filter({visible:true})).toBeVisible();
   await tab(page,lang,"challenge");
-  await page.getByRole("tabpanel").locator(".quiz .answer-options button").nth(m.answer).click();
   await expect(page.getByRole("button",{name:t.complete,exact:true})).toBeDisabled();
   await tab(page,lang,"challenge");
   await page.locator(".category-question").first().getByRole("button",{name:"HASHED",exact:true}).click();
@@ -45,11 +45,11 @@ for (const lang of enabledLocales) test(`${lang}: category comparison and both a
   expect(progress.passedChallenges).toEqual(expect.arrayContaining([m.challenges![0].id,"data-category-choice"]));
   await tab(page,lang,"learn");
   await matchAnatomy(page,m.id,lang);
-  await page.getByRole("button",{name:t.syntaxDone,exact:true}).click();
+  await finishLearn(page, lang);
   await page.getByRole("button",{name:t.path,exact:true}).click();
   await expect(page.locator(".header-xp")).toContainText(String(m.xp));
   await page.reload();
   await expect(page.locator(".header-xp")).toContainText(String(m.xp));
-  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem("abap2-master-progress")!).labs)).toEqual([m.id]);
+  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem("abap2-master-progress")!).labs)).toEqual(lang === "en" ? [] : [m.id]);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
 });
