@@ -6,15 +6,19 @@
   passedChallenges?: string[];
   recent?: string[];
   missions: string[];
+  /** Transaction codes marked as learned on the roadmap (ids from tcodes.ts). */
+  tcodes?: string[];
   current: string;
   results: Record<string, { attempts: number; passed: boolean }>;
 };
 import { missions as registry, type Mission } from "./curriculum";
+import { tcodeIds, TCODE_XP } from "../features/roadmap/data/tcodes";
 const assessmentIds = (m: Mission) => [...(m.challenges || [m]).map(c => c.id), ...(m.requiredActivities || [])];
 export const initialProgress: Progress = {
   version: 2, viewed: [], started: [], passedChallenges: [], recent: [],
   labs: [],
   missions: [],
+  tcodes: [],
   current: "orientation",
   results: {},
 };
@@ -50,6 +54,7 @@ export function normalizeProgress(value: unknown): Progress {
     recent: known(p.recent).slice(0, 6),
     labs,
     missions,
+    tcodes: known(p.tcodes, tcodeIds),
     current: ids.includes(p.current || "") ? p.current! : "orientation",
     results,
   };
@@ -74,9 +79,15 @@ export function completeMission(p: Progress, id: string, knowledgeChecked: boole
   if (!knowledgeChecked || !allChallengesPassed(p, id)) return p;
   return { ...p, missions: Array.from(new Set([...p.missions, id])) };
 }
+/** Marks a transaction code as learned. Learning it again changes nothing. */
+export function learnTCode(p: Progress, id: string): Progress {
+  if (!tcodeIds.includes(id) || p.tcodes?.includes(id)) return p;
+  return { ...p, tcodes: [...(p.tcodes || []), id] };
+}
 export function earnedXP(p: Progress) {
   return (
     (p.labs.includes("orientation") ? 25 : 0) +
-    registry.reduce((xp, m) => xp + (p.missions.includes(m.id) ? m.xp : 0), 0)
+    registry.reduce((xp, m) => xp + (p.missions.includes(m.id) ? m.xp : 0), 0) +
+    (p.tcodes || []).filter(id => tcodeIds.includes(id)).length * TCODE_XP
   );
 }
