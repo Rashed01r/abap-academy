@@ -3,6 +3,7 @@ export type VisualFamily = "trace" | "flow" | "categories" | "row-access" | "rel
 export const visualPresentations: Record<string, VisualFamily> = {
   "data-conditional-loop": "flow",
   "data-table-expressions": "trace",
+  "database-abap-sql": "trace", "database-select": "trace", "database-where": "trace", "database-joins": "trace", "database-aggregates": "trace", "database-sql-mutations": "trace",
   "dictionary-domains": "relationships", "dictionary-data-elements": "relationships", "dictionary-structures": "relationships",
   "dictionary-database-tables": "relationships", "dictionary-foreign-keys": "relationships", "dictionary-search-helps": "relationships",
   "data-table-performance": "trace",

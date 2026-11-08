@@ -4,6 +4,12 @@
 export const educationSurfaces: Record<string, {visualize: string[]; knowledge: string[]}> = Object.fromEntries(([
   ["data-conditional-loop", "selection aggregate", "selection aggregate"],
   ["data-table-expressions", "expression-read not-found exists-index optional-default", "not-found exists-index"],
+  ["database-abap-sql", "sql-single sql-host sql-subrc", "sql-subrc"],
+  ["database-select", "select-table select-order", "select-table"],
+  ["database-where", "where-filter where-empty", "where-empty"],
+  ["database-joins", "join-inner join-left", "join-inner"],
+  ["database-aggregates", "agg-functions agg-group", "agg-group"],
+  ["database-sql-mutations", "change-insert change-where change-status", "change-where"],
   ["dictionary-domains", "domain-shape domain-reuse domain-fixed-limit", "domain-reuse"],
   ["dictionary-data-elements", "element-type-source element-labels element-in-abap", "element-type-source"],
   ["dictionary-structures", "structure-type structure-include", "structure-include"],

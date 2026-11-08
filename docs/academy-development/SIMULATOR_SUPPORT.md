@@ -14,6 +14,16 @@ Earlier WHERE-unsupported statements below are historical and superseded here.
 > **Current development language: English only (2026-11-07).** Arabic support is temporarily deferred, not removed. Preserve all existing Arabic resources and RTL support; do not create or review Arabic translations or run Arabic-specific UI checks while `ENABLE_ARABIC` is false. New playable content requires complete English teaching only. This policy supersedes bilingual authoring/review requirements in the historical sections below. See [the language-phase policy](LANGUAGE_PHASE.md).
 
 
+## 2026-11-08: ABAP SQL on a demo database
+
+Demo tables (also usable as structured types, e.g. DATA ls TYPE zaca_employee): ZACA_EMPLOYEE (key employee_id; employee_name, department, salary) and ZACA_DEPARTMENT (key department; department_name). Every run starts from the same demo data; graders can seed other contents through execute(nodes, source, { database }).
+
+Supported: `SELECT [SINGLE] FROM table [AS a] [INNER JOIN | LEFT OUTER JOIN table2 AS b ON a~c = b~c [AND …]] FIELDS * | col [AS name], … | COUNT(*)/SUM( c )/MIN( c )/MAX( c ) AS name [WHERE cond] [GROUP BY cols] [ORDER BY col [ASCENDING|DESCENDING], …] INTO [TABLE] @target | @DATA(name).` WHERE supports =, <>, <, >, <=, >=, BETWEEN … AND …, LIKE with % and _, AND/OR with SQL precedence and parentheses; operands are columns, literals or @host variables. Columns in a join need alias~column. Every non-aggregated column must be in GROUP BY. Inline targets get one component per column (elementary for a single column). INTO without TABLE requires SINGLE or an aggregate-only list. Results map to targets by position with matching types.
+
+Changes: `INSERT/UPDATE/MODIFY/DELETE table FROM @wa` (single row by primary key), `UPDATE table SET col = operand [+ operand], … [WHERE cond]` (key fields cannot be set) and `DELETE FROM table [WHERE cond]`. sy-subrc/sy-dbcnt follow SAP: SELECT 0/4 and rows passed; INSERT of an existing key 4/0; UPDATE/DELETE with no match 4/0; MODIFY inserts or overwrites (0/1). A missed SELECT SINGLE leaves the target unchanged; INTO TABLE replaces the table (empty on no match). Events carry `sql` metadata and a `database` snapshot.
+
+Not supported: the old SELECT list order (SELECT cols FROM), ENDSELECT loops, HAVING, AVG, DISTINCT, subqueries, UNION, FROM TABLE mass changes, host expressions @( … ), NOT, IN, client handling, authorizations, buffering, COMMIT/ROLLBACK and real database performance. Without ORDER BY the simulator returns storage order, which SAP does not guarantee.
+
 ## 2026-11-08: BINARY SEARCH and rows checked
 
 `READ TABLE table INTO target WITH KEY … BINARY SEARCH` is supported on standard tables. It assumes ascending order by the key fields in the order written and returns the leftmost match. On a miss the target is unchanged, sy-subrc is 4 and sy-tabix is the one-based insert position, or sy-subrc 8 and sy-tabix lines + 1 when the key is beyond the last row (SAP keyword documentation). On unsorted data it can miss an existing row without an error, exactly as in SAP. BINARY SEARCH with INDEX, or placed before WITH KEY, is rejected.

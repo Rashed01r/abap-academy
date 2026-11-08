@@ -157,6 +157,42 @@
       "status": "SOURCE_REVIEWED_WITH_LIMITATIONS",
       "reviewedOn": "2026-11-08",
       "scope": "English-only guided review against the SAP-samples ABAP Dictionary cheat sheet, DDIC DDL foreign key documentation and SAP Learning: reference source, step groups, artifact map, three graded decisions, beginner layer and local lab model. Classic-only behavior (fixed-value and foreign key screen checks, search helps) labelled with ABAP Cloud replacements. Screenshots inspected. Not SAP activation or learner certification. Arabic deferred."
+    },
+    "database-abap-sql": {
+      "fingerprint": "4062752c",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS",
+      "reviewedOn": "2026-11-08",
+      "scope": "English-only runnable ABAP SQL review against the SAP-samples 03_ABAP_SQL cheat sheet: modern SELECT clause order, host variables, SELECT SINGLE vs INTO TABLE, sy-subrc/sy-dbcnt, WHERE, joins, aggregates with GROUP BY, INSERT/UPDATE/MODIFY/DELETE. Demo database subset; graders compare with the reference solution on changed databases. Learn runner database panel and screenshots inspected (desktop/light, mobile/dark). Not SAP execution or learner certification. Arabic deferred."
+    },
+    "database-select": {
+      "fingerprint": "82ebab4d",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS",
+      "reviewedOn": "2026-11-08",
+      "scope": "English-only runnable ABAP SQL review against the SAP-samples 03_ABAP_SQL cheat sheet: modern SELECT clause order, host variables, SELECT SINGLE vs INTO TABLE, sy-subrc/sy-dbcnt, WHERE, joins, aggregates with GROUP BY, INSERT/UPDATE/MODIFY/DELETE. Demo database subset; graders compare with the reference solution on changed databases. Learn runner database panel and screenshots inspected (desktop/light, mobile/dark). Not SAP execution or learner certification. Arabic deferred."
+    },
+    "database-where": {
+      "fingerprint": "895679d0",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS",
+      "reviewedOn": "2026-11-08",
+      "scope": "English-only runnable ABAP SQL review against the SAP-samples 03_ABAP_SQL cheat sheet: modern SELECT clause order, host variables, SELECT SINGLE vs INTO TABLE, sy-subrc/sy-dbcnt, WHERE, joins, aggregates with GROUP BY, INSERT/UPDATE/MODIFY/DELETE. Demo database subset; graders compare with the reference solution on changed databases. Learn runner database panel and screenshots inspected (desktop/light, mobile/dark). Not SAP execution or learner certification. Arabic deferred."
+    },
+    "database-joins": {
+      "fingerprint": "1ef46788",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS",
+      "reviewedOn": "2026-11-08",
+      "scope": "English-only runnable ABAP SQL review against the SAP-samples 03_ABAP_SQL cheat sheet: modern SELECT clause order, host variables, SELECT SINGLE vs INTO TABLE, sy-subrc/sy-dbcnt, WHERE, joins, aggregates with GROUP BY, INSERT/UPDATE/MODIFY/DELETE. Demo database subset; graders compare with the reference solution on changed databases. Learn runner database panel and screenshots inspected (desktop/light, mobile/dark). Not SAP execution or learner certification. Arabic deferred."
+    },
+    "database-aggregates": {
+      "fingerprint": "56a8d8f8",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS",
+      "reviewedOn": "2026-11-08",
+      "scope": "English-only runnable ABAP SQL review against the SAP-samples 03_ABAP_SQL cheat sheet: modern SELECT clause order, host variables, SELECT SINGLE vs INTO TABLE, sy-subrc/sy-dbcnt, WHERE, joins, aggregates with GROUP BY, INSERT/UPDATE/MODIFY/DELETE. Demo database subset; graders compare with the reference solution on changed databases. Learn runner database panel and screenshots inspected (desktop/light, mobile/dark). Not SAP execution or learner certification. Arabic deferred."
+    },
+    "database-sql-mutations": {
+      "fingerprint": "0e91e366",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS",
+      "reviewedOn": "2026-11-08",
+      "scope": "English-only runnable ABAP SQL review against the SAP-samples 03_ABAP_SQL cheat sheet: modern SELECT clause order, host variables, SELECT SINGLE vs INTO TABLE, sy-subrc/sy-dbcnt, WHERE, joins, aggregates with GROUP BY, INSERT/UPDATE/MODIFY/DELETE. Demo database subset; graders compare with the reference solution on changed databases. Learn runner database panel and screenshots inspected (desktop/light, mobile/dark). Not SAP execution or learner certification. Arabic deferred."
     }
   }
 }

@@ -1,5 +1,26 @@
 # Resume academy development
 
+## Database Development path: six runnable ABAP SQL lessons (2026-11-08)
+
+Implemented the six Database topics shown as Coming Soon, English only, as code lessons (user's choice: "Runnable ABAP SQL"). Learners write real modern ABAP SQL that runs in the browser against a demo database (ZACA_EMPLOYEE: Ahmed, Sara, Omar, Huda — the same data as the existing SQL lab; ZACA_DEPARTMENT: IT, HR, SALES, LEGAL without employees), reset on every run.
+
+| Mission | Title | Challenge |
+|---|---|---|
+| `database-abap-sql` | ABAP SQL: read one row from the database | `database-single-read`: SELECT SINGLE by @lv_id, name + department or Not found |
+| `database-select` | SELECT: read many rows into a table | `database-salary-list`: names and salaries, highest first, then sy-dbcnt |
+| `database-where` | WHERE: read only the rows you need | `database-where-filter`: department AND minimum salary, No match on empty |
+| `database-joins` | Joins: combine two tables | `database-join-report`: every department with its staff via LEFT OUTER JOIN |
+| `database-aggregates` | Aggregations: count and total in the database | `database-department-summary`: COUNT(*) and MAX per department |
+| `database-sql-mutations` | Change data with INSERT, UPDATE and DELETE | `database-raise`: UPDATE … SET … WHERE, sy-dbcnt, then SUM |
+
+Each lesson has two syntax tokens, full code anatomy, two or three concepts, beginner ideas/mistakes/check, three verified experiments, a flowchart, a challenge brief and a quiz; 300 XP each. Prerequisites chain database-fundamentals → abap-sql → select → where → joins → aggregates → sql-mutations. Graders run the learner's program and the reference solution on the same probes (four databases, changed inputs, empty and single-row cases) and require matching output and final database state plus the taught statement shape. A new database panel (`src/components/sql-summary.tsx`) shows the tables with matched rows in the Learn runner and the Explore trace; `.add-side` now uses a shrinkable grid track so wide tables scroll inside their box on phones. Files: `src/lib/sql-missions.ts`; engine changes in `src/lib/engine.ts`. Notes: `.claude/skills/academy-lesson/references/sap-notes/abap-sql.md`.
+
+Inventory: **40 playable activities / 39 registered missions / 51 assessments / 127 essential concepts / 9,655 XP**.
+
+Verification: typecheck and lint passed; `validate:education` (40 activities, 127 concepts) and `validate:curriculum` (39 missions, 51 assessments) passed; **146/146 unit tests** (10 new in tests/abap-sql.test.ts covering every lesson's example/solution/grader, canned-output rejection, SAP sy-subrc/sy-dbcnt rules, joins, aggregates, mutations, seeding and rejected syntax). Production build passed. Full production browser regression, three workers, first run: **174 passed / 0 failed / 24 skipped (5.5m)**; skips are pre-existing intentional `test.skip` cases. New tests/abap-sql.spec.ts covers all six lessons end to end (anatomy, Learn, failing then passing challenge, quiz, XP), the live database panel, the @ diagnostic and the empty preview list. Desktop/light and mobile/dark screenshots inspected, including the runner's database table after UPDATE/DELETE. Review records added by hand as `SOURCE_REVIEWED_WITH_LIMITATIONS`.
+
+Next: the remaining visible Coming Soon paths are Object-Oriented ABAP (8 topics), SAP Application Development (5), Modern ABAP (6), ABAP Cloud (6) and Real Projects (5). The full academy and the Employee Management cloud capstone remain unfinished.
+
 ## ABAP Dictionary path: six guided lessons (2026-11-08)
 
 Implemented the six Dictionary topics shown as Coming Soon, English only, as guided lessons (user's choice: "Guided + small lab"), each with reference source explained part by part, an artifact map, three graded scenario decisions, a quiz, the beginner layer (ideas, mistakes, check, challenge) and one local hands-on lab:
