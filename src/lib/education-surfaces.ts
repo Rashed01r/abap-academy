@@ -4,6 +4,12 @@
 export const educationSurfaces: Record<string, {visualize: string[]; knowledge: string[]}> = Object.fromEntries(([
   ["data-conditional-loop", "selection aggregate", "selection aggregate"],
   ["data-table-expressions", "expression-read not-found exists-index optional-default", "not-found exists-index"],
+  ["dictionary-domains", "domain-shape domain-reuse domain-fixed-limit", "domain-reuse"],
+  ["dictionary-data-elements", "element-type-source element-labels element-in-abap", "element-type-source"],
+  ["dictionary-structures", "structure-type structure-include", "structure-include"],
+  ["dictionary-database-tables", "table-parts table-primary-key", "table-primary-key"],
+  ["dictionary-foreign-keys", "fk-parts fk-mapping fk-where-checked", "fk-parts fk-where-checked"],
+  ["dictionary-search-helps", "sh-parts sh-attach sh-cloud", "sh-parts sh-cloud"],
   ["data-table-performance", "linear-search binary-search sort-first", "binary-search sort-first choose-category"],
   ["data-employee-manager", "find-first copy-save remove-shift report-current", "find-first report-current"],
   ["orientation", "statements readable-source simulation", "statements"],

@@ -348,6 +348,66 @@ export const beginnerLessons: Record<string, BeginnerLesson> = {
     check: { question: "Where does the field label “Employee status” belong?", options: ["In the data element", "In the domain", "In the table key"], answer: 0, explanation: "The data element gives a field its business meaning and labels. The domain only holds the technical shape." },
     challenge: { title: "Two apps share employee status: decide where each rule lives", must: ["Decide what belongs in the domain: type, length and allowed values.", "Decide what belongs in the data element: meaning and labels.", "Decide what the table stores and how its key identifies a row."], hints: ["Separate how a value is stored from what users call it.", "Type, length and fixed values → domain. Labels → data element. Rows and key → database table."] },
   },
+  "dictionary-domains": {
+    ideas: [["A domain is the shape of a value.", "Type CHAR, length 1, allowed values A and I."], ["Many data elements can share it.", "Employee status and supplier status use the same domain."], ["Fixed values guide screens.", "They do not stop a program from storing another value."]],
+    mistakes: [
+      { title: "Typing a variable with the domain", wrong: "DATA lv_status TYPE zaca_status_domain.", right: "DATA lv_status TYPE zaca_employee_status.", why: "Programs use data elements. A domain is only reused by data elements." },
+      { title: "One domain per field", wrong: "ZACA_EMP_STATUS_DOMAIN: CHAR(1), A / I\nZACA_SUP_STATUS_DOMAIN: CHAR(1), A / I", right: "ZACA_STATUS_DOMAIN: CHAR(1), A / I\n(used by both data elements)", why: "The same shape twice means two places to change. Reuse one domain." },
+      { title: "Trusting fixed values to protect data", wrong: "\" the domain allows A and I,\n\" so status can never be X", right: "\" check the value in the program\n\" before saving it", why: "Fixed values are not a database rule. A program can still store X." },
+    ],
+    check: { question: "Which object can type an ABAP variable?", options: ["A data element", "A domain", "A fixed value"], answer: 0, explanation: "DATA … TYPE uses data elements. Domains only give data elements their shape." },
+    challenge: { title: "Design the status domain", must: ["Decide what the domain holds.", "Decide how supplier status reuses it.", "Decide what happens when a program stores an unlisted value."], hints: ["A domain is about shape: type, length, allowed values.", "Meanings and labels live in data elements; fixed values only guide screens."] },
+  },
+  "dictionary-data-elements": {
+    ideas: [["A data element gives meaning.", "ZACA_EMPLOYEE_STATUS means the status of an employee."], ["Its type comes from a domain or is typed directly.", "With a domain, length and values are shared."], ["Labels have four sizes.", "10, 20, 40 and 55 characters."]],
+    mistakes: [
+      { title: "A short label that is too long", wrong: "Short label: Employee status", right: "Short label: Status", why: "The short label holds 10 characters. 15 characters are cut to “Employee s”." },
+      { title: "Labels in every program", wrong: "WRITE: 'Employee status', lv_status.", right: "\" the field label comes from\n\" ZACA_EMPLOYEE_STATUS", why: "Keep the label in the data element so every screen shows the same text." },
+      { title: "Typing with a raw built-in type", wrong: "DATA lv_status TYPE abap.char(1).", right: "DATA lv_status TYPE zaca_employee_status.", why: "abap.char is a Dictionary built-in type, not an ABAP type. Use the data element." },
+    ],
+    check: { question: "Where do the labels of the status column come from?", options: ["The data element", "The domain", "The table key"], answer: 0, explanation: "Field labels are part of the data element's meaning." },
+    challenge: { title: "Describe the employee status field", must: ["Choose where the column header text is set.", "Pick a short label that fits 10 characters.", "Pick the correct ABAP declaration."], hints: ["Meaning and labels belong to the data element.", "Count characters, including spaces; programs type variables with the data element."] },
+  },
+  "dictionary-structures": {
+    ideas: [["A structure is a record type.", "ZACA_ADDRESS groups street, city and country."], ["It stores no rows.", "DATA ls_address TYPE zaca_address makes one record in memory."], ["Names must be unique.", "Include another structure with a suffix if names repeat."]],
+    mistakes: [
+      { title: "Expecting rows in a structure", wrong: "SELECT * FROM zaca_address INTO TABLE @DATA(lt_addresses).", right: "DATA ls_address TYPE zaca_address.", why: "A structure is a type, not a table. Only database tables can be read with SELECT." },
+      { title: "Including a repeated name", wrong: "city : abap.char(30);\ninclude zaca_address;", right: "city : abap.char(30);\ninclude zaca_address with suffix _home;", why: "Both have city. The suffix renames the included one to city_home." },
+      { title: "Forgetting the semicolon", wrong: "street : abap.char(40)\ncity   : abap.char(30);", right: "street : abap.char(40);\ncity   : abap.char(30);", why: "Each component ends with a semicolon in define structure." },
+    ],
+    check: { question: "What does DATA ls_address TYPE zaca_address. create?", options: ["One empty address record in memory", "A database table of addresses", "A new structure"], answer: 0, explanation: "The structure is the type; DATA creates one variable of that type." },
+    challenge: { title: "Reuse the address", must: ["Decide where addresses are stored.", "Fix a repeated component name.", "Create one address record in ABAP."], hints: ["A structure is a type, like TYPES … BEGIN OF.", "A suffix renames included components; DATA … TYPE creates a variable."] },
+  },
+  "dictionary-database-tables": {
+    ideas: [["A database table keeps its rows.", "They are still there after the program ends."], ["Key fields come first.", "client + employee_id identify each employee."], ["Activation creates an empty table.", "Programs insert the rows later."]],
+    mistakes: [
+      { title: "Using the name as the key", wrong: "key name : abap.char(40) not null;", right: "key employee_id : zaca_employee_id not null;", why: "Names repeat and change. An assigned ID stays the same." },
+      { title: "Key fields after normal fields", wrong: "name : abap.char(40);\nkey employee_id : zaca_employee_id not null;", right: "key employee_id : zaca_employee_id not null;\nname : abap.char(40);", why: "Key fields must come first in the table." },
+      { title: "Inserting a changed row again", wrong: "\" insert Sara (1002) again\n\" with status I", right: "\" update Sara's existing row\n\" to status I", why: "The key 100/1002 already exists, so a second insert is refused." },
+    ],
+    check: { question: "Which fields should form the key of ZACA_EMPLOYEE?", options: ["client and employee_id", "client and name", "status"], answer: 0, explanation: "The client and the assigned employee ID identify each employee for good." },
+    challenge: { title: "Design the employee table", must: ["Choose the primary key.", "Predict what happens to a duplicate key.", "Say what activation creates."], hints: ["A key must be unique and never change.", "Same key means the same row; activation creates the empty container."] },
+  },
+  "dictionary-foreign-keys": {
+    ideas: [["A check table holds valid values.", "ZACA_DEPARTMENT lists HR, IT and SALES."], ["The foreign key links the field to it.", "Every key field of the check table gets a partner."], ["Screens check; the database does not.", "Programs must check values themselves."]],
+    mistakes: [
+      { title: "Swapping the two tables", wrong: "check table: ZACA_EMPLOYEE", right: "check table: ZACA_DEPARTMENT", why: "The check table is the one that holds the valid values." },
+      { title: "Mapping only part of the key", wrong: "where department_id = zaca_employee.department", right: "where client = zaca_employee.client\n  and department_id = zaca_employee.department", why: "The check table key is client + department_id, so both need a partner." },
+      { title: "Relying on the database to refuse bad values", wrong: "INSERT zaca_employee FROM @ls_employee.\n\" FIN will be refused", right: "\" read ZACA_DEPARTMENT first and\n\" stop if the department is missing", why: "The foreign key is not a database constraint. A program can save FIN." },
+    ],
+    check: { question: "A program saves department FIN, which is not in the check table. What happens?", options: ["It is saved", "The database refuses it", "FIN is added to the check table"], answer: 0, explanation: "Foreign keys stay in the ABAP Dictionary and only check classic screen input." },
+    challenge: { title: "Link employees to departments", must: ["Name the check table.", "Predict what a program write does.", "Choose which fields the foreign key maps."], hints: ["The check table holds the valid departments.", "The database does not enforce foreign keys; map every check table key field."] },
+  },
+  "dictionary-search-helps": {
+    ideas: [["F4 opens a list of valid values.", "Users pick instead of typing an ID."], ["The list comes from a selection method.", "Here the department table."], ["Only EXPORT values go back.", "The ID is copied; the name only helps choose."]],
+    mistakes: [
+      { title: "Exporting the name", wrong: "NAME  IMPORT yes  EXPORT yes", right: "DEPARTMENT_ID  EXPORT yes\nNAME           EXPORT no", why: "The field needs the ID. The name is shown, not copied." },
+      { title: "A search help per program", wrong: "\" build the F4 list again\n\" in every program", right: "\" attach ZACA_SH_DEPARTMENT to the\n\" data element ZACA_DEPARTMENT_ID", why: "Attached to the data element, every field typed with it gets the list." },
+      { title: "Using search helps in ABAP Cloud", wrong: "\" create search help ZACA_SH_DEPARTMENT\n\" for the Fiori app", right: "@Consumption.valueHelpDefinition: [{ entity: { name: 'ZACA_I_DEPARTMENT', element: 'DepartmentId' } }]", why: "ABAP Cloud has no search helps; CDS value helps replace them." },
+    ],
+    check: { question: "The user picks “IT · Information technology”. What lands in the field?", options: ["IT", "Information technology", "Both"], answer: 0, explanation: "Only DEPARTMENT_ID is an EXPORT parameter." },
+    challenge: { title: "Help users pick a department", must: ["Say what is copied back to the field.", "Choose where to attach the search help.", "Choose the ABAP Cloud replacement."], hints: ["Look at which parameter is EXPORT.", "Attach to the shared data element; ABAP Cloud uses CDS value helps."] },
+  },
   "database-fundamentals": {
     ideas: [["FROM picks the table.", "zaca_employee is where the rows live."], ["FIELDS picks columns.", "Only ID and name come back."], ["WHERE picks rows.", "Only IT employees come back."]],
     mistakes: [

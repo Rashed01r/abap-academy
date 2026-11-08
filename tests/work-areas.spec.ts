@@ -113,13 +113,13 @@ for(const lang of enabledLocales) for(const theme of ["light","dark"] as const) 
   });
 }
 test("valid lesson deep links are freely accessible; unknown and preview IDs do not fabricate lessons",async({page})=>{
-  for(const id of ["data-work-areas-field-symbols","data-keys","structures","data-read-table","data-table-expressions","data-table-performance","data-employee-manager"]) {
+  for(const id of ["data-work-areas-field-symbols","data-keys","structures","data-read-table","data-table-expressions","data-table-performance","data-employee-manager","dictionary-domains","dictionary-search-helps"]) {
     await page.goto(`/?mission=${id}`);
     await expect(page.locator(".lesson-summary h1")).toHaveText(missions.find(m=>m.id === id)!.title.en);
     const progress=await page.evaluate(()=>JSON.parse(localStorage.getItem("abap2-master-progress")!));
     expect(progress.missions).toEqual([]);expect(progress.labs).toEqual([]);expect(progress.started).toEqual([]);expect(progress.passedChallenges).toEqual([]);
   }
-  for(const id of ["dictionary-domains","not-a-lesson"]) {
+  for(const id of ["dictionary-lock-objects","not-a-lesson"]) {
     await page.goto(`/?mission=${id}`);
     await expect(page.locator("[data-tree-id=root]")).toBeVisible();
     await expect(page.getByRole("tab")).toHaveCount(0);

@@ -1,5 +1,26 @@
 # Resume academy development
 
+## ABAP Dictionary path: six guided lessons (2026-11-08)
+
+Implemented the six Dictionary topics shown as Coming Soon, English only, as guided lessons (user's choice: "Guided + small lab"), each with reference source explained part by part, an artifact map, three graded scenario decisions, a quiz, the beginner layer (ideas, mistakes, check, challenge) and one local hands-on lab:
+
+| Mission | Title | Lab | XP |
+|---|---|---|---|
+| `dictionary-domains` | Domains: define a value's shape once | type/length/fixed values with a value tester; shows both data elements reusing the domain | 200 |
+| `dictionary-data-elements` | Data elements: give a field its meaning | domain vs predefined type; four field labels checked against 10/20/40/55 | 200 |
+| `dictionary-structures` | Structures: group fields into one type | include zaca_address, duplicate `city` error, `with suffix _home` fix | 200 |
+| `dictionary-database-tables` | Database tables: store rows for good | choose key fields; see which of four rows a primary key refuses | 200 |
+| `dictionary-foreign-keys` | Foreign keys: link a field to a check table | classic screen check rejects FIN; program write is accepted (no DB constraint) | 220 |
+| `dictionary-search-helps` | Search helps: offer a list of valid values | F4 list with * restriction; only the EXPORT ID returns to the field | 220 |
+
+Prerequisites chain intro → domains → data elements → structures → database tables → foreign keys → search helps. One running example links them (ZACA_STATUS_DOMAIN → ZACA_EMPLOYEE_STATUS → ZACA_ADDRESS → ZACA_EMPLOYEE → ZACA_DEPARTMENT → ZACA_SH_DEPARTMENT). Classic-only behavior is labelled with ABAP Cloud replacements (CDS enumerated types, CDS value helps). Facts come from the SAP-samples 26_ABAP_Dictionary cheat sheet, the DDIC DDL foreign key documentation and SAP Learning; notes in `.claude/skills/academy-lesson/references/sap-notes/dictionary.md`. Files: `src/lib/guided-dictionary-definitions.ts`, `src/lib/dictionary-education.ts`, `src/lib/dictionary-labs.ts`, `src/components/dictionary-labs.tsx`.
+
+Inventory: **34 playable activities / 33 registered missions / 45 assessments / 113 essential concepts / 7,855 XP**.
+
+Verification: typecheck and lint passed; `validate:education` (34 activities, 113 concepts) and `validate:curriculum` (33 missions, 45 assessments) passed; **136/136 unit tests** (6 new in tests/dictionary-labs.test.ts, including guided validation and full line coverage of every reference source). Production build passed. Full production browser regression, three workers: first run 154 passed / 2 failed / 24 skipped — the deep-link test still used `dictionary-domains` as a planned ID; it now uses `dictionary-lock-objects` and includes the new lessons. Final full run: **156 passed / 0 failed / 24 skipped (4.5m)**; skips are pre-existing intentional `test.skip` cases. tests/guided.spec.ts runs the full guided journey (reference parts, artifact map, failing then passing decisions, completion, persistence, no overflow) for all six on desktop and mobile; new tests/dictionary-labs.spec.ts drives every lab and checks the Dictionary tree has no previews (one Chrome "Target crashed" during development passed unchanged on retry). Desktop/light and mobile/dark screenshots inspected. Review records added by hand as `SOURCE_REVIEWED_WITH_LIMITATIONS`.
+
+Next: the remaining planned Dictionary records (primary keys, relationships, settings and activation, views, Employee Data Model, transports, lock objects, number ranges) are not shown in the tree; the next visible Coming Soon topics are in the Database Development path. The full academy and the Employee Management cloud capstone remain unfinished.
+
 ## Working with Data path complete: performance and Employee Data Manager (2026-11-08)
 
 Implemented the last two Working with Data missions, English only, following the user's standing instruction to keep the learning path easy (short examples, familiar data, one or two new ideas each):

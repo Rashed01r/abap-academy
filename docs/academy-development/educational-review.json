@@ -121,6 +121,42 @@
       "status": "SOURCE_REVIEWED_WITH_LIMITATIONS",
       "reviewedOn": "2026-11-08",
       "scope": "English-only capstone review: combines only taught statements (line_index, table-expression copy, guarded MODIFY/DELETE INDEX, LOOP count/total); two behavioral graders with missing and duplicate IDs. In-memory only. Screenshots inspected. Not SAP compilation or learner certification. Arabic deferred."
+    },
+    "dictionary-domains": {
+      "fingerprint": "8c6bb663",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS",
+      "reviewedOn": "2026-11-08",
+      "scope": "English-only guided review against the SAP-samples ABAP Dictionary cheat sheet, DDIC DDL foreign key documentation and SAP Learning: reference source, step groups, artifact map, three graded decisions, beginner layer and local lab model. Classic-only behavior (fixed-value and foreign key screen checks, search helps) labelled with ABAP Cloud replacements. Screenshots inspected. Not SAP activation or learner certification. Arabic deferred."
+    },
+    "dictionary-data-elements": {
+      "fingerprint": "6967a987",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS",
+      "reviewedOn": "2026-11-08",
+      "scope": "English-only guided review against the SAP-samples ABAP Dictionary cheat sheet, DDIC DDL foreign key documentation and SAP Learning: reference source, step groups, artifact map, three graded decisions, beginner layer and local lab model. Classic-only behavior (fixed-value and foreign key screen checks, search helps) labelled with ABAP Cloud replacements. Screenshots inspected. Not SAP activation or learner certification. Arabic deferred."
+    },
+    "dictionary-structures": {
+      "fingerprint": "0466e283",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS",
+      "reviewedOn": "2026-11-08",
+      "scope": "English-only guided review against the SAP-samples ABAP Dictionary cheat sheet, DDIC DDL foreign key documentation and SAP Learning: reference source, step groups, artifact map, three graded decisions, beginner layer and local lab model. Classic-only behavior (fixed-value and foreign key screen checks, search helps) labelled with ABAP Cloud replacements. Screenshots inspected. Not SAP activation or learner certification. Arabic deferred."
+    },
+    "dictionary-database-tables": {
+      "fingerprint": "083e83b6",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS",
+      "reviewedOn": "2026-11-08",
+      "scope": "English-only guided review against the SAP-samples ABAP Dictionary cheat sheet, DDIC DDL foreign key documentation and SAP Learning: reference source, step groups, artifact map, three graded decisions, beginner layer and local lab model. Classic-only behavior (fixed-value and foreign key screen checks, search helps) labelled with ABAP Cloud replacements. Screenshots inspected. Not SAP activation or learner certification. Arabic deferred."
+    },
+    "dictionary-foreign-keys": {
+      "fingerprint": "0b882dc3",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS",
+      "reviewedOn": "2026-11-08",
+      "scope": "English-only guided review against the SAP-samples ABAP Dictionary cheat sheet, DDIC DDL foreign key documentation and SAP Learning: reference source, step groups, artifact map, three graded decisions, beginner layer and local lab model. Classic-only behavior (fixed-value and foreign key screen checks, search helps) labelled with ABAP Cloud replacements. Screenshots inspected. Not SAP activation or learner certification. Arabic deferred."
+    },
+    "dictionary-search-helps": {
+      "fingerprint": "ef2431e4",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS",
+      "reviewedOn": "2026-11-08",
+      "scope": "English-only guided review against the SAP-samples ABAP Dictionary cheat sheet, DDIC DDL foreign key documentation and SAP Learning: reference source, step groups, artifact map, three graded decisions, beginner layer and local lab model. Classic-only behavior (fixed-value and foreign key screen checks, search helps) labelled with ABAP Cloud replacements. Screenshots inspected. Not SAP activation or learner certification. Arabic deferred."
     }
   }
 }
