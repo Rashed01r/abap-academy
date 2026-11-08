@@ -135,7 +135,8 @@ export function useRoadmapLayout(opts: {
     const offset = isRtl ? reserve : 0;
     let f: RoadmapNode | undefined;
     for (const n of all) if (ex.has(n.id) && (!f || n.depth > f.depth)) f = n;
-    const focus = new Set<string>([root.id, ...root.children.map(c => c.id)]);
+    // With a category open, frame only its branch (root → path → category → items).
+    const focus = new Set<string>(f && f.depth >= 2 ? [root.id] : [root.id, ...root.children.map(c => c.id)]);
     if (f) { for (let p: RoadmapNode | undefined = f; p; p = p.parent) focus.add(p.id); f.children.forEach(c => focus.add(c.id)); }
     let a = 1e9, b = -1e9, c = 1e9, d = -1e9;
     for (const n of all) {
@@ -210,6 +211,10 @@ export function useRoadmapLayout(opts: {
       zoomAt(Math.exp(-e.deltaY * 0.0012), e.clientX - r.left, e.clientY - r.top);
     };
     const resize = () => fit();
+    // Focusing a card that is partly off screen makes the browser scroll this overflow:hidden
+    // stage. The camera owns the view, so keep the stage itself unscrolled.
+    const unscroll = () => { if (stage.scrollLeft || stage.scrollTop) { stage.scrollLeft = 0; stage.scrollTop = 0; } };
+    stage.addEventListener("scroll", unscroll);
     stage.addEventListener("pointerdown", down);
     stage.addEventListener("pointermove", move);
     stage.addEventListener("pointerup", end);
@@ -222,6 +227,7 @@ export function useRoadmapLayout(opts: {
       stage.removeEventListener("pointerup", end);
       stage.removeEventListener("pointercancel", end);
       stage.removeEventListener("wheel", wheel);
+      stage.removeEventListener("scroll", unscroll);
       window.removeEventListener("resize", resize);
     };
   }, [enabled, stageRef, fit, zoomAt]);

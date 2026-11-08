@@ -46,7 +46,7 @@ export const NodeCard = memo(function NodeCard({ node: n, lang, c, active, done,
       style={{ "--c": n.color } as CSSProperties}
       aria-expanded={expandable ? active : undefined}
       aria-pressed={!expandable && n.kind !== "root" ? active : undefined}
-      aria-label={n.kind === "root" ? `ABAP, ${c.hub}` : undefined}
+      aria-label={n.kind === "root" ? `ABAP, ${c.hub}` : `${label}${done ? `, ${n.kind === "tcode" ? c.learned : c.completed}` : ""}`}
       onClick={() => onSelect(n)}
       onPointerMove={hover}
     >
@@ -62,13 +62,11 @@ export const NodeCard = memo(function NodeCard({ node: n, lang, c, active, done,
       </>}
       {n.kind === "lesson" && <>
         <span className="t">{label}</span><span className="s">{localizedText(n.sub, lang)}</span>
-        {done && <span className="sr-only">{c.completed}</span>}
       </>}
       {n.kind === "tcode" && <>
         <span className="code" dir="ltr">{n.tcode!.code}</span><span className="t">{localizedText(n.label, lang)}</span>
         <span className="s">{localizedText(n.sub, lang)}</span>
         <FrequencyDots f={n.tcode!.frequency} c={c} />
-        {done && <span className="sr-only">{c.learned}</span>}
       </>}
     </button>
   </div>;

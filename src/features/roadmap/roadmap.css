@@ -32,10 +32,10 @@
 
 /* header (existing app markup, prototype look) */
 .roadmap-home > header{display:flex;align-items:center;gap:20px;padding:10px 20px;min-height:0;border-bottom:1px solid rgba(var(--tint),.16);background:rgba(7,18,14,.72);backdrop-filter:blur(10px);flex-wrap:wrap}
-.roadmap-home .brand{display:flex;align-items:center;gap:12px;position:relative;font-size:23px;font-weight:600;letter-spacing:-.4px;padding:0}
+.roadmap-home .brand{display:flex;align-items:center;gap:12px;position:relative;margin-inline-end:26px;font-size:23px;font-weight:600;letter-spacing:-.4px;padding:0}
 .roadmap-home .brand-icon{width:44px;height:44px;border-radius:12px;border:1px solid rgba(var(--tint),.4);display:grid;place-items:center;background:rgba(var(--tint),.1);color:rgb(var(--tint))}
 .roadmap-home .brand-light{font-weight:400}
-.roadmap-home .brand sup{position:relative;top:-12px;font-size:11px;background:#14302a;border:1px solid rgba(var(--tint),.25);padding:1px 7px;border-radius:6px;color:var(--mu);font-weight:400}
+.roadmap-home .brand sup{position:absolute;inset-inline-end:-26px;top:-8px;margin:0;display:inline-block;line-height:1.4;vertical-align:baseline;letter-spacing:0;font-size:11px;background:#14302a;border:1px solid rgba(var(--tint),.25);padding:1px 7px;border-radius:6px;color:var(--mu);font-weight:400}
 .roadmap-home > header nav{display:flex;gap:6px;margin-inline-start:30px}
 .roadmap-home > header nav button{background:none;border:0;padding:12px 10px;display:flex;gap:8px;align-items:center;color:var(--mu);border-bottom:2px solid transparent;font-size:15px}
 .roadmap-home > header nav .nav-active{color:rgb(var(--tint));border-color:rgb(var(--tint))}
@@ -112,7 +112,9 @@
 .roadmap-home .dots b{width:6px;height:6px;border-radius:50%;border:1px solid rgb(var(--c))}
 .roadmap-home .dots b.on{background:rgb(var(--c))}
 .roadmap-home .done::after{content:'✓';position:absolute;inset-inline-end:10px;bottom:8px;width:20px;height:20px;border-radius:50%;background:rgb(var(--c));color:#04120c;font-size:12px;font-weight:700;display:grid;place-items:center}
-.roadmap-home .k-lesson .t{font-size:14px}
+.roadmap-home .k-lesson .t{font-size:14px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.roadmap-home .k-lesson .s{-webkit-line-clamp:1}
+.roadmap-home .m-item .k-lesson .s{-webkit-line-clamp:2}
 .roadmap-home .k-lesson.planned{border-style:dashed}
 .roadmap-home .k-lesson.planned .t{color:var(--mu)}
 
@@ -181,7 +183,7 @@
   .roadmap-home .theme-select,.roadmap-home > header > .glossary{display:none}
   .roadmap-home .drawer{left:12px;right:12px;width:auto;top:auto;bottom:12px;max-height:70%;max-width:none;transform:translateY(115%)}
   [dir=rtl] .roadmap-home .drawer{transform:translateY(115%)}
-  .roadmap-home .brand sup{top:-10px}
+  .roadmap-home .brand sup{inset-inline-end:-24px}
 }
 
 /* lesson view (opened from the drawer) */
@@ -210,3 +212,6 @@
   .roadmap-home .drawer{position:fixed}
   .roadmap-home #academy-header-search{order:5;flex-basis:100%;max-width:none;min-width:0}
 }
+.lesson-view .lesson-view-body.connected-lesson-node{position:relative;min-width:0;width:100%;max-height:none;height:auto;margin:0;resize:none;border:0;border-radius:0;touch-action:auto}
+.lesson-view-bar .secondary{min-height:40px}
+.lesson-view-bar nav span[aria-current]{color:var(--ink)}

@@ -20,6 +20,7 @@ export function MobileRoadmap({ root, expanded, selectedId, lang, c, isDone, onS
       <button type="button" data-mobile-node={n.id}
         className={`card k-${n.kind}${open || selectedId === n.id ? " act" : ""}${done ? " done" : ""}${n.planned ? " planned" : ""}`}
         style={{ "--c": n.color } as CSSProperties}
+        aria-label={`${n.kind === "tcode" ? `${n.tcode!.code}, ` : ""}${localizedText(n.label, lang)}${done ? `, ${n.kind === "tcode" ? c.learned : c.completed}` : ""}`}
         aria-expanded={expandable ? open : undefined} aria-controls={expandable ? panelId : undefined}
         onClick={() => onSelect(n)}>
         {n.kind === "tcode" && <span className="code" dir="ltr">{n.tcode!.code}</span>}
@@ -28,7 +29,6 @@ export function MobileRoadmap({ root, expanded, selectedId, lang, c, isDone, onS
         {(n.kind === "path" || n.kind === "cat") && <span className="chip">{chipText(n, lang, c)}</span>}
         {expandable && <span className="chev" aria-hidden="true">›</span>}
         {n.kind === "tcode" && <FrequencyDots f={n.tcode!.frequency} c={c} />}
-        {done && <span className="sr-only">{n.kind === "tcode" ? c.learned : c.completed}</span>}
       </button>
       {expandable && open && <ul id={panelId} className="m-list">{n.children.map(item)}</ul>}
     </li>;
