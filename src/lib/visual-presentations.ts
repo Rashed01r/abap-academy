@@ -4,6 +4,7 @@ export const visualPresentations: Record<string, VisualFamily> = {
   "data-conditional-loop": "flow",
   "data-table-expressions": "trace",
   "database-abap-sql": "trace", "database-select": "trace", "database-where": "trace", "database-joins": "trace", "database-aggregates": "trace", "database-sql-mutations": "trace",
+  "oop-classes-objects": "trace", "oop-objects": "trace", "oop-attributes": "trace", "oop-instance-methods": "trace", "oop-constructors": "trace", "oop-inheritance": "trace", "oop-interfaces": "trace", "oop-exceptions": "trace",
   "dictionary-domains": "relationships", "dictionary-data-elements": "relationships", "dictionary-structures": "relationships",
   "dictionary-database-tables": "relationships", "dictionary-foreign-keys": "relationships", "dictionary-search-helps": "relationships",
   "data-table-performance": "trace",

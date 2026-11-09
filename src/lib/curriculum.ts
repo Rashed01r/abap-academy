@@ -4,6 +4,7 @@ import { fundamentals } from "./fundamentals";
 import { dataMissions } from "./data-missions";
 import { guidedMissions } from "./guided-curriculum";
 import { sqlMissions } from "./sql-missions";
+import { oopMissions } from "./oop-missions";
 import type { GuidedDefinition } from "./guided-types";
 export const text = (en: string, ar?: string): Text => ar === undefined ? ({ en }) : ({ en, ar });
 export type SyntaxToken = {
@@ -918,7 +919,7 @@ const originalMissions: Mission[] = [
     challenges: conditionChallenges,
   },
 ];
-export const missions: Mission[] = [...originalMissions, ...fundamentals, ...dataMissions, ...guidedMissions, ...sqlMissions].map(mission => ({
+export const missions: Mission[] = [...originalMissions, ...fundamentals, ...dataMissions, ...guidedMissions, ...sqlMissions, ...oopMissions].map(mission => ({
   difficulty: "beginner",
   environment: "browser",
   assessment: "simulated",

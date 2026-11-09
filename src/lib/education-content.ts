@@ -2,6 +2,7 @@ import { conditionalLoopEducation } from "./conditional-loop-mission";
 import { tableExpressionsEducation } from "./table-expressions-mission";
 import { dictionaryEducation } from "./dictionary-education";
 import { sqlEducation } from "./sql-missions";
+import { oopEducation } from "./oop-missions";
 import { tablePerformanceEducation } from "./table-performance-mission";
 import { employeeManagerEducation } from "./employee-manager-mission";
 import type { Text } from "./curriculum";
@@ -31,6 +32,7 @@ export const educationContent: Record<string, EducationSpec> = {
   "data-conditional-loop": conditionalLoopEducation,
   ...dictionaryEducation,
   ...sqlEducation,
+  ...oopEducation,
   "data-table-expressions": tableExpressionsEducation,
   "data-table-performance": tablePerformanceEducation,
   "data-employee-manager": employeeManagerEducation,

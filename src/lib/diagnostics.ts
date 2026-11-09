@@ -61,4 +61,14 @@ export const diagnosticAdvice = {
     hint: text("Wrap the read in TRY … CATCH cx_sy_itab_line_not_found … ENDTRY, test line_exists( ) first when you only need a yes/no answer, or use VALUE #( itab[ … ] OPTIONAL ) to accept an initial row."),
     example: "TRY.\n    ls_employee = lt_employees[ id = lv_id ].\n    WRITE ls_employee-name.\n  CATCH cx_sy_itab_line_not_found.\n    WRITE 'Not found'.\nENDTRY.",
   },
+  unhandled: {
+    why: text("An exception of a CX_STATIC_CHECK class is a promise: every place that can raise it must either catch it or say that it passes it on. SAP's syntax check warns about it before the program runs, and this simulator treats the warning as an error."),
+    hint: text("Wrap the call in TRY … CATCH lcx_name … ENDTRY, or add RAISING lcx_name to the signature of the method that contains the call or the RAISE EXCEPTION."),
+    example: "TRY.\n    lo_employee->give_raise( -5 ).\n  CATCH lcx_negative_raise.\n    WRITE 'Refused'.\nENDTRY.",
+  },
+  nullref: {
+    why: text("A reference variable declared with TYPE REF TO points to no object until NEW creates one. Using it before that stops the program with CX_SY_REF_IS_INITIAL."),
+    hint: text("Create the object first: lo_employee = NEW #( ). or DATA(lo_employee) = NEW lcl_employee( ). Then use lo_employee->attribute or lo_employee->method( )."),
+    example: "DATA lo_employee TYPE REF TO lcl_employee.\nlo_employee = NEW #( ).\nlo_employee->mv_name = 'Ahmed'.",
+  },
 } satisfies Record<ErrorCode, { why: ReturnType<typeof text>; hint: ReturnType<typeof text>; example: string }>;

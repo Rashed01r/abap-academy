@@ -143,17 +143,18 @@ The following IDs are stable tracking records. The current table includes the 20
 | database-performance | database | Performance fundamentals | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
 | database-sales-analysis | database | Sales Order Data Analysis | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
 | oop-introduction | oop | OOP introduction | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED |
-| oop-classes-objects | oop | Classes and objects | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
-| oop-attributes | oop | Attributes | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
-| oop-instance-methods | oop | Instance methods | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
-| oop-constructors | oop | Constructors | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
+| oop-classes-objects | oop | Classes and objects | VERIFIED | VERIFIED | VERIFIED | DEFERRED | VERIFIED | VERIFIED | VERIFIED | VERIFIED |
+| oop-objects | oop | Objects and references | VERIFIED | VERIFIED | VERIFIED | DEFERRED | VERIFIED | VERIFIED | VERIFIED | VERIFIED |
+| oop-attributes | oop | Attributes | VERIFIED | VERIFIED | VERIFIED | DEFERRED | VERIFIED | VERIFIED | VERIFIED | VERIFIED |
+| oop-instance-methods | oop | Instance methods | VERIFIED | VERIFIED | VERIFIED | DEFERRED | VERIFIED | VERIFIED | VERIFIED | VERIFIED |
+| oop-constructors | oop | Constructors | VERIFIED | VERIFIED | VERIFIED | DEFERRED | VERIFIED | VERIFIED | VERIFIED | VERIFIED |
 | oop-visibility | oop | Visibility | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
 | oop-static-instance | oop | Static versus instance | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
-| oop-inheritance | oop | Inheritance | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
+| oop-inheritance | oop | Inheritance | VERIFIED | VERIFIED | VERIFIED | DEFERRED | VERIFIED | VERIFIED | VERIFIED | VERIFIED |
 | oop-redefinition | oop | Method redefinition | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
-| oop-interfaces | oop | Interfaces | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
+| oop-interfaces | oop | Interfaces | VERIFIED | VERIFIED | VERIFIED | DEFERRED | VERIFIED | VERIFIED | VERIFIED | VERIFIED |
 | oop-polymorphism | oop | Polymorphism | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
-| oop-exceptions | oop | Exceptions | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
+| oop-exceptions | oop | Exceptions | VERIFIED | VERIFIED | VERIFIED | DEFERRED | VERIFIED | VERIFIED | VERIFIED | VERIFIED |
 | oop-employee-classes | oop | Employee Management Classes | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |
 | applications-reports | applications | Classical reports | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED | VERIFIED |
 | applications-selection-screens | applications | Selection screens | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED | PLANNED |

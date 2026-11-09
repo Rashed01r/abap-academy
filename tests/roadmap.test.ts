@@ -45,7 +45,8 @@ test("roadmap tree: ABAP root with Learning (real paths and lessons) and Transac
   assert.equal(byId.get("tcodes")!.count, 36);
   const oop = learn.children.find(c => c.id === "path:oop")!;
   assert.equal(oop.children[0].id, "lesson:oop-introduction");
-  assert.ok(oop.children.slice(1).length > 0 && oop.children.slice(1).every(c => c.planned), "remaining OOP topics are planned");
+  assert.deepEqual(oop.children.slice(1, 9).map(c => c.id), ["lesson:oop-classes-objects", "lesson:oop-objects", "lesson:oop-attributes", "lesson:oop-instance-methods", "lesson:oop-constructors", "lesson:oop-inheritance", "lesson:oop-interfaces", "lesson:oop-exceptions"]);
+  assert.deepEqual(oop.children.filter(c => c.planned).map(c => c.label.en), [], "every OOP topic has a lesson");
 });
 
 test("progress: T-codes give 10 XP once, survive normalization, unknown ids are dropped", () => {

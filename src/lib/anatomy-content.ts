@@ -1,6 +1,7 @@
 import { conditionalLoopGroups } from "./conditional-loop-mission";
 import { tableExpressionsGroups } from "./table-expressions-mission";
 import { sqlAnatomy } from "./sql-missions";
+import { oopAnatomy } from "./oop-missions";
 import { tablePerformanceGroups } from "./table-performance-mission";
 import { employeeManagerGroups } from "./employee-manager-mission";
 import { missions, type Text } from "./curriculum";
@@ -25,6 +26,14 @@ const definitions: Record<string,{fingerprint:string;groups:AnatomyGroupSpec[];c
   "database-joins": {fingerprint:"2ffa6bed", groups:sqlAnatomy["database-joins"], checks:["join","fields","loop"]},
   "database-aggregates": {fingerprint:"be058ec0", groups:sqlAnatomy["database-aggregates"], checks:["fields","group","into"]},
   "database-sql-mutations": {fingerprint:"efe3f179", groups:sqlAnatomy["database-sql-mutations"], checks:["insert","duplicate","update","delete"]},
+  "oop-classes-objects": {fingerprint:"c0891fbe", groups:oopAnatomy["oop-classes-objects"], checks:["definition","declare-method","method-body"]},
+  "oop-objects": {fingerprint:"8431967d", groups:oopAnatomy["oop-objects"], checks:["reference","second","copy"]},
+  "oop-attributes": {fingerprint:"edec46eb", groups:oopAnatomy["oop-attributes"], checks:["instance","static","sara"]},
+  "oop-constructors": {fingerprint:"19e78387", groups:oopAnatomy["oop-constructors"], checks:["signature","ctor-body","create"]},
+  "oop-inheritance": {fingerprint:"842fbaeb", groups:oopAnatomy["oop-inheritance"], checks:["sub-def","sub-ctor","sub-pay","upcast"]},
+  "oop-interfaces": {fingerprint:"3ae8a7c5", groups:oopAnatomy["oop-interfaces"], checks:["iface","employee-def","refs","call"]},
+  "oop-exceptions": {fingerprint:"08ef73c3", groups:oopAnatomy["oop-exceptions"], checks:["raiser-impl","try","catch"]},
+  "oop-instance-methods": {fingerprint:"42842058", groups:oopAnatomy["oop-instance-methods"], checks:["signatures","private","get","call"]},
   "data-table-expressions": {fingerprint:"c9b0f0f3", groups:tableExpressionsGroups, checks:["by-position","by-key","exists"]},
   "data-table-performance": {fingerprint:"308fb1d3", groups:tablePerformanceGroups, checks:["linear","sort","binary"]},
   "data-employee-manager": {fingerprint:"1ac63dd1", groups:employeeManagerGroups, checks:["find","raise","remove","report"]},

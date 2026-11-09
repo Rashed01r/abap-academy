@@ -53,7 +53,9 @@ function Highlight({ text }: { text: string }) {
 }
 const wholeNumber = /^-?\d{1,6}$/;
 const valueLine = /^([ \t]*DATA[ \t]+(\w+)[ \t]+TYPE[ \t]+i[ \t]+VALUE[ \t]+)(-?\d+)\./;
-const kindLabel = (value: MemoryValue) => typeof value === "number" ? "whole number" : kind(value);
+// Objects are stored as "<class> #<n>", static attributes as "<class>=><attr>"; a reference holds an object's name.
+const kindLabel = (value: MemoryValue, memory: Memory, name: string) => name.includes(" #") ? "object" : name.includes("=>") ? "static attribute"
+  : typeof value === "string" && typeof memory[value] === "object" ? "object reference" : typeof value === "number" ? "whole number" : kind(value);
 
 export function LessonRunner({ id, code: example }: { id: string; code: string }) {
   const m = lessonOf(id);
@@ -138,7 +140,7 @@ export function LessonRunner({ id, code: example }: { id: string; code: string }
         <figure className="beg-memory" aria-label="Memory: the program's boxes">
           <figcaption className="eyebrow">Memory</figcaption>
           {finalNames.map(name => name in memory
-            ? <div className="add-box" key={event!.changed.includes(name) ? `${name}-${step}` : name} data-changed={event!.changed.includes(name)}><code>{name}</code><strong dir="ltr">{show(memory[name])}</strong><small>{kindLabel(memory[name])}</small></div>
+            ? <div className="add-box" key={event!.changed.includes(name) ? `${name}-${step}` : name} data-changed={event!.changed.includes(name)}><code>{name}</code><strong dir="ltr">{show(memory[name])}</strong><small>{kindLabel(memory[name], memory, name)}</small></div>
             : <div className="add-box" data-empty key={name}><code>{name}</code><strong>–</strong><small>not created yet</small></div>)}
         </figure>
         {event?.database && <DatabaseState event={event}/>}

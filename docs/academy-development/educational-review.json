@@ -193,6 +193,54 @@
       "status": "SOURCE_REVIEWED_WITH_LIMITATIONS",
       "reviewedOn": "2026-11-08",
       "scope": "English-only runnable ABAP SQL review against the SAP-samples 03_ABAP_SQL cheat sheet: modern SELECT clause order, host variables, SELECT SINGLE vs INTO TABLE, sy-subrc/sy-dbcnt, WHERE, joins, aggregates with GROUP BY, INSERT/UPDATE/MODIFY/DELETE. Demo database subset; graders compare with the reference solution on changed databases. Learn runner database panel and screenshots inspected (desktop/light, mobile/dark). Not SAP execution or learner certification. Arabic deferred."
+    },
+    "oop-objects": {
+      "fingerprint": "5490af8c",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS",
+      "reviewedOn": "2026-11-09",
+      "scope": "English-only runnable local-class review against the SAP-samples 04_ABAP_Object_Orientation and 27_Exceptions cheat sheets: class definition/implementation parts, visibility sections, DATA vs CLASS-DATA, TYPE REF TO, NEW #( ) and NEW class( ), reference copies, METHODS with IMPORTING, RETURNING and RAISING, private attributes, constructors with NEW parameters, INHERITING FROM with REDEFINITION, super-> (super->constructor required in every subclass constructor, as in SAP) and PROTECTED, interfaces with iface~method and interface references, RAISE EXCEPTION, TRY/CATCH INTO and the CX_STATIC_CHECK RAISING rule. SAP only warns when a static-check exception is neither caught nor declared; the simulator turns that into an error on purpose and the lesson says so. Interpreter subset; graders compare with the reference solution on changed inputs. Learn runner and Explore trace inspected (desktop and mobile/dark). Not SAP execution or learner certification. Arabic deferred."
+    },
+    "oop-attributes": {
+      "fingerprint": "8fa829da",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS",
+      "reviewedOn": "2026-11-09",
+      "scope": "English-only runnable local-class review against the SAP-samples 04_ABAP_Object_Orientation and 27_Exceptions cheat sheets: class definition/implementation parts, visibility sections, DATA vs CLASS-DATA, TYPE REF TO, NEW #( ) and NEW class( ), reference copies, METHODS with IMPORTING, RETURNING and RAISING, private attributes, constructors with NEW parameters, INHERITING FROM with REDEFINITION, super-> (super->constructor required in every subclass constructor, as in SAP) and PROTECTED, interfaces with iface~method and interface references, RAISE EXCEPTION, TRY/CATCH INTO and the CX_STATIC_CHECK RAISING rule. SAP only warns when a static-check exception is neither caught nor declared; the simulator turns that into an error on purpose and the lesson says so. Interpreter subset; graders compare with the reference solution on changed inputs. Learn runner and Explore trace inspected (desktop and mobile/dark). Not SAP execution or learner certification. Arabic deferred."
+    },
+    "oop-classes-objects": {
+      "fingerprint": "aab01590",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS",
+      "reviewedOn": "2026-11-09",
+      "scope": "English-only runnable local-class review against the SAP-samples 04_ABAP_Object_Orientation and 27_Exceptions cheat sheets: class definition/implementation parts, visibility sections, DATA vs CLASS-DATA, TYPE REF TO, NEW #( ) and NEW class( ), reference copies, METHODS with IMPORTING, RETURNING and RAISING, private attributes, constructors with NEW parameters, INHERITING FROM with REDEFINITION, super-> (super->constructor required in every subclass constructor, as in SAP) and PROTECTED, interfaces with iface~method and interface references, RAISE EXCEPTION, TRY/CATCH INTO and the CX_STATIC_CHECK RAISING rule. SAP only warns when a static-check exception is neither caught nor declared; the simulator turns that into an error on purpose and the lesson says so. Interpreter subset; graders compare with the reference solution on changed inputs. Learn runner and Explore trace inspected (desktop and mobile/dark). Not SAP execution or learner certification. Arabic deferred."
+    },
+    "oop-instance-methods": {
+      "fingerprint": "6d1dc3ee",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS",
+      "reviewedOn": "2026-11-09",
+      "scope": "English-only runnable local-class review against the SAP-samples 04_ABAP_Object_Orientation and 27_Exceptions cheat sheets: class definition/implementation parts, visibility sections, DATA vs CLASS-DATA, TYPE REF TO, NEW #( ) and NEW class( ), reference copies, METHODS with IMPORTING, RETURNING and RAISING, private attributes, constructors with NEW parameters, INHERITING FROM with REDEFINITION, super-> (super->constructor required in every subclass constructor, as in SAP) and PROTECTED, interfaces with iface~method and interface references, RAISE EXCEPTION, TRY/CATCH INTO and the CX_STATIC_CHECK RAISING rule. SAP only warns when a static-check exception is neither caught nor declared; the simulator turns that into an error on purpose and the lesson says so. Interpreter subset; graders compare with the reference solution on changed inputs. Learn runner and Explore trace inspected (desktop and mobile/dark). Not SAP execution or learner certification. Arabic deferred."
+    },
+    "oop-constructors": {
+      "fingerprint": "e49824fb",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS",
+      "reviewedOn": "2026-11-09",
+      "scope": "English-only runnable local-class review against the SAP-samples 04_ABAP_Object_Orientation and 27_Exceptions cheat sheets: class definition/implementation parts, visibility sections, DATA vs CLASS-DATA, TYPE REF TO, NEW #( ) and NEW class( ), reference copies, METHODS with IMPORTING, RETURNING and RAISING, private attributes, constructors with NEW parameters, INHERITING FROM with REDEFINITION, super-> (super->constructor required in every subclass constructor, as in SAP) and PROTECTED, interfaces with iface~method and interface references, RAISE EXCEPTION, TRY/CATCH INTO and the CX_STATIC_CHECK RAISING rule. SAP only warns when a static-check exception is neither caught nor declared; the simulator turns that into an error on purpose and the lesson says so. Interpreter subset; graders compare with the reference solution on changed inputs. Learn runner and Explore trace inspected (desktop and mobile/dark). Not SAP execution or learner certification. Arabic deferred."
+    },
+    "oop-inheritance": {
+      "fingerprint": "aa66e607",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS",
+      "reviewedOn": "2026-11-09",
+      "scope": "English-only runnable local-class review against the SAP-samples 04_ABAP_Object_Orientation and 27_Exceptions cheat sheets: class definition/implementation parts, visibility sections, DATA vs CLASS-DATA, TYPE REF TO, NEW #( ) and NEW class( ), reference copies, METHODS with IMPORTING, RETURNING and RAISING, private attributes, constructors with NEW parameters, INHERITING FROM with REDEFINITION, super-> (super->constructor required in every subclass constructor, as in SAP) and PROTECTED, interfaces with iface~method and interface references, RAISE EXCEPTION, TRY/CATCH INTO and the CX_STATIC_CHECK RAISING rule. SAP only warns when a static-check exception is neither caught nor declared; the simulator turns that into an error on purpose and the lesson says so. Interpreter subset; graders compare with the reference solution on changed inputs. Learn runner and Explore trace inspected (desktop and mobile/dark). Not SAP execution or learner certification. Arabic deferred."
+    },
+    "oop-interfaces": {
+      "fingerprint": "0aa422df",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS",
+      "reviewedOn": "2026-11-09",
+      "scope": "English-only runnable local-class review against the SAP-samples 04_ABAP_Object_Orientation and 27_Exceptions cheat sheets: class definition/implementation parts, visibility sections, DATA vs CLASS-DATA, TYPE REF TO, NEW #( ) and NEW class( ), reference copies, METHODS with IMPORTING, RETURNING and RAISING, private attributes, constructors with NEW parameters, INHERITING FROM with REDEFINITION, super-> (super->constructor required in every subclass constructor, as in SAP) and PROTECTED, interfaces with iface~method and interface references, RAISE EXCEPTION, TRY/CATCH INTO and the CX_STATIC_CHECK RAISING rule. SAP only warns when a static-check exception is neither caught nor declared; the simulator turns that into an error on purpose and the lesson says so. Interpreter subset; graders compare with the reference solution on changed inputs. Learn runner and Explore trace inspected (desktop and mobile/dark). Not SAP execution or learner certification. Arabic deferred."
+    },
+    "oop-exceptions": {
+      "fingerprint": "72b4559e",
+      "status": "SOURCE_REVIEWED_WITH_LIMITATIONS",
+      "reviewedOn": "2026-11-09",
+      "scope": "English-only runnable local-class review against the SAP-samples 04_ABAP_Object_Orientation and 27_Exceptions cheat sheets: class definition/implementation parts, visibility sections, DATA vs CLASS-DATA, TYPE REF TO, NEW #( ) and NEW class( ), reference copies, METHODS with IMPORTING, RETURNING and RAISING, private attributes, constructors with NEW parameters, INHERITING FROM with REDEFINITION, super-> (super->constructor required in every subclass constructor, as in SAP) and PROTECTED, interfaces with iface~method and interface references, RAISE EXCEPTION, TRY/CATCH INTO and the CX_STATIC_CHECK RAISING rule. SAP only warns when a static-check exception is neither caught nor declared; the simulator turns that into an error on purpose and the lesson says so. Interpreter subset; graders compare with the reference solution on changed inputs. Learn runner and Explore trace inspected (desktop and mobile/dark). Not SAP execution or learner certification. Arabic deferred."
     }
   }
 }

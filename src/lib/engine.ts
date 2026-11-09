@@ -1,4 +1,5 @@
 ﻿import { sqlChallengeSpecs } from "./sql-missions";
+import { oopChallengeSpecs } from "./oop-missions";
 export type Locale = "en" | "ar";
 export type Range = {
   start: number;
@@ -28,6 +29,8 @@ export type ErrorCode =
   | "string"
   | "unassigned"
   | "notfound"
+  | "nullref"
+  | "unhandled"
   | "limit";
 export class SimulationError extends Error {
   constructor(
@@ -89,7 +92,19 @@ export type Expr =
   | { kind: "add"; left: Expr; right: Expr }
   | TableExpr
   | { kind: "lineIndex"; target: TableExpr }
-  | { kind: "lineExists"; target: TableExpr };
+  | { kind: "lineExists"; target: TableExpr }
+  | NewExpr
+  | CallExpr;
+/** Local classes subset: NEW #( ) / NEW lcl( ) and instance method calls ref->meth( … ) or meth( … ) inside a method. */
+export type CallArg = { name?: string; value: Expr };
+export type NewExpr = { kind: "new"; className?: string; args: CallArg[] };
+export type CallExpr = { kind: "call"; receiver: string; method: string; args: CallArg[]; viaIface?: string };
+export type CatchClause = { cls: string; into?: string; inline: boolean; body: Node[]; range: Range; bodyRange?: Range };
+export type Visibility = "public" | "protected" | "private";
+export type AttrMember = { kind: "attr"; name: string; type: "i" | "string"; isStatic: boolean; visibility: Visibility; initial?: Primitive; range: Range };
+export type MethodMember = { kind: "method"; name: string; importing: { name: string; type: "i" | "string" }[]; returning?: { name: string; type: "i" | "string" }; raising?: string[]; redefinition?: boolean; visibility: Visibility; range: Range };
+export type ClassMember = AttrMember | MethodMember;
+export type MethodImpl = { name: string; body: Node[]; range: Range; endRange: Range };
 export type Node =
   | { kind: "do"; count: Expr; body: Node[]; range: Range; endRange: Range }
   | { kind: "while"; left: Expr; op: string; right: Expr; body: Node[]; range: Range; endRange: Range }
@@ -101,7 +116,7 @@ export type Node =
   | { kind: "delete"; table: string; index: Expr; range: Range }
   | { kind: "sort"; table: string; fields: { field: string; direction: "ascending" | "descending" }[]; range: Range }
   | { kind: "control"; action: "exit" | "continue"; range: Range }
-  | { kind: "try"; body: Node[]; handler: Node[]; range: Range; catchRange: Range; endRange: Range; bodyRange?: Range; handlerRange?: Range }
+  | { kind: "try"; body: Node[]; handler: Node[]; catches: CatchClause[]; range: Range; catchRange: Range; endRange: Range; bodyRange?: Range; handlerRange?: Range }
   | { kind: "select"; single: boolean; source: SqlSource; join?: { type: "inner" | "left"; source: SqlSource; on: { left: SqlCol; right: SqlCol }[] }; fields: SqlField[] | "*"; where?: SqlCond; groupBy?: SqlCol[]; orderBy?: { col: SqlCol; direction: "ascending" | "descending" }[]; into: { table: boolean; target: string; inline: boolean }; range: Range }
   | DbChange<"dbinsert"> | DbChange<"dbupdate"> | DbChange<"dbmodify"> | DbChange<"dbdelete">
   | { kind: "data"; name: string; type: string; initial?: Expr; range: Range }
@@ -114,7 +129,12 @@ export type Node =
       fields: Record<string, "i" | "string">;
       range: Range;
     }
-  | { kind: "assign"; target: string; value: Expr; range: Range }
+  | { kind: "assign"; target: string; value: Expr; inline?: boolean; range: Range }
+  | { kind: "classDef"; name: string; parent?: string; interfaces: string[]; members: ClassMember[]; range: Range; endRange: Range }
+  | { kind: "ifaceDef"; name: string; methods: MethodMember[]; range: Range; endRange: Range }
+  | { kind: "raise"; value: NewExpr; range: Range }
+  | { kind: "classImpl"; name: string; methods: MethodImpl[]; range: Range; endRange: Range }
+  | { kind: "call"; call: CallExpr; range: Range }
   | { kind: "write"; value: Expr; range: Range }
   | {
       kind: "if";
@@ -131,7 +151,7 @@ export type Node =
     };
 export type ExecutionEvent = {
   id: number;
-  operation: "define" | "declare" | "assign" | "write" | "condition" | "end" | "loop" | "append" | "read" | "insert" | "modify" | "delete" | "sort" | "control" | "bind" | "unbind" | "try" | "catch" | "sql";
+  operation: "define" | "declare" | "assign" | "write" | "condition" | "end" | "loop" | "append" | "read" | "insert" | "modify" | "delete" | "sort" | "control" | "bind" | "unbind" | "try" | "catch" | "sql" | "call" | "raise";
   range: Range;
   statement: string;
   memory: Memory;
@@ -270,6 +290,15 @@ export function parse(source: string): Node[] {
   };
   const ref = () => {
     let n = at("<") ? symbolName() : name();
+    if ((at("-") || at("=")) && tokens[p + 1]?.text === ">") {
+      n += tokens[p].text + ">";
+      p += 2;
+      n += name();
+      if (at("~")) { p++; n += "~" + name(); }
+      if (at("-") && tokens[p + 1]?.text !== ">") fail("access", "Attributes in this subset are elementary (i or string)");
+      if ((at("-") || at("=")) && tokens[p + 1]?.text === ">") fail("unsupported", "chained attribute access or method chaining");
+      return n;
+    }
     if (at("-")) {
       p++;
       n += "-" + name();
@@ -308,9 +337,135 @@ export function parse(source: string): Node[] {
       take(")", "unsupported");
       return target;
     }
+    if (t.kind === "word" && t.text === "new" && (next === "#" || (tokens[p + 1]?.kind === "word" && tokens[p + 2]?.text === "("))) {
+      p++;
+      let className: string | undefined;
+      if (at("#")) p++; else className = name();
+      return { kind: "new", className, args: callArgs() };
+    }
     if (t.kind === "word" && next === "[") return tableExpr(name(), true);
-    return { kind: "ref", name: ref() };
+    if (t.kind === "word" && next === "(") return { kind: "call", receiver: "me", method: name(), args: callArgs() };
+    const r = ref();
+    if (at("(") && /->|=>/.test(r)) return memberCall(r);
+    return { kind: "ref", name: r };
   };
+  function callArgs(): CallArg[] {
+    take("(", "unsupported");
+    const args: CallArg[] = [];
+    if (peek()?.kind === "word" && tokens[p + 1]?.text === "=") {
+      while (peek() && !at(")")) {
+        const param = name();
+        if (args.some(a => a.name === param)) fail("declaration", param);
+        take("=", "assignment");
+        args.push({ name: param, value: expr() });
+      }
+    } else if (!at(")")) args.push({ value: expr() });
+    take(")", "unsupported");
+    return args;
+  }
+  function memberCall(r: string): CallExpr {
+    const m = /^(.*?)(->|=>)([a-z_][a-z0-9_]*(?:~[a-z_][a-z0-9_]*)?)$/.exec(r)!;
+    if (m[2] === "=>") fail("unsupported", "static methods (CLASS-METHODS)");
+    return { kind: "call", receiver: m[1], method: m[3], args: callArgs() };
+  }
+  const paramType = (): "i" | "string" => {
+    const ty = name();
+    if (ty !== "i" && ty !== "string") fail("type", "Parameters and attributes in this subset have type i or string");
+    return ty as "i" | "string";
+  };
+  function parseClass(start: number, nested: boolean, depth: number): Node {
+    if (nested || depth) fail("unsupported", "Declare classes at the top level of the program");
+    p++;
+    const className = name();
+    if (at("implementation")) {
+      p++; period(start);
+      const opening = range(start), methods: MethodImpl[] = [];
+      while (at("method")) {
+        const methodStart = p++;
+        let methodName = name();
+        if (at("~")) { p++; methodName += "~" + name(); }
+        period(methodStart);
+        const methodRange = range(methodStart), body = nodes(false, depth + 1);
+        if (!at("endmethod")) fail("block", "Close the method with ENDMETHOD.");
+        const endStart = p++; period(endStart);
+        methods.push({ name: methodName, body, range: methodRange, endRange: range(endStart) });
+      }
+      if (!at("endclass")) fail("block", "Only METHOD … ENDMETHOD blocks belong in the implementation part");
+      const endStart = p++; period(endStart);
+      return { kind: "classImpl", name: className, methods, range: opening, endRange: range(endStart) };
+    }
+    take("definition", "unsupported");
+    if (at("final")) p++;
+    let parent: string | undefined;
+    if (at("inheriting")) { p++; take("from", "unsupported"); parent = name(); }
+    if (at("public") || at("abstract") || at("create")) fail("unsupported", "global classes and class additions such as ABSTRACT or CREATE");
+    period(start);
+    const opening = range(start), members: ClassMember[] = [], interfaces: string[] = [];
+    let visibility: Visibility | undefined;
+    while (peek() && !at("endclass")) {
+      const memberStart = p;
+      if ((at("public") || at("protected") || at("private")) && tokens[p + 1]?.text === "section") {
+        visibility = tokens[p].text as Visibility; p += 2; period(memberStart); continue;
+      }
+      if (!visibility) fail("block", "Start with PUBLIC SECTION, PROTECTED SECTION or PRIVATE SECTION");
+      if (at("interfaces")) {
+        p++; const iface = name(); period(memberStart);
+        if (visibility !== "public") fail("unsupported", "INTERFACES belongs in the PUBLIC SECTION", memberStart);
+        interfaces.push(iface); continue;
+      }
+      const isStatic = at("class") && tokens[p + 1]?.text === "-" && tokens[p + 2]?.text === "data";
+      let member: ClassMember;
+      if (isStatic || at("data")) {
+        p += isStatic ? 3 : 1;
+        const attr = name(); take("type");
+        const type = paramType();
+        let initial: Primitive | undefined;
+        if (at("value")) { p++; const v = atom(); if (v.kind !== "literal") fail("declaration"); initial = (v as { value: Primitive }).value; }
+        if (at("read")) fail("unsupported", "READ-ONLY");
+        period(memberStart);
+        member = { kind: "attr", name: attr, type, isStatic, visibility: visibility!, ...(initial !== undefined ? { initial } : {}), range: range(memberStart) };
+      } else if (at("methods")) {
+        member = methodSignature(memberStart, visibility!);
+      } else if (at("class") && tokens[p + 2]?.text === "methods") return fail("unsupported", "static methods (CLASS-METHODS)");
+      else return fail("unsupported", "In a class definition use PUBLIC/PROTECTED/PRIVATE SECTION, DATA, CLASS-DATA and METHODS");
+      const params = member.kind === "method" ? [...member.importing.map(i => i.name), ...(member.returning ? [member.returning.name] : [])] : [];
+      if (members.some(m => m.name === member.name) || new Set(params).size !== params.length) fail("declaration", member.name, memberStart);
+      members.push(member);
+    }
+    if (!at("endclass")) fail("block", "Close the class with ENDCLASS.");
+    const endStart = p++; period(endStart);
+    return { kind: "classDef", name: className, ...(parent ? { parent } : {}), interfaces, members, range: opening, endRange: range(endStart) };
+  }
+  /** METHODS name [IMPORTING p TYPE t …] [RETURNING VALUE(r) TYPE t] [RAISING cx …] | METHODS name REDEFINITION. */
+  function methodSignature(memberStart: number, visibility: Visibility): MethodMember {
+    p++;
+    const method = name();
+    const importing: MethodMember["importing"] = [];
+    let returning: MethodMember["returning"], raising: string[] | undefined, redefinition: boolean | undefined;
+    if (at("redefinition")) { p++; redefinition = true; }
+    else {
+      if (at("importing")) {
+        p++;
+        while (peek()?.kind === "word" && tokens[p + 1]?.text === "type") { const param = name(); p++; importing.push({ name: param, type: paramType() }); }
+        if (!importing.length) fail("declaration");
+      }
+      if (at("returning")) { p++; take("value"); take("("); const result = name(); take(")"); take("type"); returning = { name: result, type: paramType() }; }
+      if (at("raising")) { p++; raising = []; while (peek()?.kind === "word") raising.push(name()); if (!raising.length) fail("declaration"); }
+      if (at("exporting") || at("changing") || at("optional") || at("default")) fail("unsupported", `${peek().text.toUpperCase()} in a method signature`);
+    }
+    period(memberStart);
+    return { kind: "method", name: method, importing, ...(returning ? { returning } : {}), ...(raising ? { raising } : {}), ...(redefinition ? { redefinition } : {}), visibility, range: range(memberStart) };
+  }
+  function parseInterface(start: number, nested: boolean, depth: number): Node {
+    if (nested || depth) fail("unsupported", "Declare interfaces at the top level of the program");
+    p++;
+    const ifaceName = name(); period(start);
+    const opening = range(start), methods: MethodMember[] = [];
+    while (at("methods")) methods.push(methodSignature(p, "public"));
+    if (!at("endinterface")) fail("block", "An interface only declares METHODS; close it with ENDINTERFACE.");
+    const endStart = p++; period(endStart);
+    return { kind: "ifaceDef", name: ifaceName, methods, range: opening, endRange: range(endStart) };
+  }
   function tableExpr(table: string, chain: boolean): TableExpr {
     take("[", "unsupported");
     if (at("table") || at("key") || at("index")) fail("unsupported", "KEY / TABLE KEY / INDEX additions");
@@ -504,14 +659,37 @@ export function parse(source: string): Node[] {
   function nodes(nested = false, depth = 0): Node[] {
     if (depth > RUNTIME_LIMITS.nesting) fail("limit");
     const list: Node[] = [];
-    while (peek() && !["else", "elseif", "endif", "enddo", "endwhile", "endloop", "catch", "endtry"].includes(peek().text)) {
+    while (peek() && !["else", "elseif", "endif", "enddo", "endwhile", "endloop", "catch", "endtry", "endmethod", "endclass"].includes(peek().text)) {
       const start = p;
       let node!: Node;
-      if (at("data")) {
+      if (at("class") && tokens[p + 1]?.kind === "word" && ["definition", "implementation"].includes(tokens[p + 2]?.text)) {
+        node = parseClass(start, nested, depth);
+      } else if (at("interface") && tokens[p + 1]?.kind === "word" && tokens[p + 2]?.text === ".") {
+        node = parseInterface(start, nested, depth);
+      } else if (at("raise") && tokens[p + 1]?.text === "exception") {
+        p += 2;
+        let value: NewExpr;
+        if (at("type")) {
+          p++; const className = name(); const args: CallArg[] = [];
+          if (at("exporting")) { p++; while (peek() && !at(".")) { const param = name(); take("=", "assignment"); args.push({ name: param, value: expr() }); } }
+          value = { kind: "new", className, args };
+        } else {
+          const v = atom();
+          if (v.kind !== "new") return fail("unsupported", "Write RAISE EXCEPTION NEW class( … ). or RAISE EXCEPTION TYPE class [EXPORTING …].");
+          value = v;
+        }
+        period(start);
+        node = { kind: "raise", value, range: range(start) };
+      } else if (at("data") && tokens[p + 1]?.text === "(") {
+        p += 2; const target = name(); take(")", "declaration"); take("=", "assignment");
+        const value = expr(); period(start);
+        node = { kind: "assign", target, value, inline: true, range: range(start) };
+      } else if (at("data")) {
         p++;
         const n = name();
         take("type");
         let type = name();
+        if (type === "ref") { take("to"); type = "ref:" + name(); }
         if (type === "standard") {
           take("table"); take("of"); type = "table:" + name();
           take("with"); take("empty"); take("key");
@@ -689,16 +867,24 @@ export function parse(source: string): Node[] {
         const body = nodes(true, depth + 1);
         const bodyRange = body.length ? range(bodyStart) : undefined;
         if (!at("catch")) fail("block");
-        const catchStart = p++;
-        if (name() !== "cx_sy_itab_line_not_found") fail("unsupported", "Only CATCH cx_sy_itab_line_not_found is supported", catchStart + 1);
-        period(catchStart);
-        const catchRange = range(catchStart), handlerStart = p;
-        const handler = nodes(true, depth + 1);
-        const handlerRange = handler.length ? range(handlerStart) : undefined;
-        if (at("catch")) fail("unsupported", "one CATCH per TRY");
+        const catches: CatchClause[] = [];
+        while (at("catch")) {
+          const catchStart = p++;
+          const cls = name();
+          let into: string | undefined, inline = false;
+          if (at("into")) {
+            p++;
+            if (at("data") && tokens[p + 1]?.text === "(") { p += 2; into = name(); take(")", "unsupported"); inline = true; }
+            else into = name();
+          }
+          period(catchStart);
+          const clauseRange = range(catchStart), handlerStart = p;
+          const body2 = nodes(true, depth + 1);
+          catches.push({ cls, into, inline, body: body2, range: clauseRange, bodyRange: body2.length ? range(handlerStart) : undefined });
+        }
         if (!at("endtry")) fail("block");
         const endStart = p++; period(endStart);
-        node = { kind: "try", body, handler, range: opening, catchRange, endRange: range(endStart), bodyRange, handlerRange };
+        node = { kind: "try", body, handler: catches[0].body, catches, range: opening, catchRange: catches[0].range, endRange: range(endStart), bodyRange, handlerRange: catches[0].bodyRange };
       } else if (at("exit") || at("continue")) {
         const action = tokens[p++].text as "exit" | "continue"; period(start);
         node = { kind: "control", action, range: range(start) };
@@ -717,6 +903,13 @@ export function parse(source: string): Node[] {
         )
           fail("unsupported");
         const target = ref();
+        if (at("(")) {
+          const call: CallExpr = /->|=>/.test(target) ? memberCall(target) : { kind: "call", receiver: "me", method: target, args: callArgs() };
+          period(start);
+          list.push({ kind: "call", call, range: range(start) });
+          if (++count > 150) fail("limit");
+          continue;
+        }
         if (at("[")) fail("unsupported", "write access through a table expression");
         if (at(".") && tokens[p + 1]?.kind === "word") fail("access");
         take("=", "assignment");
@@ -724,7 +917,7 @@ export function parse(source: string): Node[] {
         period(start);
         node = { kind: "assign", target, value, range: range(start) };
       } else fail("unsupported");
-      if (nested && (node.kind === "data" || node.kind === "define" || node.kind === "fieldSymbol"))
+      if (nested && (node.kind === "data" || node.kind === "define" || node.kind === "fieldSymbol" || (node.kind === "assign" && node.inline)))
         fail("unsupported", "conditional declaration", start);
       list.push(node);
       if (++count > 150) fail("limit");
@@ -741,16 +934,123 @@ export function execute(nodes: Node[], source: string, options: { database?: Dat
       string,
       Record<string, "i" | "string">
     > = Object.create(null),
-    types: Record<string, string> = Object.create(null),
     memory: Memory = Object.create(null),
     aliases: Record<string, string | null> = Object.create(null),
     output: string[] = [],
     events: ExecutionEvent[] = [];
-  const error = (code: ErrorCode, n: Node, detail = ""): never => {
+  // Swapped for each method's own scope (attributes, parameters, locals) while validating and running it.
+  let types: Record<string, string> = Object.create(null);
+  const error = (code: ErrorCode, n: Pick<Node, "range">, detail = ""): never => {
     throw new SimulationError(code, n.range, detail);
   };
+  type ClassInfo = { parent?: string; interfaces: string[]; members: ClassMember[]; impl: Record<string, Omit<MethodImpl, "endRange"> & { endRange?: Range; types: Record<string, string> }> };
+  const classes: Record<string, ClassInfo> = Object.create(null);
+  const ifaces: Record<string, { methods: MethodMember[] }> = Object.create(null);
+  // Built-in exception roots: CX_STATIC_CHECK must be caught or declared with RAISING; CX_NO_CHECK need not be.
+  const noRange = sourceRange(source, 0, 0);
+  for (const root of ["cx_static_check", "cx_no_check"])
+    classes[root] = { interfaces: [], members: [{ kind: "method", name: "constructor", importing: [], visibility: "public", range: noRange }], impl: { constructor: { name: "constructor", body: [], range: noRange, types: Object.create(null) } } };
+  let currentClass: string | undefined, currentMethod: string | undefined, readOnly = new Set<string>(), handled: string[] = [];
+  /** Class and its superclasses, root first. */
+  const chain = (cls: string): string[] => { const out: string[] = []; for (let c: string | undefined = cls; c; c = classes[c]?.parent) out.unshift(c); return out; };
+  const isSub = (cls: string, base: string) => chain(cls).includes(base);
+  const implementsIface = (cls: string, iface: string) => chain(cls).some(c => classes[c]?.interfaces.includes(iface));
+  const isException = (cls: string) => ["cx_static_check", "cx_no_check"].includes(chain(cls)[0]);
+  type Member = ClassMember & { owner: string };
+  /** Finds a component in the class or its superclasses; interface methods are found as iface~method. */
+  const member = (cls: string, name: string): Member | undefined => {
+    for (let c: string | undefined = cls; c && classes[c]; c = classes[c].parent) {
+      const own = classes[c].members.find(m => m.name === name);
+      if (own) return { ...own, owner: c };
+      const [iface, method] = name.split("~");
+      if (method && classes[c].interfaces.includes(iface)) {
+        const sig = ifaces[iface]?.methods.find(x => x.name === method);
+        if (sig) return { ...sig, name, visibility: "public", owner: c };
+      }
+    }
+    return undefined;
+  };
+  /** A reference of type target may hold a value of type value: same class, a subclass, or an implemented interface. */
+  const assignable = (target: string, value: string) => {
+    const t = target.slice(4), v = value.slice(4);
+    return t === v || (!!classes[t] && !!classes[v] && isSub(v, t)) || (!!ifaces[t] && !!classes[v] && implementsIface(v, t));
+  };
+  function checkVisible(cls: string, m: Member, n: Node) {
+    if (m.visibility === "public" || currentClass === m.owner) return;
+    if (m.visibility === "protected" && currentClass && isSub(currentClass, m.owner)) return;
+    error("access", n, `${m.name} is in the ${m.visibility.toUpperCase()} SECTION of ${m.owner}; ${m.visibility === "private" ? "only that class's own methods" : "only that class and its subclasses"} can use it`);
+  }
+  function requireHandled(cls: string, n: Node) {
+    if (chain(cls)[0] === "cx_no_check" || handled.some(h => isSub(cls, h))) return;
+    error("unhandled", n, `${cls} is not handled: catch it with TRY … CATCH ${cls}, or declare RAISING ${cls} on this method`);
+  }
+  function checkArgs(m: MethodMember, args: CallArg[], label: string, n: Node) {
+    if (args.length === 1 && !args[0].name) {
+      if (m.importing.length !== 1) error("assignment", n, m.importing.length ? `Name the parameters: ${label}( ${m.importing.map(p => `${p.name} = …`).join(" ")} )` : `${label} has no IMPORTING parameters`);
+      args[0].name = m.importing[0].name;
+    }
+    for (const a of args) {
+      const param = m.importing.find(p => p.name === a.name);
+      if (!param) error("component", n, `${label} has no parameter ${a.name}`);
+      if (exprType(a.value, n) !== param!.type) error("type", n, `${a.name} has type ${param!.type}`);
+    }
+    for (const param of m.importing) if (!args.some(a => a.name === param.name)) error("assignment", n, `${label} needs the parameter ${param.name}`);
+  }
+  function checkNew(e: NewExpr, n: Node) {
+    const ctor = member(e.className!, "constructor");
+    if (!ctor || ctor.kind !== "method") { if (e.args.length) error("unsupported", n, `${e.className} has no constructor, so NEW takes no parameters`); return; }
+    checkArgs(ctor, e.args, "constructor", n);
+  }
+  function memberType(name: string, n: Node): string {
+    const arrow = name.includes("->") ? "->" : "=>";
+    const [base, attr] = name.split(arrow);
+    let cls: string;
+    if (arrow === "=>") {
+      if (!classes[base]) return error("unknown", n, base);
+      cls = base;
+    } else {
+      const baseType = base === "me" ? (currentClass ? `ref:${currentClass}` : error("unknown", n, "me exists only inside a method")) : refType(base, n);
+      if (!baseType.startsWith("ref:")) return error("type", n, `${base} is not an object reference`);
+      cls = baseType.slice(4);
+    }
+    const m = member(cls, attr);
+    if (!m) return error("component", n, `${cls} has no attribute ${attr}`);
+    if (m.kind !== "attr") return error("type", n, `${attr} is a method; call it with ( )`);
+    if (arrow === "=>" && !m.isStatic) return error("access", n, `${attr} is an instance attribute; reach it through an object reference, not the class name`);
+    checkVisible(cls, m, n);
+    return m.type;
+  }
+  function callSignature(e: CallExpr, n: Node): MethodMember {
+    let cls: string;
+    e.viaIface = undefined;
+    if (e.receiver === "me") {
+      if (!currentClass) return error("unknown", n, `${e.method}: call a method through an object reference, for example lo_employee->${e.method}( )`);
+      cls = currentClass;
+    } else if (e.receiver === "super") {
+      const parent = currentClass && classes[currentClass]?.parent;
+      if (!parent) return error("unknown", n, "super-> works only inside a method of a subclass");
+      cls = parent;
+    } else {
+      const t = refType(e.receiver, n);
+      if (!t.startsWith("ref:")) return error("type", n, `${e.receiver} is not an object reference`);
+      cls = t.slice(4);
+    }
+    if (e.method === "constructor" && !(e.receiver === "super" && currentMethod === "constructor")) error("access", n, "A constructor runs automatically with NEW; it is only called as super->constructor( ) inside a subclass constructor");
+    let m: Member | undefined;
+    if (ifaces[cls]) {
+      const sig = ifaces[cls].methods.find(x => x.name === e.method);
+      if (sig) { m = { ...sig, owner: cls }; e.viaIface = cls; }
+    } else m = member(cls, e.method);
+    if (!m && e.method === "constructor" && e.receiver === "super") m = { kind: "method", name: "constructor", importing: [], visibility: "public", range: n.range, owner: cls }; // implicit constructor
+    if (!m || m.kind !== "method") return error("unknown", n, `${cls} has no method ${e.method}`);
+    checkVisible(cls, m, n);
+    checkArgs(m, e.args, e.method, n);
+    for (const r of m.raising ?? []) requireHandled(r, n);
+    return m;
+  }
   function refType(name: string, n: Node): string {
     if (["sy-index", "sy-subrc", "sy-tabix", "sy-dbcnt"].includes(name)) return "i";
+    if (name.includes("->") || name.includes("=>")) return memberType(name, n);
     const [base, field, ...rest] = name.split("-");
     if (!(base in types)) return error("unknown", n, base);
     const type = types[base];
@@ -792,6 +1092,13 @@ export function execute(nodes: Node[], source: string, options: { database?: Dat
       if (!(e.component in definitions[rowType])) return error("component", n, e.component);
       return definitions[rowType][e.component];
     }
+    if (e.kind === "new") {
+      if (!e.className) return "ref:#";
+      if (!classes[e.className]) return error("unknown", n, ifaces[e.className] ? `${e.className} is an interface; create an object of a class that implements it` : e.className);
+      checkNew(e, n);
+      return `ref:${e.className}`;
+    }
+    if (e.kind === "call") return callSignature(e, n).returning?.type ?? "void";
     if (exprType(e.left, n) !== "i" || exprType(e.right, n) !== "i")
       return error("type", n);
     return "i";
@@ -867,8 +1174,8 @@ export function execute(nodes: Node[], source: string, options: { database?: Dat
       } else if (n.kind === "data" || n.kind === "fieldSymbol") {
         if (n.name in types) error("declaration", n, n.name);
         const rowType = n.type.replace(/^table:/, "");
-        if (!["i", "string"].includes(rowType) && !(rowType in definitions))
-          error("type", n, n.type);
+        if (!["i", "string"].includes(rowType) && !(rowType in definitions) && !(rowType.startsWith("ref:") && (classes[rowType.slice(4)] || ifaces[rowType.slice(4)])))
+          error("type", n, rowType.startsWith("ref:") ? `Define the class or interface ${rowType.slice(4)} before this declaration` : n.type);
         types[n.name] = n.type;
         if (n.kind === "data" && n.initial && exprType(n.initial, n) !== n.type) error("type", n);
       } else if (n.kind === "bind") {
@@ -877,15 +1184,85 @@ export function execute(nodes: Node[], source: string, options: { database?: Dat
         if (refType(n.source, n) !== refType(n.target, n)) error("type", n);
       } else if (n.kind === "unbind") {
         refType(n.target, n);
+      } else if (n.kind === "assign" && n.inline) {
+        if (n.target in types) error("declaration", n, n.target);
+        const valueType = exprType(n.value, n);
+        if (valueType === "ref:#") error("type", n, "With DATA( ) name the class: NEW lcl_name( )");
+        if (valueType === "void") error("type", n, "This method has no RETURNING parameter");
+        if (!["i", "string"].includes(valueType) && !valueType.startsWith("ref:")) error("unsupported", n, "inline declarations of structures or tables here");
+        types[n.target] = valueType;
       } else if (n.kind === "assign") {
         if (n.target.startsWith("sy-")) error("assignment", n);
+        if (readOnly.has(n.target.split("-")[0])) error("assignment", n, `${n.target} is an IMPORTING parameter; it is read-only inside the method`);
         const targetType = refType(n.target, n);
+        let valueType = exprType(n.value, n);
+        if (valueType === "ref:#" && n.value.kind === "new") {
+          if (!targetType.startsWith("ref:")) error("type", n, `NEW # needs a target declared TYPE REF TO a class`);
+          if (!classes[targetType.slice(4)]) error("type", n, `NEW # cannot create an object of an interface; write NEW class( )`);
+          n.value.className = targetType.slice(4);
+          checkNew(n.value, n);
+          valueType = targetType;
+        }
+        if (valueType === "void") error("type", n, "This method has no RETURNING parameter");
+        const refOk = targetType.startsWith("ref:") && valueType.startsWith("ref:") && assignable(targetType, valueType);
         // Whole structures are assignable only from a table expression row in this subset.
         if (
-          exprType(n.value, n) !== targetType ||
-          (!["i", "string"].includes(targetType) && !(n.value.kind === "tableExpr" && definitions[targetType]))
+          (valueType !== targetType && !refOk) ||
+          (!["i", "string"].includes(targetType) && !targetType.startsWith("ref:") && !(n.value.kind === "tableExpr" && definitions[targetType]))
         )
           error("type", n);
+      } else if (n.kind === "call") {
+        callSignature(n.call, n);
+      } else if (n.kind === "ifaceDef") {
+        if (classes[n.name] || ifaces[n.name] || n.name in definitions || n.name in types) error("declaration", n, n.name);
+        ifaces[n.name] = { methods: n.methods };
+      } else if (n.kind === "raise") {
+        const cls = n.value.className;
+        if (!cls) error("unsupported", n, "Name the exception class: RAISE EXCEPTION NEW lcx_name( ).");
+        if (!classes[cls!]) error("unknown", n, cls!);
+        if (!isException(cls!)) error("type", n, `${cls} does not inherit from CX_STATIC_CHECK, so it cannot be raised`);
+        exprType(n.value, n);
+        requireHandled(cls!, n);
+      } else if (n.kind === "classDef") {
+        if (classes[n.name] || ifaces[n.name] || n.name in definitions || n.name in types || ["i", "string"].includes(n.name)) error("declaration", n, n.name);
+        if (n.parent && !classes[n.parent]) error("unknown", n, `Define the class ${n.parent} before ${n.name} inherits from it`);
+        for (const i of n.interfaces) if (!ifaces[i]) error("unknown", n, `Define INTERFACE ${i} before ${n.name} uses it`);
+        const members = n.members.map(m => {
+          if (m.kind === "attr" && m.initial !== undefined && typeof m.initial !== (m.type === "i" ? "number" : "string")) error("type", m, m.name);
+          const inherited = n.parent ? member(n.parent, m.name) : undefined;
+          if (m.kind === "method" && m.redefinition) {
+            if (!inherited || inherited.kind !== "method" || inherited.visibility === "private" || m.name === "constructor") error("unknown", m, `${m.name} is not a method of a superclass that can be redefined`);
+            const base = inherited as MethodMember;
+            return { ...m, importing: base.importing, returning: base.returning, raising: base.raising, visibility: base.visibility } as MethodMember;
+          }
+          if (inherited && m.name !== "constructor") error("declaration", m, `${m.name} already exists in ${inherited.owner}${m.kind === "method" ? `; write METHODS ${m.name} REDEFINITION to change it` : ""}`);
+          return m;
+        });
+        classes[n.name] = { parent: n.parent, interfaces: n.interfaces, members, impl: Object.create(null) };
+      } else if (n.kind === "classImpl") {
+        const info = classes[n.name];
+        if (!info) error("unknown", n, `Write CLASS ${n.name} DEFINITION before its implementation`);
+        if (Object.keys(info.impl).length) error("declaration", n, n.name);
+        for (const m of n.methods) {
+          const sig = member(n.name, m.name);
+          if (!sig || sig.kind !== "method") error("unknown", m, `Declare METHODS ${m.name} in the class definition first`);
+          if (info.impl[m.name]) error("declaration", m, m.name);
+          const outer = types;
+          types = Object.assign(Object.create(null), outer);
+          for (const c of chain(n.name)) for (const a of classes[c].members) if (a.kind === "attr" && (c === n.name || a.visibility !== "private")) types[a.name] = a.type;
+          types.me = `ref:${n.name}`;
+          for (const param of (sig as MethodMember).importing) types[param.name] = param.type;
+          if ((sig as MethodMember).returning) types[(sig as MethodMember).returning!.name] = (sig as MethodMember).returning!.type;
+          // SAP: the instance constructor of a subclass must call super->constructor, even when the superclass declares none.
+          if (m.name === "constructor" && info.parent && !(m.body[0]?.kind === "call" && m.body[0].call.receiver === "super" && m.body[0].call.method === "constructor"))
+            error("block", m, `Call super->constructor( … ) first: the constructor of ${info.parent} must run before this one`);
+          currentClass = n.name; currentMethod = m.name;
+          readOnly = new Set((sig as MethodMember).importing.map(param => param.name));
+          handled = (sig as MethodMember).raising ?? [];
+          try { validate(m.body); } finally { currentClass = undefined; currentMethod = undefined; readOnly = new Set(); handled = []; }
+          info.impl[m.name] = { ...m, types };
+          types = outer;
+        }
       } else if (n.kind === "write") {
         if (!["i", "string"].includes(exprType(n.value, n))) error("type", n);
       } else if (n.kind === "control") {
@@ -947,8 +1324,20 @@ export function execute(nodes: Node[], source: string, options: { database?: Dat
         }
         if (n.where) validateCondition(n.where, sources, n);
       } else if (n.kind === "try") {
-        validate(n.body, loops, tries + 1);
-        validate(n.handler, loops, tries + 1);
+        for (const c of n.catches) {
+          if (c.cls === "cx_sy_itab_line_not_found") { if (c.into) error("unsupported", n, "INTO needs an exception class you defined"); }
+          else if (!classes[c.cls] || !isException(c.cls)) error("unsupported", n, "CATCH cx_sy_itab_line_not_found or an exception class you defined (inheriting from CX_STATIC_CHECK)");
+        }
+        const outerHandled = handled;
+        handled = [...handled, ...n.catches.map(c => c.cls)];
+        try { validate(n.body, loops, tries + 1); } finally { handled = outerHandled; }
+        for (const c of n.catches) {
+          if (c.into) {
+            if (c.inline) { if (c.into in types) error("declaration", n, c.into); types[c.into] = `ref:${c.cls}`; }
+            else if (!assignable(refType(c.into, n), `ref:${c.cls}`)) error("type", n, `${c.into} must be TYPE REF TO ${c.cls} or a superclass`);
+          }
+          validate(c.body, loops, tries + 1);
+        }
       } else if (n.kind === "do" || n.kind === "while" || n.kind === "loop") {
         if (tries) error("unsupported", n, "Loops inside TRY are outside this subset");
         if (n.kind === "do" && exprType(n.count, n) !== "i") error("type", n);
@@ -986,22 +1375,45 @@ export function execute(nodes: Node[], source: string, options: { database?: Dat
     }
   }
   validate(nodes);
+  for (const [cls, info] of Object.entries(classes)) {
+    for (const m of info.members)
+      if (m.kind === "method" && !info.impl[m.name]) error("block", m, `Implement ${m.name} with METHOD ${m.name}. … ENDMETHOD. in CLASS ${cls} IMPLEMENTATION`);
+    for (const i of info.interfaces) for (const m of ifaces[i].methods)
+      if (!info.impl[`${i}~${m.name}`]) error("block", m, `${cls} implements ${i}, so it needs METHOD ${i}~${m.name}. … ENDMETHOD.`);
+  }
   const loopStack: NonNullable<ExecutionEvent["loop"]>[] = [];
   let steps = 0;
   let traceBytes = 0;
   let subrc = 0, tabix = 0, dbcnt = 0;
   const database: Database = structuredClone(options.database ?? demoDatabase);
-  const flat = (list: Node[]): Node[] => list.flatMap(n => [n, ...("body" in n ? flat(n.body) : []), ...(n.kind === "try" ? flat(n.handler) : []), ...(n.kind === "if" ? [...flat(n.yes), ...flat(n.no), ...(n.elseifs || []).flatMap(b => flat(b.body))] : [])]);
-  const usesSql = flat(nodes).some(n => n.kind === "select" || n.kind.startsWith("db"));
+  const usesSql = walkNodes(nodes).some(n => n.kind === "select" || n.kind.startsWith("db"));
   let pendingSql: ExecutionEvent["sql"];
-  function resolve(name: string, n: Node) {
+  // Objects live in memory under "<class> #<n>"; static attributes under "<class>=><attr>".
+  const objectClass: Record<string, string> = Object.create(null);
+  let objectCount = 0;
+  const frames: { cls: string; obj: string; locals: Set<string> }[] = [];
+  function resolve(name: string, n: Node): string {
+    if (name.includes("=>")) { const [cls, attr] = name.split("=>"); return `${member(cls, attr)!.owner}=>${attr}`; }
+    if (name.includes("->")) {
+      const [base, attr] = name.split("->");
+      const obj = base === "me" ? frames.at(-1)?.obj : get({ kind: "ref", name: base }, n);
+      if (!obj) return error("nullref", n, base);
+      const m = member(objectClass[obj as string], attr) as Member;
+      return m.kind === "attr" && m.isStatic ? `${m.owner}=>${attr}` : `${obj}-${attr}`;
+    }
     const [base, field] = name.split("-");
+    const frame = frames.at(-1);
+    if (frame && !frame.locals.has(base)) {
+      const m = member(frame.cls, base);
+      if (m?.kind === "attr") return m.isStatic ? `${m.owner}=>${base}` : `${frame.obj}-${base}`;
+    }
     if (!base.startsWith("<")) return name;
     const target = aliases[base];
     if (!target) return error("unassigned", n, base);
     return target + (field ? `-${field}` : "");
   }
   function readRef(name: string, n: Node): MemoryValue {
+    if (name === "me" && frames.length) return frames.at(-1)!.obj;
     const [base, field] = resolve(name, n).split("-");
     const value = memory[base];
     if (value === undefined) return error("unknown", n, base);
@@ -1088,6 +1500,8 @@ export function execute(nodes: Node[], source: string, options: { database?: Dat
       if (typeof v === "object") return error("type", n);
       return v;
     }
+    if (e.kind === "new") return createObject(e, n);
+    if (e.kind === "call") return invoke(e, n) ?? error("type", n);
     if (e.kind === "add") {
       const a = get(e.left, n),
         b = get(e.right, n);
@@ -1102,6 +1516,59 @@ export function execute(nodes: Node[], source: string, options: { database?: Dat
     const v = readRef(e.name, n);
     if (typeof v === "object") return error("type", n);
     return v;
+  }
+  function createObject(e: NewExpr, n: Node): string {
+    const cls = e.className!;
+    if (objectCount >= 50) error("limit", n, "objects");
+    const key = `${cls} #${++objectCount}`;
+    memory[key] = Object.fromEntries(chain(cls).flatMap(c => classes[c].members.flatMap(m => m.kind === "attr" && !m.isStatic ? [[m.name, m.initial ?? (m.type === "i" ? 0 : "")]] : [])));
+    objectClass[key] = cls;
+    // The inherited or own constructor runs now, before NEW returns the reference.
+    if (member(cls, "constructor")?.kind === "method" && classes[cls]) {
+      const args = Object.fromEntries(e.args.map(a => [a.name!, get(a.value, n)]));
+      invokeOn(key, cls, "constructor", args, n, `NEW ${cls}`);
+    }
+    return key;
+  }
+  /** Runs a call: receiver me / super / a reference; interface references call the implemented iface~method. */
+  function invoke(call: CallExpr, n: Node): Primitive | undefined {
+    const frame = frames.at(-1);
+    let obj: string | undefined, start: string | undefined;
+    if (call.receiver === "super") { obj = frame?.obj; start = frame && classes[frame.cls].parent; }
+    else if (call.receiver === "me") { obj = frame?.obj; start = obj && objectClass[obj]; }
+    else { obj = get({ kind: "ref", name: call.receiver }, n) as string; start = obj && objectClass[obj]; }
+    if (!obj || !start) return error("nullref", n, call.receiver);
+    const args = Object.fromEntries(call.args.map(a => [a.name!, get(a.value, n)]));
+    return invokeOn(obj, start, call.viaIface ? `${call.viaIface}~${call.method}` : call.method, args, n, `${call.receiver}->${call.method}`);
+  }
+  /** Parameters and locals exist only during the call, attributes resolve to the receiving object. The
+   * implementation is the first one found from startCls up its superclasses (dynamic binding / super->). */
+  function invokeOn(obj: string, startCls: string, method: string, args: Record<string, Primitive>, n: Node, label: string): Primitive | undefined {
+    if (frames.length >= 8) error("limit", n, "method calls");
+    let owner: string | undefined = startCls;
+    while (owner && !classes[owner].impl[method]) owner = classes[owner].parent;
+    if (!owner) return method === "constructor" ? undefined : error("unknown", n, method);
+    const impl = classes[owner].impl[method], sig = member(owner, method) as MethodMember;
+    const declared = walkNodes(impl.body).flatMap(x => x.kind === "data" ? [x.name] : x.kind === "assign" && x.inline ? [x.target] : x.kind === "loop" && x.inline ? [x.into] : x.kind === "select" && x.into.inline ? [x.into.target] : x.kind === "try" ? x.catches.flatMap(c => c.inline ? [c.into!] : []) : []);
+    const locals = new Set([...sig.importing.map(p => p.name), ...(sig.returning ? [sig.returning.name] : []), ...declared]);
+    const saved = [...locals].filter(k => k in memory).map(k => [k, memory[k]] as const);
+    for (const param of sig.importing) memory[param.name] = args[param.name];
+    if (sig.returning) memory[sig.returning.name] = sig.returning.type === "i" ? 0 : "";
+    const outerTypes = types;
+    frames.push({ cls: owner, obj, locals });
+    types = impl.types;
+    try {
+      emit(n, "call", { key: method === "constructor" ? "construct" : "call", name: label, value: obj }, Object.keys(args));
+      run(impl.body);
+      const result = sig.returning ? memory[sig.returning.name] as Primitive : undefined;
+      emit(n, "end", { key: "methodEnd", name: method, value: result }, [], [], undefined, impl.endRange ?? n.range);
+      return result;
+    } finally {
+      frames.pop();
+      types = outerTypes;
+      for (const k of locals) delete memory[k];
+      for (const [k, v] of saved) memory[k] = v;
+    }
   }
   function checked(v: Primitive, n: Node) {
     if (
@@ -1261,6 +1728,7 @@ export function execute(nodes: Node[], source: string, options: { database?: Dat
     const a = get(n.left,n), b = get(n.right,n);
     return n.op === "=" ? a === b : n.op === "<>" ? a !== b : n.op === ">=" ? a >= b : n.op === "<=" ? a <= b : n.op === ">" ? a > b : a < b;
   }
+  const current = new Map<Node[], Node>(); // statement being executed in each block, for catch bookkeeping
   function run(list: Node[]): "exit" | "continue" | undefined {
     const skippedRange = (item: Node): Range => "endRange" in item ? sourceRange(source, item.range.start, item.endRange.end) : item.range;
     const propagate = (n: Node, control: "exit" | "continue") => {
@@ -1269,10 +1737,19 @@ export function execute(nodes: Node[], source: string, options: { database?: Dat
       return control;
     };
     for (const n of list) {
+      current.set(list, n);
       if (++steps > RUNTIME_LIMITS.steps) error("limit", n, "steps");
       pendingLookup = undefined;
       if (n.kind === "define") {
         emit(n, "define", { key: "define", name: n.name });
+      } else if (n.kind === "classDef") {
+        const statics = n.members.flatMap(m => m.kind === "attr" && m.isStatic ? [m] : []);
+        for (const m of statics) memory[`${n.name}=>${m.name}`] = m.initial ?? (m.type === "i" ? 0 : "");
+        emit(n, "define", { key: "classDef", name: n.name }, statics.map(m => `${n.name}=>${m.name}`), [], undefined, sourceRange(source, n.range.start, n.endRange.end));
+      } else if (n.kind === "classImpl") {
+        // The implementation runs only when one of its methods is called.
+      } else if (n.kind === "call") {
+        invoke(n.call, n);
       } else if (n.kind === "fieldSymbol") {
         aliases[n.name] = null;
         emit(n, "declare", {key:"fieldSymbol", name:n.name, type:n.type}, [n.name]);
@@ -1301,7 +1778,7 @@ export function execute(nodes: Node[], source: string, options: { database?: Dat
           n,
           "declare",
           {
-            key: Array.isArray(v) ? "table" : typeof v === "object" ? "structure" : "declare",
+            key: Array.isArray(v) ? "table" : typeof v === "object" ? "structure" : n.type.startsWith("ref:") ? "declareRef" : "declare",
             name: n.name,
             type: n.type,
             value: typeof v === "object" ? undefined : v,
@@ -1319,7 +1796,7 @@ export function execute(nodes: Node[], source: string, options: { database?: Dat
           n,
           "assign",
           {
-            key: n.value.kind === "add" ? "add" : typeof v === "object" ? "assignRow" : "assign",
+            key: n.value.kind === "new" ? "create" : typeof v === "string" && objectClass[v] ? "copyRef" : n.value.kind === "call" ? "assignCall" : n.value.kind === "add" ? "add" : typeof v === "object" ? "assignRow" : "assign",
             name: n.target,
             value: typeof v === "object" ? undefined : v,
           },
@@ -1404,17 +1881,31 @@ export function execute(nodes: Node[], source: string, options: { database?: Dat
         try {
           control = run(n.body);
         } catch (raised) {
-          if (!(raised instanceof LineNotFound)) throw raised;
-          // The statement that raised and every later statement in the TRY block are abandoned.
-          const skipped = n.body.filter(item => item.range.start >= raised.node.range.start).map(skippedRange);
-          emit(n, "catch", { key: "catch", name: raised.lookup.table }, [], skipped, undefined, n.catchRange, raised.lookup);
-          const handled = run(n.handler);
+          const clause = raised instanceof LineNotFound ? n.catches.find(c => c.cls === "cx_sy_itab_line_not_found")
+            : raised instanceof RaisedException ? n.catches.find(c => isSub(raised.cls, c.cls)) : undefined;
+          if (!clause || !(raised instanceof LineNotFound || raised instanceof RaisedException)) throw raised;
+          // The statement that raised and every later statement in the TRY block are abandoned. An exception raised
+          // inside a called method abandons the whole TRY statement that made the call.
+          const at = raised instanceof LineNotFound ? raised.node : current.get(n.body) ?? raised.node;
+          const skipped = n.body.filter(item => item.range.start >= at.range.start).map(skippedRange);
+          if (raised instanceof LineNotFound) emit(n, "catch", { key: "catch", name: raised.lookup.table }, [], skipped, undefined, clause.range, raised.lookup);
+          else {
+            if (clause.into) memory[clause.into] = raised.obj;
+            emit(n, "catch", { key: "catchObject", name: raised.cls, value: raised.obj }, clause.into ? [clause.into] : [], skipped, undefined, clause.range);
+          }
+          const handledControl = run(clause.body);
           emit(n, "end", { key: "tryCaught" }, [], [], undefined, n.endRange);
-          if (handled) return propagate(n, handled);
+          if (handledControl) return propagate(n, handledControl);
           continue;
         }
         if (control) return propagate(n, control);
-        emit(n, "end", { key: "trySkipped" }, [], [n.catchRange, ...(n.handlerRange ? [n.handlerRange] : [])], undefined, n.endRange);
+        emit(n, "end", { key: "trySkipped" }, [], n.catches.flatMap(c => [c.range, ...(c.bodyRange ? [c.bodyRange] : [])]), undefined, n.endRange);
+      } else if (n.kind === "raise") {
+        const obj = createObject(n.value, n);
+        emit(n, "raise", { key: "raise", name: n.value.className, value: obj });
+        throw new RaisedException(n, n.value.className!, obj);
+      } else if (n.kind === "ifaceDef") {
+        emit(n, "define", { key: "ifaceDef", name: n.name }, [], [], undefined, sourceRange(source, n.range.start, n.endRange.end));
       } else if (n.kind === "control") {
         const rest = list.slice(list.indexOf(n) + 1);
         emit(n,"control",{key:n.action},[],rest.map(skippedRange));
@@ -1429,7 +1920,7 @@ export function execute(nodes: Node[], source: string, options: { database?: Dat
         let iteration = 0, candidate = 0, matched = 0;
         const context: NonNullable<ExecutionEvent["loop"]> = { kind:n.kind, iteration:0, count, range:n.range, ...(n.kind === "loop" ? {table:n.table} : {}) };
         loopStack.push(context);
-        while (true) {
+        try { while (true) {
           const result = n.kind === "do" ? iteration < Math.max(0,count!) : n.kind === "while" ? compare(n) : candidate < (rows as TableValue).length;
           const expression = n.kind === "while" ? `${get(n.left,n)} ${n.op} ${get(n.right,n)}` : n.kind === "do" ? `${iteration+1} <= ${count}` : `${candidate+1} <= ${(rows as TableValue).length}`;
           if (!result) {
@@ -1458,8 +1949,7 @@ export function execute(nodes: Node[], source: string, options: { database?: Dat
           const control = run(n.body);
           emit(n,"end",{key:"loopIteration"},[],[],undefined,n.endRange);
           if (control === "exit") break;
-        }
-        loopStack.pop();
+        } } finally { loopStack.pop(); } // an exception leaving a method must not leave a stale loop context
         if (n.kind === "loop") {
           tabix = savedTabix; subrc = matched ? 0 : 4;
           emit(n,"end",{key:"end"},[],[],undefined,n.endRange);
@@ -1533,16 +2023,25 @@ export function execute(nodes: Node[], source: string, options: { database?: Dat
     run(nodes);
   } catch (raised) {
     if (raised instanceof LineNotFound) throw new SimulationError("notfound", raised.node.range, raised.lookup.table);
+    if (raised instanceof RaisedException) throw new SimulationError("unhandled", raised.node.range, raised.cls);
     throw raised;
   }
   return events;
 }
 /** CX_SY_ITAB_LINE_NOT_FOUND raised by a table expression; caught by TRY or reported as a runtime error. */
+/** An exception object raised with RAISE EXCEPTION; caught by a matching CATCH up the call chain. */
+class RaisedException {
+  constructor(public node: Node, public cls: string, public obj: string) {}
+}
 class LineNotFound {
   constructor(public node: Node, public lookup: NonNullable<ExecutionEvent["lookup"]>) {}
 }
 export function simulate(source: string) {
   return execute(parse(source), source);
+}
+/** Every statement node, including nested blocks and method bodies. */
+export function walkNodes(list: Node[]): Node[] {
+  return list.flatMap(n => [n, ...("body" in n ? walkNodes(n.body) : []), ...(n.kind === "classImpl" ? n.methods.flatMap(m => walkNodes(m.body)) : []), ...(n.kind === "try" ? n.catches.flatMap(c => walkNodes(c.body)) : []), ...(n.kind === "if" ? [...walkNodes(n.yes), ...walkNodes(n.no), ...(n.elseifs || []).flatMap(b => walkNodes(b.body))] : [])]);
 }
 export type ChallengeFailure = { name: string; input: number; expected: string; actual: string };
 export function evaluate(
@@ -1554,8 +2053,27 @@ export function evaluate(
     last = events.at(-1)!;
   let correct = false;
   let failure: ChallengeFailure | undefined;
-  const sqlSpec = sqlChallengeSpecs[id];
-  if (sqlSpec) {
+  const sqlSpec = sqlChallengeSpecs[id], oopSpec = oopChallengeSpecs[id];
+  if (oopSpec) {
+    // OOP challenges: each probe replaces named inputs (DATA … VALUE or a literal assigned to a target such as
+    // lo_department->mv_code) in both the learner's program and the reference solution; outputs must agree.
+    const runProbe = (code: string, probe: Record<string, Primitive>) => {
+      const tree = parse(code);
+      for (const n of walkNodes(tree)) {
+        if (n.kind === "data" && n.name in probe) n.initial = { kind: "literal", value: probe[n.name] };
+        if (n.kind === "assign" && n.target in probe && n.value.kind === "literal") n.value = { kind: "literal", value: probe[n.target] };
+      }
+      return execute(tree, code).at(-1)!.output.join("\n");
+    };
+    correct = oopSpec.requires(nodes) && oopSpec.probes.every((probe, index) => {
+      const expected = runProbe(oopSpec.solution, probe);
+      try {
+        const actual = runProbe(source, probe);
+        if (actual !== expected) failure = { name: Object.keys(probe)[0] ?? "program", input: index + 1, expected, actual };
+        return actual === expected;
+      } catch (error) { if (!(error instanceof SimulationError)) throw error; return false; }
+    });
+  } else if (sqlSpec) {
     // ABAP SQL challenges: the learner's program and the reference solution run against the same changed
     // database contents and inputs; output and final database state must agree on every probe.
     const flatten = (list: Node[]): Node[] => list.flatMap(n => [n, ...("body" in n ? flatten(n.body) : []), ...(n.kind === "try" ? flatten(n.handler) : []), ...(n.kind === "if" ? [...flatten(n.yes), ...flatten(n.no), ...(n.elseifs || []).flatMap(b => flatten(b.body))] : [])]);

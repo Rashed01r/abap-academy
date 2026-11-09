@@ -48,7 +48,7 @@ export function executionSteps(events: readonly ExecutionEvent[], lang: Locale):
     condition:"Check a choice", end:"Finish this block", loop:"Check the next pass", append:"Save a row",
     read:"Find a row", insert:"Insert a row", modify:"Replace a row", delete:"Remove a row", sort:"Put rows in order",
     control:"Choose the next instruction", bind:"Connect to existing data", unbind:"Disconnect the reference",
-    try:"Enter a protected block", catch:"Handle a missing row", sql:"Talk to the database",
+    try:"Enter a protected block", catch:"Handle a missing row", sql:"Talk to the database", call:"Run a method", raise:"Raise an exception",
   };
   // Arabic titles are optional while Arabic is deferred; missing ones fall back to English.
   const arabic: Partial<Record<ExecutionEvent["operation"], string>> = {

@@ -10,7 +10,7 @@
     "predev": "node scripts/prepare-monaco.mjs",
     "prebuild": "node scripts/prepare-monaco.mjs && tsx scripts/validate-education.ts",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test --test-concurrency=1 tests/engine.test.ts tests/fundamentals.test.ts tests/exploration.test.ts tests/anatomy.test.ts tests/table-keys.test.ts tests/field-symbols.test.ts tests/guided.test.ts tests/guided-data.test.ts tests/read-table.test.ts tests/table-operations.test.ts tests/education-quality.test.ts tests/visual-classroom.test.ts tests/teaching-trace.test.ts tests/conditional-loop.test.ts tests/table-expressions.test.ts tests/table-performance.test.ts tests/employee-manager.test.ts tests/dictionary-labs.test.ts tests/abap-sql.test.ts tests/roadmap.test.ts",
+    "test": "tsx --test --test-concurrency=1 tests/engine.test.ts tests/fundamentals.test.ts tests/exploration.test.ts tests/anatomy.test.ts tests/table-keys.test.ts tests/field-symbols.test.ts tests/guided.test.ts tests/guided-data.test.ts tests/read-table.test.ts tests/table-operations.test.ts tests/education-quality.test.ts tests/visual-classroom.test.ts tests/teaching-trace.test.ts tests/conditional-loop.test.ts tests/table-expressions.test.ts tests/table-performance.test.ts tests/employee-manager.test.ts tests/dictionary-labs.test.ts tests/abap-sql.test.ts tests/oop.test.ts tests/roadmap.test.ts",
     "validate:curriculum": "tsx scripts/validate-curriculum.ts",
     "validate:education": "tsx scripts/validate-education.ts",
     "report:trace-captions": "tsx scripts/report-trace-captions.ts",
