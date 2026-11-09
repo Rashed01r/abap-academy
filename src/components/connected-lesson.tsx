@@ -14,6 +14,7 @@ import { TableCategoryExplorer } from "./table-category-explorer";
 import { TableKeyExplorer } from "./table-key-explorer";
 import { TechnicalText } from "./technical-text";
 import { GuidedAssessment, GuidedExplorer } from "./guided-activity";
+import { DecisionChallenge } from "./decision-challenge";
 import { VisualCodeAnatomy } from "./visual-code-anatomy";
 import { LessonConcepts, LessonAlternatives } from "./lesson-concepts";
 import { ControlFlowExplorer } from "./control-flow-explorer";
@@ -121,13 +122,13 @@ export function ConnectedLesson({id, lang, theme, progress, setProgress, onNavig
         {m?.activity === "table-keys" && <TableKeyExplorer sessionKey={`${id}:visual-model`} lang={lang} assessment={false} onPass={() => {}}/>}
         {m?.guided ? tab === "visualize" && <GuidedExplorer definition={m.guided} lang={lang}/> : <LearningWorkspace initialCode={code} lang={lang} theme={theme} storageKey={`abap2-workspace:${id}:visualize`}/>}
       </> : <>
-        {additionPilot ? <AdditionChallengeIntro onLearn={() => select("learn")} onExplore={() => select("visualize")} /> : beginner ? <LessonChallengeIntro id={id} onLearn={() => select("learn")} onExplore={() => select("visualize")}/> : <>
+        {additionPilot ? <AdditionChallengeIntro onLearn={() => select("learn")} onExplore={() => select("visualize")} /> : id.startsWith("dictionary-") ? null : beginner ? <LessonChallengeIntro id={id} onLearn={() => select("learn")} onExplore={() => select("visualize")}/> : <>
           <p className="instruction"><TechnicalText>{localizedText(m?.goal, lang) || c.orientationGoal}</TechnicalText></p>
           <p>{c.help} <button className="text-button" onClick={() => select("learn")}>{c.learn}</button> · <button className="text-button" onClick={() => select("visualize")}>{tabLabel("visualize")}</button></p>
         </>}
         {m?.activity === "table-categories" && <TableCategoryExplorer sessionKey={`${id}:assessment-model`} lang={lang} assessment completed={progress.passedChallenges?.includes("data-category-choice")} onPass={() => attempt("data-category-choice", true)}/>}
         {m?.activity === "table-keys" && <TableKeyExplorer sessionKey={`${id}:assessment-model`} lang={lang} assessment completed={progress.passedChallenges?.includes("data-key-design")} onPass={() => attempt("data-key-design", true)}/>}
-        {m?.guided ? <>
+        {m?.guided && id.startsWith("dictionary-") ? <DecisionChallenge definition={m.guided} lang={lang} completed={progress.passedChallenges?.includes(`${id}-assessment`) || false} onResult={passed => attempt(`${id}-assessment`, passed)} onLearn={() => select("learn")} onExplore={() => select("visualize")}/> : m?.guided ? <>
           <p className="pill guided-boundary">{localizedText(m.guided.boundary, lang)}</p>
           <GuidedAssessment definition={m.guided} lang={lang} completed={progress.passedChallenges?.includes(`${id}-assessment`) || false} onResult={passed => attempt(`${id}-assessment`, passed)}/>
         </> : m ? <>

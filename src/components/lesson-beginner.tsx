@@ -15,6 +15,7 @@ import { getAnatomy } from "@/lib/anatomy-content";
 import { simulate, type Memory, type MemoryValue } from "@/lib/engine";
 import "./addition-lesson.css";
 import { DatabaseState } from "./sql-summary";
+import { DictionaryLessonPanel, hasDictionaryPanel } from "./dictionary-lesson-panels";
 
 // Syntax Orientation is not a mission, so it gets the few mission fields these components read.
 const orientationLesson = { id: "orientation", title: { en: ui.en.orientation }, goal: { en: treeCopy.en.orientationGoal }, example: orientationExamples.en, expected: "5\n8", tokens: orientation, guided: undefined, challenges: undefined };
@@ -149,6 +150,7 @@ export function LessonRunner({ id, code: example }: { id: string; code: string }
           {event?.output.length ? <pre dir="ltr">{event.output.join("\n")}</pre> : <p>Nothing on the screen yet.</p>}
         </section>
       </div>}
+      {hasDictionaryPanel(id) && <div className="add-side"><DictionaryLessonPanel id={id} part={gi}/></div>}
     </div>
     <div className="add-controls">
       <button type="button" onClick={() => go(step - 1)} disabled={!step}><span aria-hidden="true">← </span>Back</button>

@@ -22,7 +22,8 @@ export function GuidedExplorer({definition: d, lang, sqlLab = true}: {definition
     {d.id === "database-fundamentals" && sqlLab && <SqlFoundationLab lang={lang}/>}
     {d.id === "oop-introduction" && <ObjectExplorer lang={lang}/>}
     {d.id.startsWith("dictionary-") && d.id !== "dictionary-introduction" && <DictionaryLab id={d.id}/>}
-    <section className="learn-card artifact-explorer" aria-label={localizedText(d.activityTitle, lang)}>
+    {/* The Dictionary designer and labs already walk through each object step by step, so this card list would repeat them. */}
+    {!d.id.startsWith("dictionary-") && <section className="learn-card artifact-explorer" aria-label={localizedText(d.activityTitle, lang)}>
       <h2>{localizedText(d.activityTitle, lang)}</h2>
       <p><TechnicalText>{localizedText(d.activityIntro, lang)}</TechnicalText></p>
       <div className="artifact-nodes" role="group" aria-label={localizedText(d.activityTitle, lang)}>
@@ -39,7 +40,7 @@ export function GuidedExplorer({definition: d, lang, sqlLab = true}: {definition
           </div>)}
         </div>
       </article>
-    </section>
+    </section>}
   </div>;
 }
 

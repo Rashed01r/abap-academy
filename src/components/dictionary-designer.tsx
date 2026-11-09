@@ -28,6 +28,13 @@ export function dictionaryDesignIssues(domain: DomainDraft, binding: string, key
 }
 const copy = {
   en: {
+    steps: [["Domain", "type and length"], ["Data element", "bind to a domain"], ["Table key", "choose key fields"], ["Test a value", "see it checked"]] as [string, string][], stepsLabel: "Design steps",
+    stepTitles: ["Define the technical domain", "Give ZACA_EMPLOYEE_STATUS its technical type", "Choose the table key", "Check a value against the domain"],
+    stepIntros: ["A domain sets the type, length and allowed values once, so many fields can share it.", "A data element says what a field means. It borrows its type and length from a domain, so many fields can share one definition.", "A good key never changes and never repeats. Tick the fields that identify an employee row.", "Type a candidate status and see whether the domain you designed accepts it."],
+    boundHint: "Your domain from step 1: type, length and fixed values are inherited.", unboundHint: "Missing dependency: activation would fail.", boundResult: "Bound. The element now inherits the type, length and values of your domain.",
+    keyAdvice: { employee_id: "Stable business identifier. Each employee has exactly one.", name: "Names change and repeat, so two people could collide.", status: "Changes from A to I when someone leaves." } as Record<string, string>, goodKey: "good key", badKey: "bad key",
+    checksLabel: "Checks", checkLength: "Length is between 1 and 40", checkFixed: "Fixed values fit the domain", checkBinding: "Element is bound to a domain", checkKey: "Table has a primary key", checkIdentity: "Key contains employee_id", checkStable: "Key avoids name and status",
+    problem: "problem", problems: "problems", consistent: "Design is consistent", back: "Back", next: "Next", done: "Last step", stepOf: (n: number, total: number) => `Step ${n} of ${total}`,
     title: "Dictionary designer", boundary: "Local teaching model: no SAP objects are created or activated. These input checks illustrate a domain policy; they do not claim that a domain enforces a database CHECK constraint.",
     domain: "1. Technical domain", type: "Dictionary type", length: "Length (1–40 for this lab)", fixed: "Fixed values (comma separated; blank means unrestricted)", intInfo: "INT4 uses a signed 32-bit integer range; the character length control does not apply.",
     element: "2. Semantic data element", binding: "Domain binding for ZACA_EMPLOYEE_STATUS", unbound: "Unbound — missing dependency", custom: "ZACA_STATUS_DOMAIN — your domain above", label: "Translated label", labelValue: ENABLE_ARABIC ? "Employee status / حالة الموظف" : "Employee status", table: "3. Table key", keyHelp: "Single-client teaching table: an employee ID is unique; names and status may change. Select the stable identity. A real client-dependent table also includes its client field in the primary key.", test: "4. Check an input value", value: "Candidate status", accepted: "Value satisfies the selected local domain policy.", valid: "Dependencies and identity are consistent in this model. This is not SAP activation.", sample: "Current design", issues: "Review the design", changed: "Changing a shared domain can affect every dependent element and field; review consumers before real SAP activation.",
@@ -41,7 +48,8 @@ const copy = {
   },
 };
 export function DictionaryDesigner({ lang }: { lang: Locale }) {
-  const t = copy[lang];
+  const t = { ...copy.en, ...copy[lang] }; // new guided-step wording is English only while ENABLE_ARABIC = false
+  const [step, setStep] = useTopicSession("dictionary-designer:step", 0);
   const [type, setType] = useTopicSession<DomainDraft["type"]>("dictionary-designer:type", "CHAR");
   const [length, setLength] = useTopicSession("dictionary-designer:length", 1);
   const [fixed, setFixed] = useTopicSession("dictionary-designer:fixed", "A,I");
@@ -52,17 +60,50 @@ export function DictionaryDesigner({ lang }: { lang: Locale }) {
   const issues = dictionaryDesignIssues(domain, binding, keys);
   const valueIssues = domainValueIssues(domain, value);
   const messages: Record<string, string> = { length: t.lengthError, binding: t.bindingError, fixedDefinition: t.fixedDefinition, keyMissing: t.keyMissing, identityMissing: t.identityMissing, mutableKey: t.mutableKey, overflow: t.overflow, digits: t.digits, integer: t.integer, fixed: t.fixedError };
-  return <section className="learn-card guided-explorer guided-assessment" dir={lang === "ar" ? "rtl" : "ltr"} aria-label={t.title}>
-    <h2>{t.title}</h2><p>{t.boundary}</p>
-    <fieldset><legend>{t.domain}</legend><div className="explore-actions">
-      <label>{t.type}<select value={type} onChange={e => setType(e.target.value as DomainDraft["type"])}>{["CHAR", "NUMC", "INT4"].map(v => <option key={v}>{v}</option>)}</select></label>
-      <label>{t.length}<input type="number" min={1} max={40} value={length} disabled={type === "INT4"} onChange={e => setLength(Number(e.target.value))}/></label>
-      <label>{t.fixed}<input dir="ltr" value={fixed} onChange={e => setFixed(e.target.value)}/></label>
-    </div>{type === "INT4" && <p>{t.intInfo}</p>}</fieldset>
-    <fieldset><legend>{t.element}</legend><label>{t.binding}<select value={binding} onChange={e => setBinding(e.target.value)}><option value="">{t.unbound}</option><option value="ZACA_STATUS_DOMAIN">{t.custom}</option></select></label><p>{t.label}: {t.labelValue}</p></fieldset>
-    <fieldset><legend>{t.table}</legend><p>{t.keyHelp}</p><div className="explore-actions">{["employee_id", "name", "status"].map(field => <label key={field}><input type="checkbox" checked={keys.includes(field)} onChange={e => setKeys(previous => e.target.checked ? [...previous, field] : previous.filter(v => v !== field))}/><code>{field}</code></label>)}</div></fieldset>
-    <div role="status" aria-live="polite"><h3>{issues.length ? t.issues : t.valid}</h3>{issues.length > 0 && <ul>{issues.map(issue => <li key={issue}>{messages[issue]}</li>)}</ul>}</div>
-    <fieldset><legend>{t.test}</legend><label>{t.value}<input dir="ltr" value={value} onChange={e => setValue(e.target.value)}/></label><div role="status" aria-live="polite">{!binding ? <p>{t.noBinding}</p> : valueIssues.length ? <ul>{valueIssues.map(issue => <li key={issue}>{messages[issue]}</li>)}</ul> : <p>{t.accepted}</p>}</div></fieldset>
-    <div className="key-reference"><h3>{t.sample}</h3><pre dir="ltr">{`DOMAIN ZACA_STATUS_DOMAIN: ${type}${type === "INT4" ? "" : `(${length})`}\nFIXED: ${domain.fixed.join(" | ") || "—"}\nELEMENT ZACA_EMPLOYEE_STATUS → ${binding || "?"}\nTABLE STATUS → ZACA_EMPLOYEE_STATUS\nKEY: ${keys.join(" + ") || "?"}`}</pre></div><p>{t.changed}</p>
+  const has = (...names: string[]) => names.some(n => issues.includes(n));
+  const valid = [!has("length", "fixedDefinition"), !has("binding"), !has("keyMissing", "identityMissing", "mutableKey"), !!binding && !valueIssues.length];
+  const checks: [string, boolean, string, string][] = [
+    ["length", !has("length"), t.checkLength, t.lengthError], ["fixed", !has("fixedDefinition"), t.checkFixed, t.fixedDefinition], ["binding", !has("binding"), t.checkBinding, t.bindingError],
+    ["key", !has("keyMissing"), t.checkKey, t.keyMissing], ["identity", !has("identityMissing"), t.checkIdentity, t.identityMissing], ["stable", !has("mutableKey"), t.checkStable, t.mutableKey],
+  ];
+  const current = Math.min(Math.max(step, 0), t.steps.length - 1);
+  return <section className="learn-card guided-explorer guided-assessment dd" dir={lang === "ar" ? "rtl" : "ltr"} aria-label={t.title}>
+    <h2>{t.title}</h2><p className="dd-note">{t.boundary}</p>
+    <ol className="dd-steps" aria-label={t.stepsLabel}>{t.steps.map(([name, hint], i) => <li key={name}>
+      <button type="button" className="dd-step" aria-current={i === current ? "step" : undefined} data-state={i === current ? "current" : i < current ? (valid[i] ? "ok" : "problem") : "todo"} onClick={() => setStep(i)}>
+        <b aria-hidden="true">{i === current ? i + 1 : i < current ? (valid[i] ? "✓" : "!") : i + 1}</b><span>{name}<small>{hint}</small></span></button></li>)}</ol>
+    <div className="dd-grid">
+      <div className="dd-main">
+        <h3>{t.stepTitles[current]}</h3><p className="muted">{t.stepIntros[current]}</p>
+        {current === 0 && <><div className="explore-actions">
+          <label>{t.type}<select value={type} onChange={e => setType(e.target.value as DomainDraft["type"])}>{["CHAR", "NUMC", "INT4"].map(v => <option key={v}>{v}</option>)}</select></label>
+          <label>{t.length}<input type="number" min={1} max={40} value={length} disabled={type === "INT4"} onChange={e => setLength(Number(e.target.value))}/></label>
+          <label>{t.fixed}<input dir="ltr" value={fixed} onChange={e => setFixed(e.target.value)}/></label>
+        </div>{type === "INT4" && <p className="muted">{t.intInfo}</p>}</>}
+        {current === 1 && <><fieldset className="dd-choices"><legend>{t.binding}</legend>
+          {[["ZACA_STATUS_DOMAIN", t.custom, t.boundHint], ["", t.unbound, t.unboundHint]].map(([id, title, hint]) => <label key={id || "none"} data-on={binding === id || undefined}>
+            <input type="radio" name="dd-binding" checked={binding === id} onChange={() => setBinding(id)}/><span><b>{title}</b><small>{hint}</small></span></label>)}</fieldset>
+          <p>{t.label}: <strong>{t.labelValue}</strong></p>
+          <p role="status" aria-live="polite" data-ok={!!binding}>{binding ? t.boundResult : t.bindingError}</p></>}
+        {current === 2 && <fieldset className="dd-choices"><legend>{t.table}</legend>
+          {["employee_id", "name", "status"].map(field => <label key={field} data-on={keys.includes(field) || undefined}>
+            <input type="checkbox" checked={keys.includes(field)} onChange={e => setKeys(previous => e.target.checked ? [...previous, field] : previous.filter(v => v !== field))}/>
+            <span><b><code>{field}</code></b><small>{t.keyAdvice[field]}</small></span><em data-good={field === "employee_id"}>{field === "employee_id" ? t.goodKey : t.badKey}</em></label>)}</fieldset>}
+        {current === 3 && <><label className="dd-test">{t.value}<input dir="ltr" value={value} onChange={e => setValue(e.target.value)}/></label>
+          <div role="status" aria-live="polite" data-ok={valid[3]}>{!binding ? <p>{t.noBinding}</p> : valueIssues.length ? <ul>{valueIssues.map(issue => <li key={issue}>{messages[issue]}</li>)}</ul> : <p>{t.accepted}</p>}</div></>}
+      </div>
+      <div className="dd-rail">
+        <section className="dd-box" aria-label={t.sample}><div className="dd-head"><span className="eyebrow">{t.sample}</span>
+          <span className="dd-pill" data-ok={!issues.length} role="status" aria-live="polite">{issues.length ? `${issues.length} ${issues.length === 1 ? t.problem : t.problems}` : t.consistent}</span></div>
+          <pre dir="ltr">{`DOMAIN ZACA_STATUS_DOMAIN: ${type}${type === "INT4" ? "" : `(${length})`}\nFIXED: ${domain.fixed.join(" | ") || "—"}\nELEMENT ZACA_EMPLOYEE_STATUS → ${binding || "?"}\nTABLE STATUS → ZACA_EMPLOYEE_STATUS\nKEY: ${keys.join(" + ") || "?"}`}</pre></section>
+        <section className="dd-box" aria-label={t.checksLabel}><span className="eyebrow">{t.checksLabel}</span>
+          <ul className="dd-checks">{checks.map(([id, ok, good, bad]) => <li key={id} data-ok={ok}>{ok ? `✓ ${good}` : `✗ ${bad}`}</li>)}</ul>
+          <p className="muted">{issues.length ? t.issues : t.valid}</p></section>
+      </div>
+    </div>
+    <div className="add-controls"><button type="button" onClick={() => setStep(current - 1)} disabled={!current}><span aria-hidden="true">← </span>{t.back}</button>
+      <span className="add-progress">{t.stepOf(current + 1, t.steps.length)}</span>
+      <button type="button" className="primary" onClick={() => setStep(current + 1)} disabled={current === t.steps.length - 1}>{current === t.steps.length - 1 ? t.done : `${t.next}: ${t.steps[current + 1][0]} →`}</button></div>
+    <p className="muted">{t.changed}</p>
   </section>;
 }

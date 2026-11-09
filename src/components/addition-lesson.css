@@ -146,3 +146,93 @@
 /* Other lessons have more stages than the three on Add two numbers. */
 .beg-phases { display: flex; flex-wrap: wrap; }
 .beg-phases button { width: auto; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Introduction to ABAP Dictionary: the table builds up beside the code */
+.dict-panel { padding: 1rem; border: 1px solid var(--line); border-radius: 10px; background: var(--surface2); display: grid; gap: .6rem; min-width: 0; }
+.dict-panel table { width: 100%; border-collapse: collapse; }
+.dict-panel th { padding: .55rem .7rem; text-align: left; border: 1px solid var(--line); background: var(--accent-soft); color: var(--accent-text); font-weight: 600; }
+.dict-panel td { padding: .55rem .7rem; border: 1px solid var(--line); background: var(--surface); font-variant-numeric: tabular-nums; }
+.dict-panel [data-new] { outline: 2px solid var(--accent); outline-offset: -2px; }
+.dict-tag { margin-inline-start: .4rem; padding: .1rem .5rem; border-radius: 999px; background: var(--warning-bg); color: var(--warning); font-size: .72rem; }
+.dict-empty { margin: 0; padding: 1rem; text-align: center; color: var(--muted); font-style: italic; border: 1px dashed var(--line); border-radius: 8px; }
+.dict-try { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; }
+.dict-try input { width: 11rem; padding: .35rem .7rem; border: 1px solid var(--accent); border-radius: 6px; background: var(--surface3); color: var(--ink); font: inherit; }
+.dict-try [role="status"] { color: var(--danger); }
+.dict-try [role="status"][data-ok="true"] { color: var(--accent-text); }
+.dict-chain { display: flex; gap: .4rem; align-items: stretch; }
+.dict-chain > div { flex: 1; min-width: 0; padding: .7rem; display: grid; gap: .2rem; text-align: center; border: 2px solid var(--line); border-radius: 12px; background: var(--surface); }
+.dict-chain > div[data-lit] { border-color: var(--accent); background: var(--bg-card-selected); }
+.dict-chain small { color: var(--accent-text); font-size: .7rem; letter-spacing: .08em; text-transform: uppercase; }
+.dict-chain code { overflow-wrap: normal; font-size: .76rem; }
+.dict-chain [data-de] code { color: var(--warning); }
+.dict-chain span { color: var(--muted); font-size: .78rem; }
+.dict-chain b { align-self: center; color: var(--accent); }
+@media (max-width: 640px) { .dict-chain { flex-direction: column; } .dict-chain b { transform: rotate(90deg); } }
+@media (prefers-reduced-motion: no-preference) { .dict-panel [data-new] { animation: add-pop .45s ease-out; } }
+.dict-spec th { width: 34%; padding: .55rem .7rem; text-align: left; vertical-align: top; border: 1px solid var(--line); background: var(--accent-soft); color: var(--accent-text); font-weight: 600; }
+.dict-spec tr[data-fresh] > td { background: var(--bg-card-selected); box-shadow: inset 3px 0 0 var(--accent); }
+.dict-panel tr[data-bad] > td { background: var(--danger-bg); color: var(--danger); }
+.dict-slot { color: var(--accent-text); }
+.dict-choices { display: grid; gap: .5rem; }
+.dict-choices button { padding: .55rem .8rem; text-align: left; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); font: inherit; cursor: pointer; }
+.dict-choices button[aria-pressed="true"] { border-color: var(--accent); background: var(--bg-card-selected); }
+.dict-choices button:disabled { cursor: default; opacity: .8; }
+.dict-field { min-width: 7rem; padding: .35rem .7rem; border: 1px solid var(--accent); border-radius: 6px; background: var(--surface3); }
+.dict-code { margin: 0; padding: .7rem; border-radius: 8px; background: var(--code); color: var(--accent-text); font-size: .85rem; overflow: auto; }
+.add-box-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; }
+.dict-try label { display: inline-flex; gap: .4rem; align-items: center; }
+.dict-try input[type="checkbox"], .dict-try input[type="radio"] { width: auto; margin: 0; }
+
+/* Dictionary designer (Explore code): guided four-step layout with a live design rail */
+.dd-note { margin: .2rem 0 1rem; padding: .5rem .8rem; border-radius: 8px; background: var(--neutral-chip); color: var(--muted); font-size: .8rem; }
+.dd-steps { list-style: none; margin: 0 0 1rem; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .6rem; }
+.dd-step { width: 100%; display: flex; gap: .6rem; align-items: center; padding: .6rem .8rem; text-align: left; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--ink); font: inherit; cursor: pointer; }
+.dd-step b { flex: none; width: 1.8rem; height: 1.8rem; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 50%; font-size: .8rem; }
+.dd-step small { display: block; color: var(--muted); font-size: .72rem; }
+.dd-step[data-state="current"] { background: var(--accent-soft); border-color: var(--accent); }
+.dd-step[data-state="current"] b { background: var(--accent); border-color: var(--accent); color: #08211a; }
+.dd-step[data-state="ok"] b { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-text); }
+.dd-step[data-state="problem"] { border-color: var(--danger); }
+.dd-step[data-state="problem"] b { background: var(--danger-bg); border-color: var(--danger); color: var(--danger); }
+.dd-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 1rem; align-items: start; }
+.dd-main, .dd-box { padding: 1rem; border: 1px solid var(--line); border-radius: 12px; background: var(--surface2); min-width: 0; }
+.dd-main h3 { margin: 0 0 .3rem; }
+.dd-rail { display: grid; gap: 1rem; min-width: 0; }
+.dd-head { display: flex; flex-wrap: wrap; gap: .5rem; justify-content: space-between; align-items: center; margin-bottom: .6rem; }
+.dd-pill { padding: .2rem .7rem; border-radius: 999px; font-size: .8rem; font-weight: 600; background: var(--danger-bg); color: var(--danger); }
+.dd-pill[data-ok="true"] { background: var(--accent-soft); color: var(--accent-text); }
+.dd-box pre { margin: 0; overflow: auto; }
+.dd-checks { list-style: none; margin: .5rem 0; padding: 0; display: grid; gap: .25rem; }
+.dd-checks li { color: var(--accent-text); } .dd-checks li[data-ok="false"] { color: var(--danger); }
+.dd-choices { display: grid; gap: .6rem; margin: .6rem 0; padding: 0; border: 0; min-width: 0; }
+.dd-choices legend { padding: 0; margin-bottom: .4rem; color: var(--muted); }
+.dd-choices label { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: .7rem; align-items: center; padding: .7rem .9rem; border: 2px solid var(--line); border-radius: 12px; background: var(--surface); cursor: pointer; }
+.dd-choices label[data-on] { border-color: var(--accent); background: var(--bg-card-selected); }
+.dd-choices small { display: block; color: var(--muted); }
+.dd-choices em { font-style: normal; font-size: .78rem; padding: .15rem .6rem; border-radius: 999px; background: var(--danger-bg); color: var(--danger); }
+.dd-choices em[data-good="true"] { background: var(--accent-soft); color: var(--accent-text); }
+.dd [role="status"][data-ok="true"] { color: var(--accent-text); } .dd-main > [role="status"][data-ok="false"] { color: var(--danger); }
+.dd-test { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; margin-bottom: .6rem; }
+@media (max-width: 800px) { .dd-grid, .dd-steps { grid-template-columns: 1fr; } }
+
+/* Decision challenge (reference lessons): one decision at a time */
+.dc-hero { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: space-between; align-items: center; }
+.dc-xp { padding: .5rem 1rem; text-align: center; border: 1px solid var(--accent); border-radius: 12px; color: var(--accent-text); }
+.dc-xp b { display: block; font-size: 1.4rem; }
+.dc-dots { list-style: none; margin: 0 0 .6rem; padding: 0; display: flex; flex-wrap: wrap; gap: .6rem; }
+.dc-dots button { display: flex; gap: .5rem; align-items: center; padding: .4rem .9rem .4rem .5rem; border: 1px solid var(--line); border-radius: 999px; background: var(--bg); color: var(--ink); font: inherit; cursor: pointer; }
+.dc-dots b { width: 1.6rem; height: 1.6rem; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 50%; font-size: .75rem; }
+.dc-dots [aria-current="step"] { border-color: var(--accent); background: var(--accent-soft); }
+.dc-dots [data-state="right"] b { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-text); }
+.dc-dots [data-state="wrong"] b { background: var(--danger-bg); border-color: var(--danger); color: var(--danger); }
+.dc-bar { height: 8px; margin-bottom: 1rem; border-radius: 99px; background: var(--line); overflow: hidden; }
+.dc-bar i { display: block; height: 100%; background: var(--accent); transition: width .3s; }
+.dc-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 1rem; align-items: start; }
+.dc-question { padding: 1rem; border: 1px solid var(--line); border-radius: 12px; background: var(--surface2); }
+.dc-question h3 { margin: .2rem 0 .8rem; font-size: 1.2rem; }
+.dc-question label[data-state="right"] { border-color: var(--accent); background: var(--accent-soft); }
+.dc-question label[data-state="wrong"] { border-color: var(--danger); background: var(--danger-bg); }
+.dc-rail { display: grid; gap: 1rem; min-width: 0; }
+.dc-hint { margin: .4rem 0; color: var(--warning); }
+@media (max-width: 800px) { .dc-grid { grid-template-columns: 1fr; } }
+.dc-question label:not([data-state]) em { background: var(--surface3); color: var(--muted); }

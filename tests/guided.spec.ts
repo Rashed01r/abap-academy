@@ -34,10 +34,13 @@ for (const lang of enabledLocales) for (const [index, d] of guidedDefinitions.en
     let saved = await page.evaluate(() => JSON.parse(localStorage.getItem("abap2-master-progress")!));
     expect(saved.missions).toEqual(["structures"]); expect(saved.started).not.toContain(d.id);
     await tab(page, lang, "visualize");
-    const explorer = page.locator(".artifact-explorer");
-    await expect(explorer.getByRole("button", {name: localizedText(d.artifacts[0].title, lang), exact: false}).first()).toBeVisible();
-    await explorer.locator("[data-artifact]").last().click();
-    await expect(explorer.locator(".artifact-detail h3")).toHaveText(localizedText(d.artifacts.at(-1)!.title, lang));
+    if (d.id.startsWith("dictionary-")) await expect(page.locator(".artifact-explorer")).toHaveCount(0);
+    else {
+      const explorer = page.locator(".artifact-explorer");
+      await expect(explorer.getByRole("button", {name: localizedText(d.artifacts[0].title, lang), exact: false}).first()).toBeVisible();
+      await explorer.locator("[data-artifact]").last().click();
+      await expect(explorer.locator(".artifact-detail h3")).toHaveText(localizedText(d.artifacts.at(-1)!.title, lang));
+    }
     await expect(page.getByRole("tabpanel").locator(".monaco-editor")).toHaveCount(0);
     await tab(page, lang, "challenge");
     const assessment = page.getByRole("region", {name: lang === "en" ? "Apply the lesson" : "طبّق ما تعلمته", exact: true});
@@ -46,10 +49,16 @@ for (const lang of enabledLocales) for (const [index, d] of guidedDefinitions.en
     await expect(check).toBeDisabled(); await expect(complete).toBeDisabled();
     await assessment.getByRole("button", {name: lang === "en" ? "Show next hint" : "أظهر التلميح التالي", exact: true}).first().click();
     await expect(assessment).toContainText(localizedText(d.decisions[0].hints[0], lang));
-    for (const decision of d.decisions) await assessment.locator(`[data-decision="${decision.id}"] select`).selectOption(decision.options.find(o => o.id !== decision.correct)!.id);
+    // The intro lesson shows one decision at a time with radio answers; the others use a select per decision.
+    const choose = async (decision: typeof d.decisions[number], optionId: string) => {
+      if (!d.id.startsWith("dictionary-")) return assessment.locator(`[data-decision="${decision.id}"] select`).selectOption(optionId);
+      await assessment.getByRole("button", {name: `Decision ${d.decisions.indexOf(decision) + 1}`, exact: true}).click();
+      await assessment.getByRole("radio", {name: localizedText(decision.options.find(o => o.id === optionId)!.text, lang), exact: true}).check();
+    };
+    for (const decision of d.decisions) await choose(decision, decision.options.find(o => o.id !== decision.correct)!.id);
     await check.click(); await expect(assessment.getByTestId("guided-result")).toHaveClass(/error-text/);
     await expect(complete).toBeDisabled();
-    for (const decision of d.decisions) await assessment.locator(`[data-decision="${decision.id}"] select`).selectOption(decision.correct);
+    for (const decision of d.decisions) await choose(decision, decision.correct);
     await check.click(); await expect(assessment.getByTestId("guided-result")).toHaveClass(/success-text/);
     // English challenges have no quick check: passing the challenge alone enables completion.
     await expect(page.getByRole("tabpanel").locator(".quiz")).toHaveCount(0);
@@ -73,10 +82,13 @@ test("specialized foundation models react to actual input and preserve state on 
   await page.goto("/?mission=dictionary-introduction");
   await openLesson(page, "dictionary-introduction"); await tab(page, "en", "visualize");
   const designer = page.getByRole("region", {name: "Dictionary designer", exact: true});
+  await designer.getByRole("button", {name: /^Test a value/}).click();
   await designer.getByLabel("Candidate status", {exact: true}).fill("ACTIVE");
   await expect(designer).toContainText("The value exceeds the chosen character length");
-  await designer.getByRole("combobox", {name: /^Domain binding for ZACA_EMPLOYEE_STATUS/}).selectOption("");
+  await designer.getByRole("button", {name: /^Data element/}).click();
+  await designer.getByRole("radio", {name: /^Unbound/}).check();
   await expect(designer).toContainText("Bind the data element to a domain");
+  await designer.getByRole("button", {name: /^Test a value/}).click();
   await openLesson(page, "database-fundamentals"); await tab(page, "en", "visualize");
   const sql = page.getByRole("region", {name: "SQL foundation lab", exact: true});
   await sql.getByRole("combobox", {name: /^Department(?: |$)/}).selectOption("IT");
