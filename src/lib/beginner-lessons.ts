@@ -1,6 +1,9 @@
 // Hand-written beginner content for every lesson, following the "Add two numbers" layout.
 // English only while ENABLE_ARABIC = false. Experiment answers are never stored here:
 // the page runs the learner's code before and after the change and shows the real screens.
+import { applicationBeginner } from "./application-beginner";
+import { modernBeginner } from "./modern-content";
+import { cloudBeginner } from "./cloud-content";
 export type BeginnerLesson = {
   goal?: { give: string; shows: string };
   ideas: [title: string, text: string][];
@@ -12,6 +15,9 @@ export type BeginnerLesson = {
 };
 
 export const beginnerLessons: Record<string, BeginnerLesson> = {
+  ...applicationBeginner,
+  ...modernBeginner,
+  ...cloudBeginner,
   orientation: {
     goal: { give: "WRITE 5.", shows: "5" },
     ideas: [["An instruction is one command.", "WRITE 5. tells the program to show 5."], ["A period ends it.", "An instruction can span lines. Only the period ends it."], ["A comment is a note.", "A line starting with * is for people. The program skips it."]],
@@ -681,16 +687,6 @@ export const beginnerLessons: Record<string, BeginnerLesson> = {
     ],
     check: { question: "Which object chooses the protocol, such as OData V4?", options: ["The service binding", "The service definition", "The CDS view"], answer: 0, explanation: "The service definition chooses what is exposed. The separate binding chooses how." },
     challenge: { title: "Make four architecture decisions for a cloud service", must: ["Choose the development contract.", "Decide where the data, the model and the rules live.", "Decide how the service is exposed and published."], hints: ["Check the dependency boundary before the syntax.", "Data → table, meaning → CDS, rules → behavior, consumer view → projection, protocol → binding."] },
-  },
-  "projects-employee-management": {
-    ideas: [["A UUID is the identity.", "The name can change; the UUID never does."], ["Behavior declares the rules.", "create, update and name validation."], ["Projection and service expose it.", "Only the operations the app needs."]],
-    mistakes: [
-      { title: "Using the name as the key", wrong: "key employee_name : abap.char(80) not null;", right: "key employee_uuid : sysuuid_x16 not null;", why: "Names change. A UUID identifies the employee for good." },
-      { title: "Declaring a validation without code", wrong: "validation validateName on save { create; field EmployeeName; }\n\" done", right: "validation validateName on save { create; field EmployeeName; }\n\" + implement validateName in zbp_i_academyemployee", why: "A declaration only names the rule. The behavior class must implement it." },
-      { title: "Forgetting use update", wrong: "define behavior for ZC_AcademyEmployee alias Employee\n{\n  use create;\n}", right: "define behavior for ZC_AcademyEmployee alias Employee\n{\n  use create;\n  use update;\n}", why: "Users can only edit through the service if the projection reuses update." },
-    ],
-    check: { question: "What proves this project stage is done?", options: ["Tests in a real SAP system: allowed writes, rejected bad data, denied access", "A successful service preview", "The code compiles"], answer: 0, explanation: "A preview is one observation. Acceptance needs real create and update, rejected invalid data and denied access." },
-    challenge: { title: "Resolve the project review findings", must: ["Fix the data identity.", "Fix the validation and the missing update operation.", "Fix security and define the acceptance tests."], hints: ["Names can change without changing the person.", "UUID key, implemented validation, use update in the projection, separate read and write authorization, then real SAP tests."] },
   },
 };
 

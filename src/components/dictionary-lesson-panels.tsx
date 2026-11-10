@@ -5,6 +5,11 @@
 import { useState, type ReactNode } from "react";
 import { domainValueIssues } from "./dictionary-designer";
 import { DictionaryIntroPanel } from "./dictionary-intro-panel";
+import { ApplicationPanel } from "./application-lessons";
+import { CloudPanel } from "./cloud-lessons";
+import { cloudLessons } from "@/lib/cloud-content";
+import { applicationLessons } from "@/lib/application-labs";
+import { sqlEmployees } from "./sql-foundation-lab";
 import {
   labelSlots, labelFit, candidateRows, keyCandidates, keyCollisions, keyDesignIssues, departments, foreignKeyCheck, searchHelpRows,
 } from "@/lib/dictionary-labs";
@@ -151,7 +156,70 @@ function SearchHelpPanel({ part }: { part: number }) {
   </>;
 }
 
+/** Database fundamentals: the same four employees travel through FROM, FIELDS, WHERE and INTO TABLE. */
+function SqlReadPanel({ part }: { part: number }) {
+  const [department, setDepartment] = useState("IT");
+  const [ordered, setOrdered] = useState(true);
+  const all = ["employee_id", "employee_name", "department", "salary"];
+  const kept = sqlEmployees.filter(e => e.department === department);
+  const result = [...kept].sort((a, b) => (ordered ? a.employee_id - b.employee_id : b.employee_id - a.employee_id));
+  const cell = (e: (typeof sqlEmployees)[number], cols: string[]) => cols.map(c => String(e[c as keyof typeof e]));
+  return <>
+    {part >= 0 && part < 2 && <Panel title="The ABAP variable · lv_department">
+      <div className="add-box-row"><div className="add-box" data-changed={part === 0 || undefined}><code>lv_department</code><strong dir="ltr">IT</strong><small>program memory</small></div></div>
+      <p className="muted">{part === 0 ? "A value from the program. WHERE will compare each row with it." : "The table lives in the database, not in the program."}</p></Panel>}
+    {part < 0 && <Panel title="The database table · ZACA_EMPLOYEE"><Empty /></Panel>}
+    {part === 1 && <Panel title="FROM · the source table · ZACA_EMPLOYEE">
+      <Grid cols={all} rows={sqlEmployees.map(e => cell(e, all))} keys={["employee_id"]} fresh={all} />
+      <p className="muted">Four persistent rows. Nothing is read yet.</p></Panel>}
+    {part === 2 && <Panel title="FIELDS · only two columns">
+      <Grid cols={all} rows={sqlEmployees.map(e => cell(e, all))} keys={["employee_id"]} fresh={["employee_id", "employee_name"]} />
+      <p className="muted">Outlined columns are requested. The result is narrower, but still has four rows.</p></Panel>}
+    {part === 3 && <Panel title="WHERE · only some rows">
+      <Grid cols={["employee_id", "employee_name", "department"]} rows={sqlEmployees.map(e => cell(e, ["employee_id", "employee_name", "department"]))} bad={sqlEmployees.flatMap((e, i) => e.department === department ? [] : [i])} />
+      <label className="dict-try">department = <select value={department} onChange={e => setDepartment(e.target.value)}>{["IT", "HR", "SALES", "LEGAL"].map(v => <option key={v}>{v}</option>)}</select>
+        <Msg ok={kept.length > 0}>{kept.length ? `${kept.length} row${kept.length === 1 ? "" : "s"} kept (the red rows are skipped).` : "No row matches: the result is empty and sy-subrc = 4."}</Msg></label></Panel>}
+    {part >= 4 && <Panel title="INTO TABLE · lt_employees (a local copy)">
+      {result.length ? <Grid cols={["employee_id", "employee_name"]} rows={result.map(e => cell(e, ["employee_id", "employee_name"]))} fresh={["employee_id", "employee_name"]} /> : <p className="dict-empty">Empty result.</p>}
+      <label className="dict-try"><input type="checkbox" checked={ordered} onChange={e => setOrdered(e.target.checked)} /> ORDER BY employee_id
+        <Msg ok={ordered}>{ordered ? "✓ The order is guaranteed." : "✗ No ORDER BY: the database may return rows in any order."}</Msg></label>
+      <p className="muted">Changing lt_employees never changes the database table.</p></Panel>}
+  </>;
+}
+
+/** Classes and objects: the contract, the private counter, the method, then two independent objects. */
+function CounterPanel({ part }: { part: number }) {
+  const [counts, setCounts] = useState([0, 0]);
+  const [access, setAccess] = useState("");
+  const bump = (i: number) => setCounts(c => c.map((v, j) => j === i ? v + 1 : v));
+  const boxes = (names: string[], changed?: number) => <div className="add-box-row">{names.map((n, i) => <div className="add-box" key={n} data-changed={i === changed || undefined}>
+    <code>{n}</code><strong dir="ltr">{counts[i]}</strong><small>mv_value (private)</small></div>)}</div>;
+  return <>
+    <Panel title="The class · LCL_COUNTER"><Spec part={part} rows={[
+      [0, "Public methods", <><code>increment</code>, <code>get_value</code> (returns an integer)</>],
+      [1, "Private data", <><code>mv_value</code>: only the class can touch it</>],
+      [2, "increment does", <code>mv_value = mv_value + 1.</code>],
+      [3, "Objects", "lo_first and lo_second, built with NEW"],
+    ]} /></Panel>
+    {part === 1 && <Panel title="Try it · who may change mv_value?"><div className="dict-choices">
+      {[["direct", "lo_first->mv_value = 5."], ["method", "lo_first->increment( )."]].map(([id, code]) => <button type="button" key={id} aria-pressed={access === id} onClick={() => setAccess(id)}><code>{code}</code></button>)}</div>
+      {access && <Msg ok={access === "method"}>{access === "method" ? "✓ Allowed: the public method changes the private data." : "✗ Syntax error: mv_value is private."}</Msg>}</Panel>}
+    {part === 2 && <Panel title="Try it · call increment( ) once">
+      {boxes(["lo_first"])}
+      <div className="dict-try"><button type="button" onClick={() => bump(0)}>{"lo_first->increment( )"}</button></div>
+      <p className="muted">The method reads and writes the receiving object's own mv_value.</p></Panel>}
+    {part === 3 && <Panel title="Try it · two independent objects">
+      {boxes(["lo_first", "lo_second"])}
+      <div className="dict-try"><button type="button" onClick={() => bump(0)}>{"lo_first->increment( )"}</button> <button type="button" onClick={() => bump(1)}>{"lo_second->increment( )"}</button></div>
+      <p className="muted">Same class, separate values. In the lesson code only lo_first is incremented, so WRITE shows 1 and 0.</p></Panel>}
+  </>;
+}
+
 const panels: Record<string, (p: { part: number }) => ReactNode> = {
+  ...Object.fromEntries(Object.keys(applicationLessons).map(id => [id, ({ part }: { part: number }) => <ApplicationPanel id={id} part={part} />])),
+  ...Object.fromEntries(Object.keys(cloudLessons).map(id => [id, ({ part }: { part: number }) => <CloudPanel id={id} part={part} />])),
+  "oop-introduction": CounterPanel,
+  "database-fundamentals": SqlReadPanel,
   "dictionary-introduction": DictionaryIntroPanel, "dictionary-domains": DomainPanel, "dictionary-data-elements": DataElementPanel,
   "dictionary-structures": StructurePanel, "dictionary-database-tables": TablePanel, "dictionary-foreign-keys": ForeignKeyPanel, "dictionary-search-helps": SearchHelpPanel,
 };

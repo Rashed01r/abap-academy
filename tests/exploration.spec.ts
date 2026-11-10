@@ -47,10 +47,9 @@ for (const lang of enabledLocales)
             await expect(page.getByRole('tabpanel').locator('.timeline li')).not.toHaveCount(0);
             await page.getByRole('button', { name: t.path, exact: true }).click();
             await openPath(page, 'cloud');
-            await page.locator('[data-node^="planned:cloud:"] .card, [data-mobile-node^="planned:cloud:"]').first().click();
-            await expect(page.locator('[data-drawer]')).toContainText(roadmapCopy(lang).plannedText);
-            await expect(page.locator('[data-drawer]').getByRole('button', { name: /Open lesson/ })).toHaveCount(0);
-            await expect(page.getByRole('tab')).toHaveCount(0);
+            // Every topic of the path now has a lesson, so no "planned" card is left to open.
+            await expect(page.locator('[data-node^="planned:"], [data-mobile-node^="planned:"]')).toHaveCount(0);
+            await expect(page.locator('[data-node^="lesson:cloud-"] .card, [data-mobile-node^="lesson:cloud-"]')).toHaveCount(7);
             await openLesson(page, 'addition', lang);
             await expect(page.locator('.lesson-summary h1')).toHaveText(localizedText(missions[0].title, lang));
             expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();

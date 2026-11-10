@@ -4,10 +4,13 @@ import type { GuidedDefinition } from "./guided-types";
 import { guidedDataDefinitions } from "./guided-data-definitions";
 import { guidedDictionaryDefinitions } from "./guided-dictionary-definitions";
 import { guidedDevelopmentDefinitions } from "./guided-development-definitions";
+import { guidedApplicationDefinitions } from "./guided-application-definitions";
+import { guidedModernDefinitions } from "./modern-content";
 import { guidedCloudProjectDefinitions } from "./guided-cloud-project-definitions";
+import { guidedCloudDefinitions } from "./guided-cloud-definitions";
 
 export const guidedDefinitions: GuidedDefinition[] = [
-  ...guidedDataDefinitions, ...guidedDictionaryDefinitions, ...guidedDevelopmentDefinitions, ...guidedCloudProjectDefinitions,
+  ...guidedDataDefinitions, ...guidedDictionaryDefinitions, ...guidedDevelopmentDefinitions, ...guidedApplicationDefinitions, ...guidedModernDefinitions, ...guidedCloudProjectDefinitions, ...guidedCloudDefinitions,
 ];
 
 /** One registration pipeline; guided reference code never enters the interpreter. */

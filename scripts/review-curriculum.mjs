@@ -12,7 +12,7 @@ try {
       localStorage.setItem("abap2-language", lang); localStorage.setItem("abap2-appearance", lang === "ar" ? "dark" : "light");
     }, {lang});
     const page = await context.newPage();
-    for (const id of ["dictionary-introduction", "database-fundamentals", "oop-introduction", "applications-reports", "modern-syntax", "cloud-introduction", "projects-employee-management", "data-read-table", "data-table-mutations", "data-sorting-filtering"]) {
+    for (const id of ["dictionary-introduction", "database-fundamentals", "oop-introduction", "applications-reports", "modern-syntax", "cloud-introduction", "data-read-table", "data-table-mutations", "data-sorting-filtering"]) {
       await page.goto(`${base}/?mission=${id}`);
       await page.locator(".lesson-summary h1").waitFor();
       if (width > 768) await page.locator(".panel-actions button").first().click();

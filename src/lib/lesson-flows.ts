@@ -1,7 +1,11 @@
 // "The whole lesson in one line": each step is [code, plain meaning, isDecision?]. English only while ENABLE_ARABIC = false.
 export type FlowStep = readonly [code: string, say: string, decision?: true];
 
+import { modernFlows } from "./modern-content";
+import { cloudFlows } from "./cloud-content";
 export const lessonFlows: Record<string, readonly FlowStep[]> = {
+  ...modernFlows,
+  ...cloudFlows,
   orientation: [["WRITE 'Hi'", "an instruction"], [".", "the period ends it"], ["\" note", "a comment, never printed"], ["Build trace", "run it and watch"]],
   addition: [["DATA", "make the boxes"], ["a + b", "add"], ["=", "store in lv_result"], ["WRITE", "show it"]],
   structures: [["TYPES", "describe the shape"], ["DATA ls", "create one record"], ["ls-name =", "fill a field"], ["WRITE ls-name", "show a field"]],
@@ -46,8 +50,12 @@ export const lessonFlows: Record<string, readonly FlowStep[]> = {
   "dictionary-introduction": [["Domain", "technical type and length"], ["Data element", "business meaning and labels"], ["Structure", "grouped fields, no rows"], ["Database table", "stores the rows"]],
   "database-fundamentals": [["FROM", "which table"], ["FIELDS", "which columns"], ["WHERE", "which rows", true], ["ORDER BY", "which order"], ["INTO TABLE", "a local copy of the result"]],
   "oop-introduction": [["CLASS", "the blueprint"], ["NEW", "create an object"], ["->increment( )", "call a method"], ["mv_value", "each object keeps its own value"]],
+  "applications-alv": [["SELECT", "rows into a table"], ["field catalog", "describe each column"], ["REUSE_ALV_LIST_DISPLAY", "show the list"], ["sy-subrc", "did it work?", true]],
+  "applications-module-pool": [["PBO", "prepare the screen"], ["screen", "user types and presses"], ["PAI", "read the OK field", true], ["LEAVE TO SCREEN 0", "end the screen"]],
+  "applications-smart-forms": [["SSF_FUNCTION_MODULE_NAME", "find the generated name"], ["sy-subrc", "form active?", true], ["CALL FUNCTION", "pass the data"], ["printed form", "the document"]],
+  "applications-debugging": [["breakpoint", "stop at a line"], ["F5 / F6", "step"], ["variables", "read the values"], ["F8", "continue"]],
+  "applications-transactions": [["SE93", "create the code"], ["start object", "report or dialog?", true], ["program + screen", "what it starts"], ["user types the code", "program runs"]],
   "applications-reports": [["INITIALIZATION", "set defaults"], ["AT SELECTION-SCREEN", "is the input valid?", true], ["START-OF-SELECTION", "produce the main list"], ["END-OF-SELECTION", "finish normally"]],
   "modern-syntax": [["VALUE #( … )", "build a table"], ["lt[ id = 10 ]", "read one row"], ["DATA( … )", "declare where used"], ["|{ … }|", "put values in text"]],
   "cloud-introduction": [["Table", "stores records"], ["CDS", "business data model"], ["Behavior", "operations and rules"], ["Projection", "the consumer view"], ["Service", "expose and bind"]],
-  "projects-employee-management": [["UUID table", "stable identity"], ["Root + behavior", "the business object"], ["Projection", "the consumer shape"], ["Authorization", "who may read or write", true], ["Service + tests", "prove it in SAP"]],
 };

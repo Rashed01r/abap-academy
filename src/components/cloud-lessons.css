@@ -1,0 +1,17 @@
+/* ABAP Cloud and RAP lesson: layer stack (Learn) and code review (Challenge). Uses the app's theme tokens. */
+.cl2-stack { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column-reverse; gap: .4rem; }
+.cl2-stack li { display: flex; justify-content: space-between; gap: .6rem; padding: .5rem .8rem; border: 1px dashed var(--line); border-radius: 8px; opacity: .45; }
+.cl2-stack li[data-on] { opacity: 1; border-style: solid; border-color: var(--accent); background: var(--accent-soft); }
+.cl2-stack li[data-now] { box-shadow: 0 0 0 2px var(--accent); }
+.cl2-stack small { color: var(--muted); }
+.dict-panel [role="status"][data-kind="ok"] { color: var(--accent-text); }
+.dict-panel [role="status"][data-kind="warn"] { color: var(--muted); }
+.dict-panel [role="status"][data-kind="bad"] { color: var(--danger); }
+.cr-lines { list-style: none; margin: .6rem 0; padding: 0; display: grid; gap: .3rem; }
+.cr-lines button { width: 100%; display: flex; gap: .7rem; align-items: center; text-align: left; padding: .45rem .7rem; border: 1px solid var(--line); border-radius: 8px; background: var(--code); color: var(--accent-text); font: inherit; cursor: pointer; }
+.cr-lines button span { flex: none; width: 1.4rem; text-align: center; color: var(--muted); }
+.cr-lines button[aria-pressed="true"] { border-color: var(--accent); background: var(--bg-card-selected); }
+.cr-lines button[data-state="hit"] { border-color: var(--accent); }
+.cr-lines button[data-state="miss"] { border-color: var(--danger); background: var(--danger-bg); color: var(--danger); }
+.cr-lines p { margin: .2rem 0 .4rem 2.1rem; }
+.cr-lines p[data-state="miss"] { color: var(--danger); }

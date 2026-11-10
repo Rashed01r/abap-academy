@@ -1,0 +1,47 @@
+/* Modern ABAP lessons: classic vs modern, and the build-it lab. Uses the app's theme tokens. */
+.ml-two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: .9rem; align-items: start; }
+@media (max-width: 760px) { .ml-two { grid-template-columns: 1fr; } }
+.ml-sub { border: 1px solid var(--line); border-radius: 12px; padding: .75rem; display: grid; gap: .6rem; align-content: start; min-width: 0; }
+.ml-sub h3, .ml-parts { margin: 0; }
+.ml-code { background: var(--surface2); border-radius: 10px; padding: .6rem .7rem; margin: 0; overflow-x: auto; display: grid; font: .8rem/1.55 var(--font-mono, monospace); }
+.ml-l { display: block; white-space: pre; padding: 0 .25rem; border-radius: 4px; background: none; border: 0; text-align: start; color: inherit; font: inherit; }
+button.ml-l { cursor: pointer; }
+button.ml-l:hover { background: var(--accent-soft); }
+button.ml-l[data-hl] { background: var(--accent-soft); }
+button.ml-l[data-sel] { outline: 2px solid var(--accent); }
+.ml-toggle { display: flex; gap: .55rem; align-items: flex-start; padding: .5rem .65rem; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.ml-toggle input { margin-top: .3rem; accent-color: var(--accent); }
+.ml-parts { display: grid; gap: .5rem; align-content: start; }
+.ml-note { background: var(--surface2); border-radius: 10px; padding: .65rem .8rem; min-height: 3.2rem; line-height: 1.5; }
+.ml-status { display: grid; gap: .4rem; margin: 0; padding: 0; list-style: none; }
+.ml-status li { padding: .45rem .7rem; border-radius: 10px; background: var(--accent-soft); }
+.ml-status li[data-kind="warn"] { background: var(--warning-bg, var(--surface2)); }
+.ml-status li[data-kind="err"] { background: var(--danger-bg, var(--surface2)); }
+/* Old way -> new way */
+.ml-chips, .ml-modes, .ml-steps { display: flex; flex-wrap: wrap; gap: .5rem; margin: 0; padding: 0; list-style: none; }
+.ml-chip { border-radius: 999px; padding: .2rem .8rem; font-weight: 600; font-size: .9rem; background: var(--accent-soft); color: var(--accent); }
+.ml-chip[data-old] { background: var(--danger-bg, var(--surface2)); color: var(--danger, var(--ink)); }
+.ml-steps button[aria-current="step"] { border-color: var(--accent); box-shadow: inset 0 0 0 2px var(--accent); }
+.ml-block { display: grid; gap: .6rem; } .ml-block h3 { margin: 0; }
+.ml-pair { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: .75rem; align-items: stretch; }
+@media (max-width: 760px) { .ml-pair { grid-template-columns: 1fr; } }
+.ml-side { border: 1px solid var(--line); border-radius: 12px; padding: .7rem; display: grid; gap: .5rem; align-content: start; min-width: 0; background: var(--surface); }
+.ml-side[data-kind="new"] { background: var(--accent-soft); border-color: var(--accent); }
+.ml-tag { font: 700 .72rem sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+.ml-side[data-kind="old"] .ml-tag { color: var(--danger, #b3261e); } .ml-side[data-kind="new"] .ml-tag { color: var(--accent); }
+.ml-side[data-kind="new"] .ml-code { background: var(--surface); }
+mark.ml-del { background: var(--danger-bg, rgba(179, 38, 30, .18)); color: inherit; text-decoration: line-through; border-radius: 4px; padding: 0 2px; }
+mark.ml-add { background: var(--accent-soft); color: inherit; box-shadow: inset 0 -2px var(--accent); font-weight: 600; border-radius: 4px; padding: 0 2px; }
+.ml-arrow { display: grid; place-items: center; align-content: center; gap: .35rem; text-align: center; min-width: 7.5rem; max-width: 9.5rem; }
+@media (max-width: 760px) { .ml-arrow { max-width: none; } .ml-arrow span { transform: rotate(90deg); } }
+.ml-arrow span { font: 700 2rem/1 sans-serif; color: var(--accent); } .ml-arrow small { color: var(--muted); font-size: .8rem; line-height: 1.3; }
+.ml-why { background: var(--surface2); border-radius: 10px; padding: .65rem .8rem; display: grid; gap: .25rem; } .ml-why b { color: var(--accent); }
+.ml-pair[data-go] .ml-arrow span { animation: ml-nudge 1s ease-out 1; }
+.ml-pair[data-go] .ml-side[data-kind="new"] { animation: ml-slide .45s ease-out 1; }
+@keyframes ml-nudge { 0% { transform: translateX(-12px); opacity: .2; } 60% { transform: translateX(6px); opacity: 1; } 100% { transform: none; } }
+@keyframes ml-slide { from { transform: translateX(-14px); opacity: .3; } to { transform: none; opacity: 1; } }
+@media (max-width: 760px) { @keyframes ml-nudge { from { opacity: .2; } to { opacity: 1; } } }
+@media (prefers-reduced-motion: reduce) { .ml-pair[data-go] * { animation: none !important; } }
+/* The old/new blocks hold inline highlights, so they are plain pre blocks, not one line per grid row. */
+.ml-side .ml-code { display: block; white-space: pre; }
+.ml-modes button[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 2px var(--accent); }

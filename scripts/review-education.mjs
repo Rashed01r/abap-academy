@@ -3,7 +3,7 @@ import { mkdir } from "node:fs/promises";
 const output = "build/education-review";
 await mkdir(output, {recursive: true});
 const browser = await chromium.launch({executablePath: "C:/Program Files/Google/Chrome/Application/chrome.exe", headless: true});
-const topics = process.argv.length > 2 ? process.argv.slice(2) : ["conditions", "data-table-categories", "dictionary-introduction", "database-fundamentals", "oop-introduction", "applications-reports", "modern-syntax", "cloud-introduction", "projects-employee-management"];
+const topics = process.argv.length > 2 ? process.argv.slice(2) : ["conditions", "data-table-categories", "dictionary-introduction", "database-fundamentals", "oop-introduction", "applications-reports", "modern-syntax", "cloud-introduction"];
 try {
   for (const [lang, theme, width, height] of [["en", "light", 1440, 1100], ["en", "dark", 390, 844]]) {
     const context = await browser.newContext({viewport: {width, height}});

@@ -14,7 +14,13 @@ import { TableCategoryExplorer } from "./table-category-explorer";
 import { TableKeyExplorer } from "./table-key-explorer";
 import { TechnicalText } from "./technical-text";
 import { GuidedAssessment, GuidedExplorer } from "./guided-activity";
+import { isConceptLesson, isStepLesson } from "@/lib/application-labs";
+import { ConceptExplore } from "./concept-lessons";
+import { ModernBuilder, OldNewSteps } from "./modern-lessons";
+import { isModernLesson } from "@/lib/modern-lessons";
 import { DecisionChallenge } from "./decision-challenge";
+import { CloudReview } from "./cloud-lessons";
+import { cloudLessons } from "@/lib/cloud-content";
 import { VisualCodeAnatomy } from "./visual-code-anatomy";
 import { LessonConcepts, LessonAlternatives } from "./lesson-concepts";
 import { ControlFlowExplorer } from "./control-flow-explorer";
@@ -44,6 +50,11 @@ export function ConnectedLesson({id, lang, theme, progress, setProgress, onNavig
   const next = recommendedLesson(id, progress.missions, progress.labs);
   const [classroomSelection,setClassroomSelection] = useTopicSession<ClassroomSelection>(`${id}:classroom-selection`,{});
   const additionPilot = id === "addition" && lang === "en";
+  // Reference (SAP-only) lessons that use the step-by-step Explore labs and one-decision-at-a-time Challenge.
+  const stepLesson = isStepLesson(id);
+  // Application Development lessons teach the idea first (Learn), then the code (Explore code), then decisions (Challenge).
+  const concept = isConceptLesson(id);
+  const modern = isModernLesson(id);
   const tabLabel = (name: Tab) => c[name];
   // The beginner layout (start, picture, run, mistakes, remember, experiments, brief) for English lessons; addition keeps its hand-written version.
   const beginner = lang === "en" && (!!m || id === "orientation") && !additionPilot;
@@ -84,9 +95,16 @@ export function ConnectedLesson({id, lang, theme, progress, setProgress, onNavig
     </div>
     {tabs.map(name => <section key={name} id={`${id}-${name}-panel`} role="tabpanel" aria-labelledby={`${id}-${name}-tab`} hidden={tab !== name} tabIndex={0}>
       {visited.includes(name) && (name === "learn" ? additionPilot ? <AdditionLearn onExplore={() => select("visualize")} /> : <>
-        {beginner && <LessonStart id={id}/>}
+        {beginner && !concept && <LessonStart id={id}/>}
         {tab === "learn" && !beginner && <VisualClassroom id={id} lang={lang} theme={theme} selection={classroomSelection} onSelect={setClassroomSelection}/>}
-        {beginner ? <>
+        {beginner ? modern ? <>
+          <OldNewSteps id={id}/>
+          <LessonMistakes id={id}/>
+          <LessonRemember id={id} onExplore={() => select("visualize")}/>
+        </> : concept ? <>
+          <ConceptExplore id={id}/>
+          <LessonRemember id={id} onExplore={() => select("visualize")}/>
+        </> : <>
           <LessonRunner id={id} code={code}/>
           <LessonMistakes id={id}/>
           <LessonRemember id={id} onExplore={() => select("visualize")}/>
@@ -104,7 +122,15 @@ export function ConnectedLesson({id, lang, theme, progress, setProgress, onNavig
         <LessonConcepts id={id} lang={lang} onConceptSelect={ref=>{const [kind,key]=ref.split(":");if(kind === "group") selectGroup(key);else if(kind === "artifact") setClassroomSelection({artifact:key});}}/>
         </>}
         {m && <details><summary>{c.deeper}</summary><p>{localizedText(m.brief, lang)}</p><p>{localizedText(m.practice, lang)}</p>{m.references?.map(ref => <p key={ref}><a href={ref} target="_blank" rel="noreferrer">{ref}</a></p>)}</details>}
-      </> : name === "visualize" ? additionPilot ? <AdditionExplore theme={theme} onChallenge={() => select("challenge")} /> : beginner ? <>
+      </> : name === "visualize" ? additionPilot ? <AdditionExplore theme={theme} onChallenge={() => select("challenge")} /> : beginner ? modern ? <>
+        <ModernBuilder id={id}/>
+        <div className="addition-pilot-next"><p className="muted">Next: decide which design fits each situation.</p><button className="primary" onClick={() => select("challenge")}>Try the challenge →</button></div>
+      </> : concept ? <>
+        <p className="muted">The idea from Learn, now as code. Each part below maps to something you just saw.</p>
+        <LessonRunner id={id} code={code}/>
+        <LessonMistakes id={id}/>
+        <div className="addition-pilot-next"><p className="muted">Next: decide which design fits each situation.</p><button className="primary" onClick={() => select("challenge")}>Try the challenge →</button></div>
+      </> : <>
         {/* Like Add two numbers: one card with the experiments and the editor (SAP-only lessons: the design explorer). */}
         <LessonExplore id={id} code={exploreCode}>
           {m?.guided ? tab === "visualize" && <GuidedExplorer definition={m.guided} lang={lang}/> : <LearningWorkspace initialCode={code} lang={lang} theme={theme} storageKey={`abap2-workspace:${id}:visualize`} onCodeChange={setExploreCode}/>}
@@ -122,13 +148,13 @@ export function ConnectedLesson({id, lang, theme, progress, setProgress, onNavig
         {m?.activity === "table-keys" && <TableKeyExplorer sessionKey={`${id}:visual-model`} lang={lang} assessment={false} onPass={() => {}}/>}
         {m?.guided ? tab === "visualize" && <GuidedExplorer definition={m.guided} lang={lang}/> : <LearningWorkspace initialCode={code} lang={lang} theme={theme} storageKey={`abap2-workspace:${id}:visualize`}/>}
       </> : <>
-        {additionPilot ? <AdditionChallengeIntro onLearn={() => select("learn")} onExplore={() => select("visualize")} /> : id.startsWith("dictionary-") ? null : beginner ? <LessonChallengeIntro id={id} onLearn={() => select("learn")} onExplore={() => select("visualize")}/> : <>
+        {additionPilot ? <AdditionChallengeIntro onLearn={() => select("learn")} onExplore={() => select("visualize")} /> : stepLesson ? null : beginner ? <LessonChallengeIntro id={id} onLearn={() => select("learn")} onExplore={() => select("visualize")}/> : <>
           <p className="instruction"><TechnicalText>{localizedText(m?.goal, lang) || c.orientationGoal}</TechnicalText></p>
           <p>{c.help} <button className="text-button" onClick={() => select("learn")}>{c.learn}</button> · <button className="text-button" onClick={() => select("visualize")}>{tabLabel("visualize")}</button></p>
         </>}
         {m?.activity === "table-categories" && <TableCategoryExplorer sessionKey={`${id}:assessment-model`} lang={lang} assessment completed={progress.passedChallenges?.includes("data-category-choice")} onPass={() => attempt("data-category-choice", true)}/>}
         {m?.activity === "table-keys" && <TableKeyExplorer sessionKey={`${id}:assessment-model`} lang={lang} assessment completed={progress.passedChallenges?.includes("data-key-design")} onPass={() => attempt("data-key-design", true)}/>}
-        {m?.guided && id.startsWith("dictionary-") ? <DecisionChallenge definition={m.guided} lang={lang} completed={progress.passedChallenges?.includes(`${id}-assessment`) || false} onResult={passed => attempt(`${id}-assessment`, passed)} onLearn={() => select("learn")} onExplore={() => select("visualize")}/> : m?.guided ? <>
+        {m?.guided && id in cloudLessons ? <CloudReview id={id} completed={progress.passedChallenges?.includes(`${id}-assessment`) || false} onResult={passed => attempt(`${id}-assessment`, passed)} onLearn={() => select("learn")} onExplore={() => select("visualize")}/> : m?.guided && stepLesson ? <DecisionChallenge definition={m.guided} lang={lang} completed={progress.passedChallenges?.includes(`${id}-assessment`) || false} onResult={passed => attempt(`${id}-assessment`, passed)} onLearn={() => select("learn")} onExplore={() => select("visualize")}/> : m?.guided ? <>
           <p className="pill guided-boundary">{localizedText(m.guided.boundary, lang)}</p>
           <GuidedAssessment definition={m.guided} lang={lang} completed={progress.passedChallenges?.includes(`${id}-assessment`) || false} onResult={passed => attempt(`${id}-assessment`, passed)}/>
         </> : m ? <>

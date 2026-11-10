@@ -9,11 +9,12 @@ import {
   labelSlots, labelFit, structureComponents, candidateRows, keyCandidates, keyCollisions, keyDesignIssues,
   departments, foreignKeyCheck, searchHelpRows,
 } from "@/lib/dictionary-labs";
+import { sqlEmployees, sqlDepartments, projectSqlFixture, type SqlSource } from "./sql-foundation-lab";
 
 type Step = { name: string; hint: string; title: string; intro: string; valid?: boolean; body: ReactNode };
 
 /** Steps on top, the current step on the left, the live design on the right. Reuses the Dictionary designer styles. */
-function StepLab({ label, sessionKey, steps, rail }: { label: string; sessionKey: string; steps: Step[]; rail: ReactNode }) {
+export function StepLab({ label, sessionKey, steps, rail }: { label: string; sessionKey: string; steps: Step[]; rail: ReactNode }) {
   const [step, setStep] = useTopicSession(`${sessionKey}:step`, 0);
   const current = Math.min(Math.max(step, 0), steps.length - 1), s = steps[current];
   return <section className="learn-card guided-explorer guided-assessment dd" aria-label={label}>
@@ -30,7 +31,7 @@ function StepLab({ label, sessionKey, steps, rail }: { label: string; sessionKey
       <button type="button" className="primary" onClick={() => setStep(current + 1)} disabled={current === steps.length - 1}>{current === steps.length - 1 ? "Last step" : `Next: ${steps[current + 1].name} →`}</button></div>
   </section>;
 }
-const Box = ({ title, children }: { title: string; children: ReactNode }) => <section className="dd-box" aria-label={title}><span className="eyebrow">{title}</span>{children}</section>;
+export const Box = ({ title, children }: { title: string; children: ReactNode }) => <section className="dd-box" aria-label={title}><span className="eyebrow">{title}</span>{children}</section>;
 const Pill = ({ ok, children }: { ok: boolean; children: ReactNode }) => <span className="dd-pill" data-ok={ok}>{children}</span>;
 
 const domainMessages: Record<string, string> = {
@@ -159,13 +160,83 @@ function SearchHelpLab() {
   </>} />;
 }
 
-export const dictionaryLabs: Record<string, () => React.JSX.Element> = {
+const sqlColumns: Record<SqlSource, string[]> = { employees: ["employee_id", "employee_name", "department", "salary"], departments: ["department", "department_name"] };
+function SqlReadLab() {
+  const k = "database-fundamentals:lab";
+  const [source, setSource] = useTopicSession<SqlSource>(`${k}-source`, "employees");
+  const [picked, setPicked] = useTopicSession<string[]>(`${k}-fields`, ["employee_id", "employee_name"]);
+  const [department, setDepartment] = useTopicSession(`${k}-department`, "IT");
+  const [salary, setSalary] = useTopicSession(`${k}-salary`, "0");
+  const [ordered, setOrdered] = useTopicSession(`${k}-ordered`, true);
+  const columns = sqlColumns[source], fields = columns.filter(c => picked.includes(c)), min = Number(salary);
+  const table = source === "employees" ? "zaca_employee" : "zaca_department";
+  const badSalary = !Number.isFinite(min) || min < 0;
+  const rows = projectSqlFixture({ source, fields, department, minimumSalary: badSalary ? 0 : min });
+  if (ordered && fields.length) rows.sort((a, b) => String(a[fields[0]]).localeCompare(String(b[fields[0]]), undefined, { numeric: true }));
+  const total = (source === "employees" ? sqlEmployees : sqlDepartments).length;
+  const where = [department && `department = '${department}'`, source === "employees" && min > 0 && `salary >= ${min}`].filter(Boolean).join(" AND ");
+  const select = `SELECT FROM ${table}\n  FIELDS ${fields.join(", ") || "?"}${where ? `\n  WHERE ${where}` : ""}${ordered && fields.length ? `\n  ORDER BY ${fields[0]}` : ""}\n  INTO TABLE @DATA(lt_result).`;
+  return <StepLab label="SQL read lab" sessionKey={k} steps={[
+    { name: "Choose the source", hint: "FROM", title: "FROM: which table do you read?", intro: "The source is a database table. Reading it never changes it.",
+      body: <div className="explore-actions">{([["employees", "Employees (zaca_employee)"], ["departments", "Departments (zaca_department)"]] as const).map(([id, text]) => <label key={id}>
+        <input type="radio" name="sql-source" checked={source === id} onChange={() => { setSource(id); setPicked(sqlColumns[id].slice(0, 2)); setDepartment(""); }}/>{text}</label>)}</div> },
+    { name: "Pick the columns", hint: "FIELDS", title: "FIELDS: which columns come back?", intro: "Columns change the width of the result. They do not remove any rows.", valid: !!fields.length,
+      body: <><div className="explore-actions">{columns.map(c => <label key={c}><input type="checkbox" checked={fields.includes(c)}
+        onChange={e => setPicked(columns.filter(x => x === c ? e.target.checked : fields.includes(x)))}/>{c}</label>)}</div>
+        {!fields.length && <p role="status" className="error-text">Choose at least one column.</p>}</> },
+    { name: "Filter the rows", hint: "WHERE", title: "WHERE: which rows come back?", intro: "A filter changes the height of the result. Try a department with no employees.", valid: !badSalary,
+      body: <div className="explore-actions">
+        <label>Department<select value={department} onChange={e => setDepartment(e.target.value)}>{["", "IT", "HR", "SALES", "LEGAL"].map(v => <option key={v} value={v}>{v || "All departments"}</option>)}</select></label>
+        {source === "employees" && <label>Minimum salary<input inputMode="numeric" value={salary} aria-invalid={badSalary} onChange={e => setSalary(e.target.value)}/></label>}
+        {badSalary && <p role="alert" className="error-text">Enter a salary of 0 or more.</p>}</div> },
+    { name: "Order and receive", hint: "ORDER BY, INTO", title: "ORDER BY and INTO TABLE: how does the result arrive?", intro: "INTO TABLE puts a copy in an internal table. Without ORDER BY the order is not guaranteed.",
+      body: <><div className="explore-actions"><label><input type="checkbox" checked={ordered} onChange={e => setOrdered(e.target.checked)}/>ORDER BY the first column</label></div>
+        <p className="muted">Changing lt_result later never writes back to {table}.</p></> },
+  ]} rail={<>
+    <Box title="Current read"><pre dir="ltr">{select}</pre></Box>
+    <Box title="Result in lt_result"><div role="status" aria-live="polite">{rows.length && fields.length ? <div className="table-scroll"><table className="key-table" aria-label="Result">
+      <thead><tr>{fields.map(f => <th key={f}>{f}</th>)}</tr></thead><tbody>{rows.map((r, i) => <tr key={i}>{fields.map(f => <td key={f}>{r[f]}</td>)}</tr>)}</tbody></table></div>
+      : <p className="muted">No matching rows. lt_result stays empty and sy-subrc = 4.</p>}
+      <p className="muted">{fields.length ? rows.length : 0} of {total} rows.</p></div></Box>
+  </>} />;
+}
+
+function ObjectLab() {
+  const k = "oop-introduction:lab";
+  const [counts, setCounts] = useTopicSession<number[]>(`${k}-objects`, []);
+  const [sel, setSel] = useTopicSession(`${k}-selected`, 0);
+  const [access, setAccess] = useTopicSession(`${k}-access`, "");
+  const current = Math.min(sel, counts.length - 1);
+  const bump = () => setCounts(c => c.map((v, i) => i === current ? v + 1 : v));
+  const picker = <div className="explore-actions" role="group" aria-label="Select object">{counts.map((_, i) => <button type="button" className="secondary" key={i} aria-pressed={current === i} onClick={() => setSel(i)}>lo_{i + 1}</button>)}</div>;
+  return <StepLab label="Object lab" sessionKey={k} steps={[
+    { name: "Create objects", hint: "NEW", title: "NEW: create objects from one class", intro: "Every NEW builds a separate object with its own mv_value, starting at 0.", valid: counts.length > 0,
+      body: <><div className="explore-actions"><button type="button" className="primary" disabled={counts.length >= 4} onClick={() => { setCounts(c => [...c, 0]); setSel(counts.length); }}>Create instance</button>
+        <button type="button" className="secondary" onClick={() => { setCounts([]); setSel(0); }}>Reset objects</button></div>
+        {counts.length >= 4 && <p className="muted">Four objects is enough for this lab.</p>}</> },
+    { name: "Call a method", hint: "->increment( )", title: "Call increment( ) on one object", intro: "A method changes only the object it is called on. The others keep their own value.", valid: counts.length > 0,
+      body: counts.length ? <>{picker}<div className="explore-actions"><button type="button" className="primary" onClick={bump}>{`Invoke lo_${current + 1}->increment( )`}</button></div></>
+        : <p className="muted">No objects yet. Go back and create an instance first.</p> },
+    { name: "Private data", hint: "PRIVATE SECTION", title: "Reach the private counter", intro: "mv_value is in the PRIVATE SECTION. Pick how a caller tries to change it.", valid: access !== "direct",
+      body: <><div className="dict-choices">{[["direct", "lo_1->mv_value = 5."], ["method", "lo_1->increment( )."]].map(([id, code]) => <button type="button" key={id} aria-pressed={access === id} onClick={() => setAccess(id)}><code>{code}</code></button>)}</div>
+        {access && <p role="status" aria-live="polite" className={access === "method" ? "success-text" : "error-text"}>{access === "method" ? "✓ Allowed: increment( ) is public, so the class changes its own data." : "✗ Syntax error: mv_value is private and cannot be reached from outside the class."}</p>}</> },
+  ]} rail={<>
+    <Box title="Objects in memory">{counts.length ? <div className="add-box-row">{counts.map((v, i) => <div className="add-box" key={i} data-changed={i === current || undefined}><code>lo_{i + 1}</code><strong dir="ltr">{v}</strong><small>mv_value</small></div>)}</div>
+      : <p className="muted">Nothing created yet.</p>}</Box>
+    <Box title="Program so far"><pre dir="ltr">{counts.length ? counts.map((_, i) => `DATA(lo_${i + 1}) = NEW lcl_counter( ).`).join("\n") : "\" no objects yet"}</pre>
+      <p className="muted">One class, {counts.length} object{counts.length === 1 ? "" : "s"}. Copying a reference would point to the same object, not make a new one.</p></Box>
+  </>} />;
+}
+
+export const dictionaryLabs:Record<string, () => React.JSX.Element> = {
   "dictionary-domains": DomainLab,
   "dictionary-data-elements": DataElementLab,
   "dictionary-structures": StructureLab,
   "dictionary-database-tables": TableKeyLab,
   "dictionary-foreign-keys": ForeignKeyLab,
   "dictionary-search-helps": SearchHelpLab,
+  "database-fundamentals": SqlReadLab,
+  "oop-introduction": ObjectLab,
 };
 export function DictionaryLab({ id }: { id: string }) {
   const Lab = dictionaryLabs[id];

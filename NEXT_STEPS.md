@@ -1,5 +1,26 @@
 # Resume academy development
 
+## ABAP Cloud and RAP path completed; Real Projects removed (2026-11-10)
+
+Implemented the six remaining ABAP Cloud and RAP topics, English only, as reference lessons in the redesigned Learn / Explore code / Challenge style (Learn A: growing layer stack plus try-it; Explore B: four-step designer with a live rail and a "Ready to publish / Problems found" pill; Challenge B: line-by-line code review). `cloud-introduction` was moved to the same style.
+
+| Mission | Title | Review challenge |
+|---|---|---|
+| `cloud-adt` | ADT: the tool for ABAP Cloud | flag REPORT, WRITE and a GUI popup function module |
+| `cloud-rap-bo` | RAP business objects | flag `lock master` and `authorization master` on a child entity |
+| `cloud-behavior` | Behavior definitions | flag MODIFY, direct INSERT and COMMIT ENTITIES inside a validation |
+| `cloud-eml` | EML: use a business object from ABAP | flag a direct UPDATE and IN LOCAL MODE in a consumer |
+| `cloud-service-bindings` | Service bindings: expose the object | flag exposing the root entity and authorizationCheck NOT_REQUIRED |
+| `cloud-btp` | SAP BTP: where ABAP Cloud runs | flag a hard-coded URL and hard-coded credentials |
+
+Files: `src/lib/guided-cloud-definitions.ts` (definitions), `src/lib/cloud-content.ts` (education, beginner copy, flows, surfaces, tab data), `src/components/cloud-lessons.tsx` + `.css`, sources in `.claude/skills/academy-lesson/references/sap-notes/cloud-rap.md`. Removed the "Real Projects" path and its lesson `projects-employee-management` everywhere (curriculum, content, flows, surfaces, review notes, check scripts); paths 9 -> 8.
+
+Verification: `tsc --noEmit` clean; `validate:curriculum` 63 missions / 75 assessments; `validate:education` reports only the review-drift gate ("source changed or review missing") for the cloud, applications and modern lessons, because review records were not re-recorded; unit tests 160 pass / 1 fail (that same drift test); Playwright `guided.spec.ts` "en: cloud-*" 7/7 pass on mobile; `exploration.spec.ts` passes on desktop (planned-card step replaced: no planned cards remain) and the mobile run stops at opening the Cloud path card behind an open lesson drawer. The guided desktop projects stop at "Expand workspace" (same for the untouched Dictionary lesson). Not run: full `test:e2e`, `build`, `lint`.
+
+Known limits: no SAP tenant, ADT, activation, publishing or released-API lookup; names such as PA0001, HR_READ_INFOTYPE and POPUP_TO_CONFIRM being unreleased, ADT menu names and the ATC check variant label were not verified on a live system.
+
+Next: record the review evidence once the lessons are reviewed (`report:education -- --record-review`, only after review); the Employee Management capstone was removed with Real Projects and is not planned.
+
 ## Object-Oriented ABAP path: eight runnable class lessons (2026-11-09)
 
 Implemented all eight OOP topics shown as Coming Soon, English only, as runnable code lessons (user's choice: "Runnable OOP code", built in two slices). Learners write real local classes that run in the browser; objects appear in memory as cards (`lcl_employee #1`) and reference variables point to them.

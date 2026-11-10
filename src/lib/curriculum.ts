@@ -999,15 +999,6 @@ export const paths = [
     ),
     time: 100,
   },
-  {
-    id: "projects",
-    title: text("Real Projects", "مشاريع عملية"),
-    concepts: text(
-      "Employee management · Leave management · Sales order processing · API integration · Complete business applications",
-      "إدارة الموظفين · إدارة الإجازات · معالجة طلبات البيع · تكامل API · تطبيقات أعمال متكاملة",
-    ),
-    time: 150,
-  },
 ];
 export const conceptLabels: Record<Locale, string[]> = {
   en: ["Conditions", "Loops"],

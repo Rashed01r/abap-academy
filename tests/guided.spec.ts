@@ -6,6 +6,7 @@ import { guidedDefinitions } from "../src/lib/guided-curriculum";
 import { ui } from "../src/lib/i18n";
 import { treeCopy } from "../src/lib/tree-copy";
 import { openLesson, tab } from "./academy-helpers";
+import { cloudLessons } from "../src/lib/cloud-content";
 
 for (const lang of enabledLocales) for (const [index, d] of guidedDefinitions.entries()) {
   test(`${lang}: ${d.id} reference anatomy, model decisions and durable achievements`, async ({page}) => {
@@ -34,7 +35,7 @@ for (const lang of enabledLocales) for (const [index, d] of guidedDefinitions.en
     let saved = await page.evaluate(() => JSON.parse(localStorage.getItem("abap2-master-progress")!));
     expect(saved.missions).toEqual(["structures"]); expect(saved.started).not.toContain(d.id);
     await tab(page, lang, "visualize");
-    if (d.id.startsWith("dictionary-")) await expect(page.locator(".artifact-explorer")).toHaveCount(0);
+    if (d.id.startsWith("dictionary-") || d.id in cloudLessons) await expect(page.locator(".artifact-explorer")).toHaveCount(0);
     else {
       const explorer = page.locator(".artifact-explorer");
       await expect(explorer.getByRole("button", {name: localizedText(d.artifacts[0].title, lang), exact: false}).first()).toBeVisible();
@@ -43,9 +44,22 @@ for (const lang of enabledLocales) for (const [index, d] of guidedDefinitions.en
     }
     await expect(page.getByRole("tabpanel").locator(".monaco-editor")).toHaveCount(0);
     await tab(page, lang, "challenge");
+    const complete = page.getByRole("button", {name: ui[lang].complete, exact: true});
+    if (d.id in cloudLessons) {
+      // Code review: a wrong flag fails; flagging exactly the violating lines passes.
+      const lines = cloudLessons[d.id].review.lines;
+      const review = page.getByRole("region", {name: "Code review", exact: true}), submit = review.getByRole("button", {name: "Submit review", exact: true});
+      const line = (code: string) => review.getByRole("button", {name: code, exact: false});
+      await expect(complete).toBeDisabled();
+      const fine = lines.find(l => !l[1])![0];
+      await line(fine).click(); await submit.click();
+      await expect(review.getByTestId("guided-result")).toHaveClass(/error-text/); await expect(complete).toBeDisabled();
+      await line(fine).click();
+      for (const [code, bad] of lines) if (bad) await line(code).click();
+      await submit.click(); await expect(review.getByTestId("guided-result")).toHaveClass(/success-text/);
+    } else {
     const assessment = page.getByRole("region", {name: lang === "en" ? "Apply the lesson" : "طبّق ما تعلمته", exact: true});
     const check = assessment.getByRole("button", {name: lang === "en" ? "Check decisions" : "تحقق من القرارات", exact: true});
-    const complete = page.getByRole("button", {name: ui[lang].complete, exact: true});
     await expect(check).toBeDisabled(); await expect(complete).toBeDisabled();
     await assessment.getByRole("button", {name: lang === "en" ? "Show next hint" : "أظهر التلميح التالي", exact: true}).first().click();
     await expect(assessment).toContainText(localizedText(d.decisions[0].hints[0], lang));
@@ -60,6 +74,7 @@ for (const lang of enabledLocales) for (const [index, d] of guidedDefinitions.en
     await expect(complete).toBeDisabled();
     for (const decision of d.decisions) await choose(decision, decision.correct);
     await check.click(); await expect(assessment.getByTestId("guided-result")).toHaveClass(/success-text/);
+    }
     // English challenges have no quick check: passing the challenge alone enables completion.
     await expect(page.getByRole("tabpanel").locator(".quiz")).toHaveCount(0);
     await expect(complete).toBeEnabled(); await complete.click();
@@ -90,20 +105,22 @@ test("specialized foundation models react to actual input and preserve state on 
   await expect(designer).toContainText("Bind the data element to a domain");
   await designer.getByRole("button", {name: /^Test a value/}).click();
   await openLesson(page, "database-fundamentals"); await tab(page, "en", "visualize");
-  const sql = page.getByRole("region", {name: "SQL foundation lab", exact: true});
-  await sql.getByRole("combobox", {name: /^Department(?: |$)/}).selectOption("IT");
-  await sql.getByLabel("Minimum salary (employees only)", {exact: true}).fill("9000");
-  await expect(sql.getByRole("table", {name: "Derived result", exact: true})).toContainText("Omar");
-  await expect(sql.getByRole("table", {name: "Derived result", exact: true})).not.toContainText("Ahmed");
+  const sql = page.getByRole("region", {name: "SQL read lab", exact: true});
+  await sql.getByRole("button", {name: /^Filter the rows/}).click();
+  await sql.getByLabel("Minimum salary", {exact: true}).fill("9000");
+  await expect(sql.getByRole("table", {name: "Result", exact: true})).toContainText("Omar");
+  await expect(sql.getByRole("table", {name: "Result", exact: true})).not.toContainText("Ahmed");
   await sql.getByRole("combobox", {name: /^Department(?: |$)/}).selectOption("LEGAL");
   await expect(sql).toContainText("No matching rows");
   await openLesson(page, "oop-introduction"); await tab(page, "en", "visualize");
-  const objects = page.getByRole("region", {name: "One class, independent objects", exact: true});
+  const objects = page.getByRole("region", {name: "Object lab", exact: true});
   await objects.getByRole("button", {name: "Create instance", exact: true}).click();
-  await objects.getByRole("button", {name: "Invoke add_one( )", exact: true}).click();
   await objects.getByRole("button", {name: "Create instance", exact: true}).click();
-  await expect(objects.getByRole("status")).toContainText("object_1 · name = Item; quantity = 1");
-  await expect(objects.getByRole("status")).toContainText("object_2 · name = Item; quantity = 0");
+  await objects.getByRole("button", {name: /^Call a method/}).click();
+  await objects.getByRole("button", {name: "lo_1", exact: true}).click();
+  await objects.getByRole("button", {name: "Invoke lo_1->increment( )", exact: true}).click();
+  await expect(objects.getByRole("group", {name: "Objects in memory"}).or(objects.getByLabel("Objects in memory"))).toContainText("lo_1");
+  await expect(objects.getByLabel("Objects in memory")).toContainText("lo_2");
   await openLesson(page, "dictionary-introduction"); await tab(page, "en", "visualize");
   await expect(designer.getByLabel("Candidate status", {exact: true})).toHaveValue("ACTIVE");
 });

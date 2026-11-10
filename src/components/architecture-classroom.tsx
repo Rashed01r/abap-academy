@@ -10,7 +10,6 @@ import { firstSentence } from "@/lib/teaching-trace";
 const groupMap: Record<string, Record<string,string>> = {
   "dictionary-introduction": {domain:"status-field",element:"status-field",structure:"table-container",table:"table-container"},
   "cloud-introduction": {package:"cloud-contract",api:"cloud-api",cds:"cloud-exposure",behavior:"cloud-exposure",service:"cloud-exposure",binding:"cloud-exposure",client:"cloud-exposure"},
-  "projects-employee-management": {requirements:"employee-table",table:"employee-table",root:"employee-root",behavior:"employee-behavior",projection:"employee-projection",service:"employee-service",binding:"employee-service",evidence:"employee-service"},
 };
 export function ArchitectureClassroom({definition:d, lang, selection, onSelect}: {definition: GuidedDefinition; lang: Locale; selection: ClassroomSelection; onSelect:(s:ClassroomSelection)=>void}) {
   const root=useRef<HTMLDivElement>(null), marker=useId().replace(/:/g,"");

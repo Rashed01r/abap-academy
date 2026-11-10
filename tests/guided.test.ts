@@ -7,7 +7,7 @@ import { validateAnatomy } from "../src/lib/code-anatomy";
 import { allChallengesPassed, completeMission, earnedXP, initialProgress, normalizeProgress, visitMission } from "../src/lib/progress";
 
 test("Pass A covers every path with complete guided content and explicit runtime boundaries", () => {
-  assert.equal(paths.length, 9);
+  assert.equal(paths.length, 8);
   paths.forEach(p => assert.ok(missions.some(m => m.pathId === p.id), `${p.id} is playable`));
   for (const d of guidedDefinitions) {
     assert.deepEqual(validateGuided(d), []);

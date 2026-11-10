@@ -84,7 +84,7 @@ export function validateEducation(content: Record<string, EducationSpec> = educa
 export const pathLevels: Record<string, Text> = Object.fromEntries([
   ...["fundamentals", "data", "dictionary"].map(id => [id, {en: "Beginner", ar: "مبتدئ"}]),
   ...["database", "oop", "applications"].map(id => [id, {en: "Intermediate", ar: "متوسط"}]),
-  ...["modern", "cloud", "projects"].map(id => [id, {en: "Advanced", ar: "متقدم"}]),
+  ...["modern", "cloud"].map(id => [id, {en: "Advanced", ar: "متقدم"}]),
 ]);
 
 /** Prefer unfinished follow-ons; never changes access or learner records. */

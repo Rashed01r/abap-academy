@@ -1,0 +1,55 @@
+/* Concept explorer (SAP Application Development, Explore code). Uses the app's theme tokens. */
+.cl { display: grid; gap: 1rem; min-width: 0; }
+.cl-lead { font-size: 1.05rem; line-height: 1.6; max-width: 70ch; margin: 0; }
+.cl-benefits { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: .6rem; }
+.cl-benefits div { background: var(--accent-soft); border-radius: 10px; padding: .65rem .8rem; font-size: .92rem; line-height: 1.45; }
+.cl-benefits b { display: block; font-weight: 700; margin-bottom: .15rem; }
+.cl-split { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 1rem; align-items: start; }
+@media (max-width: 760px) { .cl-split { grid-template-columns: 1fr; } }
+.cl-side { display: grid; gap: .75rem; min-width: 0; }
+.cl-explain { background: var(--surface2); border-radius: 12px; padding: .9rem; display: grid; gap: .55rem; min-height: 11rem; align-content: start; }
+.cl-explain h3 { display: flex; gap: .5rem; align-items: center; margin: 0; }
+.cl-explain p { margin: 0; }
+.cl-why { border-inline-start: 3px solid var(--accent); padding-inline-start: .6rem; }
+.cl-tag { font: 600 .75rem var(--font-mono, monospace); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: .1rem .5rem; width: fit-content; }
+.cl-pin { display: inline-grid; place-items: center; width: 1.4rem; height: 1.4rem; border-radius: 50%; background: var(--accent); color: var(--accent-ink, #06241b); font: 700 .75rem sans-serif; flex: none; border: 0; padding: 0; }
+.cl-pin.static { position: static; }
+.cl-hot { position: relative; border: 2px dashed transparent; border-radius: 8px; padding: .6rem .5rem .4rem .9rem; display: grid; gap: .4rem; justify-items: start; cursor: pointer; }
+.cl-hot:hover, .cl-hot[data-on="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.cl-hot > .cl-pin { position: absolute; top: -.6rem; left: -.6rem; cursor: pointer; }
+.cl-hot[data-on="true"] > .cl-pin { box-shadow: 0 0 0 3px var(--accent-soft), 0 0 0 5px var(--accent); }
+.cl-hot label { font-weight: 600; font-size: .9rem; }
+.cl-hot input { width: min(100%, 16rem); }
+.cl-win { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); }
+.cl-win-title { background: var(--surface2); padding: .5rem .75rem; display: flex; justify-content: space-between; gap: .5rem; font-weight: 600; font-size: .85rem; }
+.cl-win-bar { padding: .4rem .6rem; border-bottom: 1px solid var(--line); }
+.cl-win-body { padding: 1rem; display: grid; gap: .8rem; }
+.cl-chips { display: flex; gap: .4rem; } .cl-chips span { border: 1px solid var(--line); border-radius: 6px; padding: .1rem .6rem; font-size: .85rem; background: var(--surface2); }
+.cl-answer { min-height: 1.6em; font-weight: 600; }
+.cl-paper { background: #fffef9; color: #1d1d1b; border: 1px solid var(--line); border-radius: 4px; padding: 1rem 1.1rem; display: grid; gap: .6rem; box-shadow: 0 6px 18px rgba(0, 0, 0, .15); }
+.cl-paper .cl-hot:hover, .cl-paper .cl-hot[data-on="true"] { background: rgba(11, 125, 97, .14); }
+.cl-paper table { width: 100%; border-collapse: collapse; font-size: .9rem; border: 0; } .cl-paper th, .cl-paper td { border: 0; border-bottom: 1px solid #cfcbbf; padding: .25rem .4rem; text-align: left; background: none; color: #1d1d1b; }
+.cl-logo { letter-spacing: .08em; font-size: 1.05rem; } .cl-paper small { color: #5f5b50; }
+.cl-foot { display: flex; justify-content: space-between; width: 100%; gap: 1rem; }
+.cl-data { background: var(--surface2); border-radius: 12px; padding: .8rem; display: grid; gap: .5rem; }
+.cl-data p { margin: 0; } .cl-data label { display: grid; gap: .2rem; font-size: .88rem; }
+.cl-scn { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: .6rem; }
+.cl-scn button { text-align: start; border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: .7rem .8rem; line-height: 1.45; }
+.cl-scn button[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 2px var(--accent); }
+.cl-vs { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; } @media (max-width: 640px) { .cl-vs { grid-template-columns: 1fr; } }
+.cl-side-card { border: 1px solid var(--line); border-radius: 12px; padding: .9rem; display: grid; gap: .5rem; align-content: start; background: var(--surface2); }
+.cl-side-card[data-fit="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.cl-side-card h3, .cl-side-card p { margin: 0; }
+.cl-badge { font: 700 .72rem sans-serif; letter-spacing: .06em; text-transform: uppercase; padding: .15rem .55rem; border-radius: 999px; width: fit-content; background: var(--surface); color: var(--warning, #b4540a); border: 1px solid var(--line); }
+.cl-badge[data-fit="true"] { background: var(--accent); color: var(--accent-ink, #06241b); border-color: var(--accent); }
+.cl-lanes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; }
+.cl-lane { font: 700 .78rem sans-serif; letter-spacing: .08em; text-transform: uppercase; text-align: center; padding: .5rem; border-radius: 8px; background: var(--surface2); }
+.cl-step { border: 1px solid var(--line); border-radius: 10px; padding: .5rem .65rem; background: var(--surface); font-size: .9rem; position: relative; display: grid; gap: .3rem; min-width: 0; }
+.cl-step[data-state="now"] { border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 0 0 2px var(--accent); }
+.cl-step[data-state="done"] { opacity: .7; }
+.cl-step b { display: flex; gap: .4rem; align-items: center; font-weight: 600; }
+.cl-arrow { position: absolute; left: 50%; top: -.95rem; transform: translateX(-50%); color: var(--accent); font-weight: 700; }
+.cl-hot .cl-chips button { border: 1px solid var(--line); border-radius: 6px; padding: .1rem .6rem; font-size: .85rem; background: var(--surface2); }
+.cl-defs { width: 100%; border-collapse: collapse; font-size: .85rem; } .cl-defs th, .cl-defs td { text-align: left; padding: .25rem .4rem; border-bottom: 1px solid var(--line); }
+.cl-defs tr[data-hit] td { background: var(--accent-soft); font-weight: 600; }
+.cl-opens { display: grid; gap: .25rem; min-height: 4.2rem; align-content: start; }

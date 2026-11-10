@@ -1,6 +1,7 @@
 /** Independently declared concepts introduced by visualizers and knowledge checks.
  * When adding a control or question, update its requirements as part of authoring.
  * These IDs must resolve to explicit teaching, not merely a substring in prose. */
+import { cloudSurfaces } from "./cloud-content";
 export const educationSurfaces: Record<string, {visualize: string[]; knowledge: string[]}> = Object.fromEntries(([
   ["data-conditional-loop", "selection aggregate", "selection aggregate"],
   ["data-table-expressions", "expression-read not-found exists-index optional-default", "not-found exists-index"],
@@ -24,6 +25,17 @@ export const educationSurfaces: Record<string, {visualize: string[]; knowledge: 
   ["dictionary-database-tables", "table-parts table-primary-key", "table-primary-key"],
   ["dictionary-foreign-keys", "fk-parts fk-mapping fk-where-checked", "fk-parts fk-where-checked"],
   ["dictionary-search-helps", "sh-parts sh-attach sh-cloud", "sh-parts sh-cloud"],
+  ["applications-alv", "alv-input alv-fieldcat", "alv-fieldcat alv-call"],
+  ["applications-module-pool", "screen-pbo-pai screen-ok-field", "screen-pbo-pai screen-leave"],
+  ["applications-smart-forms", "form-lookup form-inactive", "form-lookup form-interface"],
+  ["applications-debugging", "debug-keys debug-variables", "debug-keys debug-watch"],
+  ["applications-transactions", "tx-kinds tx-naming", "tx-kinds tx-tools"],
+  ["modern-abap-syntax", "syntax-c1 syntax-c2", "syntax-c3"],
+  ["modern-cds-views", "cdsviews-c1 cdsviews-c2", "cdsviews-c3"],
+  ["modern-cds-associations", "cdsassoc-c1 cdsassoc-c2", "cdsassoc-c3"],
+  ["modern-dcl", "dcl-c1 dcl-c2", "dcl-c3"],
+  ["modern-amdp", "amdp-c1 amdp-c2", "amdp-c3"],
+  ["modern-performance", "perf-c1 perf-c2", "perf-c3"],
   ["data-table-performance", "linear-search binary-search sort-first", "binary-search sort-first choose-category"],
   ["data-employee-manager", "find-first copy-save remove-shift report-current", "find-first report-current"],
   ["orientation", "statements readable-source simulation", "statements"],
@@ -49,5 +61,5 @@ export const educationSurfaces: Record<string, {visualize: string[]; knowledge: 
   ["applications-reports", "input-default validate event-output normal-end", "normal-end"],
   ["modern-syntax", "inline-data value-context expression-absence templates-release", "value-context"],
   ["cloud-introduction", "contract persistence cds behavior projection service binding-environment", "persistence cds behavior projection service binding-environment"],
-  ["projects-employee-management", "identity root-behavior projection-operations authorization acceptance", "acceptance"],
+  ...cloudSurfaces,
 ] as const).map(([id, visualize, knowledge]) => [id, {visualize: visualize.split(" "), knowledge: knowledge.split(" ")}]));

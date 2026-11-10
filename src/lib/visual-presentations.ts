@@ -14,5 +14,7 @@ export const visualPresentations: Record<string, VisualFamily> = {
   "data-table-model": "trace", "data-table-categories": "categories", "data-keys": "trace",
   "data-work-areas-field-symbols": "row-access", "data-read-table": "trace", "data-table-mutations": "trace", "data-sorting-filtering": "trace",
   "dictionary-introduction": "relationships", "database-fundamentals": "sql", "oop-introduction": "objects",
-  "applications-reports": "report", "modern-syntax": "expressions", "cloud-introduction": "relationships", "projects-employee-management": "relationships",
+  "applications-alv": "relationships", "applications-module-pool": "relationships", "applications-smart-forms": "relationships", "applications-debugging": "relationships", "applications-transactions": "relationships",
+"modern-abap-syntax": "relationships", "modern-cds-views": "relationships", "modern-cds-associations": "relationships", "modern-dcl": "relationships", "modern-amdp": "relationships", "modern-performance": "relationships",
+  "applications-reports": "report", "modern-syntax": "expressions", "cloud-introduction": "relationships", "cloud-adt": "relationships", "cloud-rap-bo": "relationships", "cloud-behavior": "relationships", "cloud-eml": "relationships", "cloud-service-bindings": "relationships", "cloud-btp": "relationships",
 };

@@ -2,7 +2,7 @@ import { chromium } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
 await mkdir("build/visual-classroom",{recursive:true});
 const browser=await chromium.launch({executablePath:"C:/Program Files/Google/Chrome/Application/chrome.exe",headless:true});
-const ids=process.argv.slice(2).length ? process.argv.slice(2) : ["data-table-categories","data-work-areas-field-symbols","addition","structures","do","while","dictionary-introduction","database-fundamentals","oop-introduction","applications-reports","modern-syntax","cloud-introduction","projects-employee-management"];
+const ids=process.argv.slice(2).length ? process.argv.slice(2) : ["data-table-categories","data-work-areas-field-symbols","addition","structures","do","while","dictionary-introduction","database-fundamentals","oop-introduction","applications-reports","modern-syntax","cloud-introduction"];
 try {for(const [lang,width,height] of [["en",1440,1000],["en",390,844]]) {
  const context=await browser.newContext({viewport:{width,height}});
  await context.addInitScript(({lang,width})=>{localStorage.setItem("abap2-language",lang);localStorage.setItem("abap2-appearance",width>760 ? "light" : "dark");},{lang,width});

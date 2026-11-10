@@ -5,11 +5,13 @@ import type { GuidedDefinition } from "@/lib/guided-types";
 import type { Locale } from "@/lib/engine";
 import { gradeGuided } from "@/lib/guided-curriculum";
 import { useTopicSession } from "@/lib/use-topic-session";
+import { isStepLesson } from "@/lib/application-labs";
+import { cloudLessons } from "@/lib/cloud-content";
 import { TechnicalText } from "./technical-text";
 
 const DictionaryDesigner = dynamic(() => import("./dictionary-designer").then(m => m.DictionaryDesigner));
-const SqlFoundationLab = dynamic(() => import("./sql-foundation-lab").then(m => m.SqlFoundationLab));
-const ObjectExplorer = dynamic(() => import("./object-explorer").then(m => m.ObjectExplorer));
+const ApplicationLab = dynamic(() => import("./application-lessons").then(m => m.ApplicationLab));
+const CloudLab = dynamic(() => import("./cloud-lessons").then(m => m.CloudLab));
 const DictionaryLab = dynamic(() => import("./dictionary-labs").then(m => m.DictionaryLab));
 
 /** sqlLab=false when the lesson's picture (VisualClassroom) already shows the SQL lab on the same tab. */
@@ -19,11 +21,9 @@ export function GuidedExplorer({definition: d, lang, sqlLab = true}: {definition
   const related = d.relations.filter(r => r.from === artifact.id || r.to === artifact.id);
   return <div className="guided-explorer">
     {d.id === "dictionary-introduction" && <DictionaryDesigner lang={lang}/>}
-    {d.id === "database-fundamentals" && sqlLab && <SqlFoundationLab lang={lang}/>}
-    {d.id === "oop-introduction" && <ObjectExplorer lang={lang}/>}
-    {d.id.startsWith("dictionary-") && d.id !== "dictionary-introduction" && <DictionaryLab id={d.id}/>}
+    {d.id in cloudLessons ? <CloudLab id={d.id}/> : d.id === "applications-alv" ? <ApplicationLab id={d.id}/> : isStepLesson(d.id) && d.id !== "dictionary-introduction" && <DictionaryLab id={d.id}/>}
     {/* The Dictionary designer and labs already walk through each object step by step, so this card list would repeat them. */}
-    {!d.id.startsWith("dictionary-") && <section className="learn-card artifact-explorer" aria-label={localizedText(d.activityTitle, lang)}>
+    {!isStepLesson(d.id) && <section className="learn-card artifact-explorer" aria-label={localizedText(d.activityTitle, lang)}>
       <h2>{localizedText(d.activityTitle, lang)}</h2>
       <p><TechnicalText>{localizedText(d.activityIntro, lang)}</TechnicalText></p>
       <div className="artifact-nodes" role="group" aria-label={localizedText(d.activityTitle, lang)}>
