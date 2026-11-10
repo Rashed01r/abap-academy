@@ -5,7 +5,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 const jetbrains = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains", display: "swap" });
 export const metadata: Metadata = {
-  title: "ABAP Academy 2.0 — SAP ABAP for Everyone",
+  title: "ABAP Academy — SAP ABAP for Everyone",
   description:
     "Learn ABAP through short bilingual lessons, guided simulations, and hands-on challenges. No SAP system needed.",
 };

@@ -1,5 +1,4 @@
 "use client";
-import { localizedText } from "../lib/language-policy";
 import { ENABLE_ARABIC, resolveLocale } from "@/lib/language-policy";
 import { useEffect, useState } from "react";
 import {
@@ -14,11 +13,6 @@ import {
 import { Locale } from "@/lib/engine";
 import { ui } from "@/lib/i18n";
 import {
-  missions,
-  additionExample,
-  conditionalExample,
-} from "@/lib/curriculum";
-import {
   Progress,
   initialProgress,
   normalizeProgress,
@@ -26,7 +20,6 @@ import {
   visitMission,
   earnedXP,
 } from "@/lib/progress";
-import { LearningWorkspace } from "@/components/learning-workspace";
 import { glossary } from "@/lib/glossary";
 import { RoadmapHome } from "@/features/roadmap/RoadmapHome";
 import { LessonView } from "@/features/roadmap/LessonView";
@@ -43,7 +36,6 @@ export default function Academy() {
     [progressStorageReady, setProgressStorageReady] = useState(false),
     [storage, setStorage] = useState(true),
     [view, setView] = useState("home"),
-    [example, setExample] = useState(0),
     [lastLesson, setLastLesson] = useState<string>();
   const lang = resolveLocale(preference);
   const t = ui[lang],
@@ -129,7 +121,7 @@ export default function Academy() {
     window.scrollTo({ top: 0 });
   }
   return (
-    <div className={`app ${view !== "simulator" ? "immersive-academy" : ""} ${view === "home" ? "roadmap-home" : ""}`}>
+    <div className={`app immersive-academy ${view === "home" ? "roadmap-home" : ""}`}>
       <a className="skip" href="#main">
         {t.skip}
       </a>
@@ -143,29 +135,21 @@ export default function Academy() {
             <GraduationCap size={25} />
           </span>
           <span>
-            ABAP<span className="brand-light">academy</span>
-            <sup>2.0</sup>
+            ABAP <span className="brand-light">Academy</span>
           </span>
         </button>
         <nav aria-label={t.path}>
           <button
-            className={view !== "simulator" ? "nav-active" : ""}
+            className="nav-active"
             onClick={() => navigate("home")}
           >
             <Map size={16} />
             {t.path}
           </button>
-          <button
-            className={view === "simulator" ? "nav-active" : ""}
-            onClick={() => navigate("simulator")}
-          >
-            <Code2 size={16} />
-            {t.playground}
-          </button>
         </nav>
         {view === "home" && <div id="academy-header-search" />}
         <div className="header-settings">
-          {view !== "simulator" && <span className="header-xp pill" key={earnedXP(progress)}>{earnedXP(progress)} XP</span>}
+          <span className="header-xp pill" key={earnedXP(progress)}>{earnedXP(progress)} XP</span>
           <label className="theme-select">
             <span className="sr-only">{t.appearance}</span>
             {appearance === "system" ? (
@@ -193,51 +177,19 @@ export default function Academy() {
             {lang === "en" ? "العربية" : "English"}
           </button>}
         </div>
-        {view !== "simulator" && <AcademyGlossary lang={lang} compact />}
+        <AcademyGlossary lang={lang} compact />
       </header>
       <main id="main">
         {view === "home" ? (
           <RoadmapHome lang={lang} progress={progress} setProgress={setProgress} ready={ready} focusMission={lastLesson} onOpenLesson={open} />
-        ) : view !== "simulator" ? (
+        ) : (
           <LessonView id={view} lang={lang} theme={theme} progress={progress} setProgress={setProgress} ready={ready}
             onBack={() => { setLastLesson(view); navigate("home"); window.scrollTo({ top: 0 }); }} onNavigate={open} />
-        ) : (
-              <section className="simulator-page">
-                <span className="eyebrow">{t.limit}</span>
-                <h1>{t.playground}</h1>
-                <p className="intro">{t.editorHelp}</p>
-                <div className="example-tabs">
-                  {[
-                    missions[0].title,
-                    missions[1].title,
-                    { en: t.conditionDemo, ar: t.conditionDemo },
-                  ].map((v, i) => (
-                    <button
-                      key={i}
-                      aria-pressed={example === i}
-                      onClick={() => setExample(i)}
-                    >
-                      {localizedText(v, lang)}
-                    </button>
-                  ))}
-                </div>
-                <LearningWorkspace
-                  key={example}
-                  initialCode={
-                    [additionExample, missions[1].example, conditionalExample][
-                      example
-                    ]
-                  }
-                  lang={lang}
-                  theme={theme}
-                />
-              </section>
         )}
       </main>
-      {(view === "simulator") && <AcademyGlossary lang={lang} />}
       <footer>
         <span>
-          ABAP academy <sup>2.0</sup>
+          ABAP Academy
         </span>
         <span>{storage ? t.saved : t.storage}</span>
         <span>{t.limit}</span>

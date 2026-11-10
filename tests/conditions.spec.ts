@@ -61,19 +61,3 @@ for (const lang of enabledLocales)
             expect(saved.results.conditions.attempts).toBe(6);
             expect(errors).toEqual([]);
         });
-test("diagnostics give relevant English advice and permit correction", async ({ page }) => {
-    await page.goto("/");
-    await page.getByRole("button", { name: ui.en.playground, exact: true }).click();
-    await edit(page, "WRITE missing.");
-    await page.getByRole("button", { name: ui.en.run, exact: true }).click();
-    await expect(page.locator(".feedback.error")).toContainText("DATA");
-    await expect(page.locator(".feedback.error")).toContainText("FIELD-SYMBOLS");
-    await expect(page.locator("header .language")).toHaveCount(0);
-    await page.getByText(ui.en.explainWhy, { exact: true }).click();
-    await expect(page.locator(".feedback.error")).toContainText("DATA");
-    await edit(page, "DATA missing TYPE i VALUE 7.\nWRITE missing.");
-    await expect(page.locator(".feedback.error")).toHaveCount(0);
-    await page.getByRole("button", { name: ui.en.run, exact: true }).click();
-    await page.locator(".timeline li>button").filter({ visible: true }).last().click();
-    await expect(page.getByTestId("output").filter({ visible: true })).toHaveText("7");
-});

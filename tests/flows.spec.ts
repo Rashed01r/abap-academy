@@ -1,9 +1,8 @@
 import { enabledLocales } from "../src/lib/language-policy";
 import { localizedText } from "../src/lib/language-policy";
 import { test, expect } from '@playwright/test';
-import { missions, structureExample } from '../src/lib/curriculum';
+import { missions } from '../src/lib/curriculum';
 import { ui } from '../src/lib/i18n';
-import { roadmapCopy } from '../src/lib/tree-copy';
 import { openLesson, tab, answerQuiz, edit, gradeAll, completion, openPath, roadmapNode } from './academy-helpers';
 import { matchAnatomy, finishLearn } from './anatomy-helpers';
 for (const lang of enabledLocales)
@@ -64,87 +63,13 @@ for (const lang of enabledLocales)
             await page.screenshot({ path: info.outputPath('academy.png') });
             expect(errors).toEqual([]);
         });
-test("synchronized trace: next, previous, restart, play, edits, English-only settings, and theme", async ({ page, }, info) => {
-    await page.goto("/");
-    await page
-        .getByRole("button", { name: ui.en.playground, exact: true })
-        .click();
-    await page.getByRole("button", { name: ui.en.run, exact: true }).click();
-    await expect(page.locator(".execution-pointer")).toHaveCount(1);
-    const controls = page.locator(".execution-controls");
-    for (let i = 0; i < 3; i++)
-        await controls.getByRole("button", { name: "Next", exact: true }).click();
-    await expect(page.getByTestId("memory")).toContainText("13");
-    await controls.getByRole("button", { name: "Previous", exact: true }).click();
-    await expect(page.getByTestId("memory").locator(".memory-card").last()).toContainText("0");
-    await expect(page.locator("header .language")).toHaveCount(0);
-    await expect(page.locator(".active-statement")).toHaveAttribute("data-start-line", "3");
-    await expect(page.locator(".editor-shell")).toHaveAttribute("dir", "ltr");
-    await page.getByLabel(ui.en.appearance, { exact: true }).selectOption("dark");
-    await expect(page.locator(".editor-shell")).toHaveAttribute("data-editor-theme", "dark");
-    await expect(page.locator(".active-statement")).toHaveAttribute("data-start-line", "3");
-    await controls
-        .getByRole("button", { name: ui.en.restart, exact: true })
-        .click();
-    await expect(page.locator(".active-statement")).toHaveAttribute("data-start-line", "1");
-    await controls.getByRole("button", { name: ui.en.play, exact: true }).click();
-    await expect(page.locator(".active-statement")).toHaveAttribute("data-start-line", "2", { timeout: 4000 });
-    await controls
-        .getByRole("button", { name: ui.en.pause, exact: true })
-        .click();
-    await edit(page, "DATA lv_age TYPE i\nlv_age = 25.");
-    await expect(page.locator(".execution-pointer")).toHaveCount(0);
-    await expect(page.locator(".timeline")).toHaveCount(0);
-    await page.getByRole("button", { name: ui.en.run, exact: true }).click();
-    await expect(page.locator(".feedback.error")).toContainText("period");
-    await expect(page.locator(".error-range")).not.toHaveCount(0);
-    await edit(page, structureExample);
-    await page.getByRole("button", { name: ui.en.run, exact: true }).click();
-    await expect(page.locator(".active-statement")).toHaveAttribute("data-end-line", "4");
-    await controls.getByRole("button", { name: ui.en.next, exact: true }).click();
-    await page
-        .locator(".view-line")
-        .filter({ hasText: "ls_employee-name = 'Ahmed'." })
-        .click({ position: { x: 35, y: 8 } });
-    await expect(page.locator(".selected-field")).toContainText("ls_employee-name");
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
-    await page.screenshot({
-        path: `test-results/${info.project.name}-workspace.png`,
-        fullPage: true,
-    });
-});
-test("conditional trace skips unchosen WRITE and displays condition", async ({ page, }) => {
-    await page.goto("/");
-    await page
-        .getByRole("button", { name: ui.en.playground, exact: true })
-        .click();
-    await page
-        .getByRole("button", { name: ui.en.conditionDemo, exact: true })
-        .click();
-    await page.getByRole("button", { name: ui.en.run, exact: true }).click();
-    const next = page
-        .locator(".execution-controls")
-        .getByRole("button", { name: "Next", exact: true });
-    await next.click();
-    await expect(page.locator(".condition-card")).toContainText("1200 >= 1000 → TRUE");
-    await expect(page.locator(".skipped-code")).not.toHaveCount(0);
-    await next.click();
-    await expect(page.getByTestId("output")).toHaveText("Approved");
-    await next.click();
-    await expect(page.locator(".active-statement")).toContainText("ENDIF.");
-    await expect(page.locator(".timeline li")).toHaveCount(4);
-    await expect(page.getByTestId("output")).toHaveText("Approved");
-    await expect(page.locator(".timeline li>button").filter({ hasText: "WRITE 'Review'" })).toHaveCount(0);
-});
-test('system appearance follows OS and future topics have connected previews', async ({ page }) => {
+test('system appearance follows OS and the roadmap collapses from its root', async ({ page }) => {
     await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'reduce' });
     await page.goto('/');
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
     await page.emulateMedia({ colorScheme: 'light' });
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
-    await openPath(page, 'projects');
-    await page.locator('[data-node^="planned:projects:"] .card, [data-mobile-node^="planned:projects:"]').first().click();
-    await expect(page.locator('[data-drawer]')).toContainText(roadmapCopy('en').plannedText);
+    await openPath(page, 'cloud');
     await expect(page.getByRole('tab')).toHaveCount(0);
     await roadmapNode(page, 'abap').click();
     await expect(page.locator('[data-drawer].open')).toHaveCount(0);
