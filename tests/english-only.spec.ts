@@ -18,7 +18,7 @@ async function expectEnglish(page: import("@playwright/test").Page) {
 }
 
 for(const theme of ["light","dark"] as const)test(`legacy Arabic preference: all lessons and tabs render English / ${theme}`,async({page},info)=>{
-  test.setTimeout(240000);
+  test.setTimeout(480000); // visits every lesson x 3 tabs; 64 lessons now
   await page.addInitScript(theme=>{
     if(!sessionStorage.getItem("english-seeded")){
       localStorage.setItem("abap2-language","ar");localStorage.setItem("abap2-appearance",theme);

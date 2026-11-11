@@ -14,8 +14,7 @@ const ApplicationLab = dynamic(() => import("./application-lessons").then(m => m
 const CloudLab = dynamic(() => import("./cloud-lessons").then(m => m.CloudLab));
 const DictionaryLab = dynamic(() => import("./dictionary-labs").then(m => m.DictionaryLab));
 
-/** sqlLab=false when the lesson's picture (VisualClassroom) already shows the SQL lab on the same tab. */
-export function GuidedExplorer({definition: d, lang, sqlLab = true}: {definition: GuidedDefinition; lang: Locale; sqlLab?: boolean}) {
+export function GuidedExplorer({definition: d, lang}: {definition: GuidedDefinition; lang: Locale}) {
   const [selected, setSelected] = useTopicSession(`${d.id}:artifact`, d.artifacts[0].id);
   const artifact = d.artifacts.find(a => a.id === selected) || d.artifacts[0];
   const related = d.relations.filter(r => r.from === artifact.id || r.to === artifact.id);

@@ -15,6 +15,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Design reference copies, not shipped; the live code is in src/features/roadmap.
+    "docs/**",
   ]),
 ]);
 

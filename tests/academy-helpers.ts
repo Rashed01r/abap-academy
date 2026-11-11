@@ -10,6 +10,9 @@ export function roadmapNode(page: Page, id: string) {
 }
 /** Expands Learning and one of its paths (no-op for nodes that are already open). */
 export async function openPath(page: Page, pathId: string) {
+    // On mobile the detail drawer covers the lower accordion; close it first, as a user would.
+    const close = page.locator('[data-drawer] .x');
+    if (await close.isVisible()) await close.click();
     for (const id of ["learn", `path:${pathId}`]) {
         const node = roadmapNode(page, id);
         if (await node.getAttribute('aria-expanded') !== 'true') await node.click();
@@ -23,6 +26,8 @@ export function roadmapSearch(page: Page, lang: Locale = "en") {
 export async function openLesson(page: Page, id: string, lang: Locale = "en") {
     const title = id === "orientation" ? ui[lang].orientation : localizedText(missions.find(m => m.id === id)!.title, lang);
     const back = page.getByRole('button', { name: roadmapCopy(lang).backToRoadmap, exact: true });
+    // A ?mission= deep link opens its lesson after hydration; wait for it, or Back is clicked before the lesson exists.
+    if (new URL(page.url()).searchParams.has('mission')) await expect(page.locator('.lesson-summary h1')).toBeVisible();
     if (await back.count()) await back.click();
     await roadmapSearch(page, lang).fill(title);
     await page.locator(`[data-result="lesson:${id}"]`).click();

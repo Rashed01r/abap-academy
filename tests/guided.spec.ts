@@ -4,7 +4,6 @@ import { localizedText } from "../src/lib/language-policy";
 import { test, expect } from "@playwright/test";
 import { guidedDefinitions } from "../src/lib/guided-curriculum";
 import { ui } from "../src/lib/i18n";
-import { treeCopy } from "../src/lib/tree-copy";
 import { openLesson, tab } from "./academy-helpers";
 import { cloudLessons } from "../src/lib/cloud-content";
 
@@ -18,8 +17,6 @@ for (const lang of enabledLocales) for (const [index, d] of guidedDefinitions.en
     }, {lang, dark: index % 2 === 0});
     await page.goto(`/?mission=${d.id}`);
     await expect(page.locator(".lesson-summary h1")).toHaveText(localizedText(d.title, lang));
-    const expand = page.getByRole("button", {name: treeCopy[lang].expandWorkspace, exact: true});
-    if ((page.viewportSize()?.width || 0) >= 768) await expand.click();
     await expect(page.locator(".guided-boundary")).toContainText(localizedText(d.boundary, lang));
     if (lang === "en") {
       // Reference code is explained part by part, with no simulated memory or screen.

@@ -10,7 +10,6 @@ for (const lang of enabledLocales) test(`${lang}: category comparison and both a
   const t=ui[lang];
   await page.addInitScript(lang => {localStorage.setItem("abap2-language",lang);localStorage.setItem("abap2-appearance","light");},lang);
   await page.goto("/");
-  await expect(page.locator(".tree-paths>button")).toHaveCount(9);
   await openLesson(page,m.id,lang);
   // The practice diagram now lives only on Challenge (with its graded questions); Explore code is experiments + editor.
   await tab(page,lang,"challenge");

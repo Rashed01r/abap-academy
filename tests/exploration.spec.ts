@@ -3,7 +3,6 @@ import { localizedText } from "../src/lib/language-policy";
 import { test, expect } from '@playwright/test';
 import { missions, paths } from '../src/lib/curriculum';
 import { ui } from '../src/lib/i18n';
-import { roadmapCopy } from '../src/lib/tree-copy';
 import { openLesson, tab, answerQuiz, edit, selectChallenge, completion, openPath, roadmapNode } from './academy-helpers';
 for (const lang of enabledLocales)
     for (const theme of ['light', 'dark'] as const)

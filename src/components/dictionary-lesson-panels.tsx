@@ -198,7 +198,7 @@ function CounterPanel({ part }: { part: number }) {
     <Panel title="The class · LCL_COUNTER"><Spec part={part} rows={[
       [0, "Public methods", <><code>increment</code>, <code>get_value</code> (returns an integer)</>],
       [1, "Private data", <><code>mv_value</code>: only the class can touch it</>],
-      [2, "increment does", <code>mv_value = mv_value + 1.</code>],
+      [2, "increment does", <code key="does">mv_value = mv_value + 1.</code>],
       [3, "Objects", "lo_first and lo_second, built with NEW"],
     ]} /></Panel>
     {part === 1 && <Panel title="Try it · who may change mv_value?"><div className="dict-choices">
@@ -207,7 +207,7 @@ function CounterPanel({ part }: { part: number }) {
     {part === 2 && <Panel title="Try it · call increment( ) once">
       {boxes(["lo_first"])}
       <div className="dict-try"><button type="button" onClick={() => bump(0)}>{"lo_first->increment( )"}</button></div>
-      <p className="muted">The method reads and writes the receiving object's own mv_value.</p></Panel>}
+      <p className="muted">The method reads and writes the receiving object&apos;s own mv_value.</p></Panel>}
     {part === 3 && <Panel title="Try it · two independent objects">
       {boxes(["lo_first", "lo_second"])}
       <div className="dict-try"><button type="button" onClick={() => bump(0)}>{"lo_first->increment( )"}</button> <button type="button" onClick={() => bump(1)}>{"lo_second->increment( )"}</button></div>

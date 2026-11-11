@@ -1,3 +1,4 @@
+import { isConceptLesson } from "../src/lib/application-labs";
 import { enabledLocales } from "../src/lib/language-policy";
 import { localizedText } from "../src/lib/language-policy";
 import { test, expect } from "@playwright/test";
@@ -25,8 +26,11 @@ for (const lang of enabledLocales) test(`${lang}: every implemented lesson expos
     }
     if (lang === "en" && (id === "orientation" || missions.some(m => m.id === id))) {
       // English lessons use the beginner layout: Start here, then Remember with the flow and every concept.
-      await expect(page.locator("[data-lesson-start]")).toContainText(spec.what.en);
-      await expect(page.locator("[data-lesson-start]")).toContainText(spec.why.en);
+      // Concept lessons (SAP application topics) open on ConceptExplore instead of a Start-here block.
+      if (!isConceptLesson(id)) {
+        await expect(page.locator("[data-lesson-start]")).toContainText(spec.what.en);
+        await expect(page.locator("[data-lesson-start]")).toContainText(spec.why.en);
+      }
       const remember = page.locator("[data-lesson-remember]");
       await expect(remember.locator(".lesson-flow li")).toHaveCount(lessonFlows[id].length);
       for (const concept of spec.concepts) await expect(remember.locator(`[data-concept="${id}/${concept.id}"]`)).toContainText(concept.explanation.en);
@@ -125,10 +129,6 @@ for (const lang of enabledLocales) test(`${lang}: all alternative anatomy exampl
 test("learning journey stays advisory and completed lessons offer a real next link", async ({page}) => {
   await page.addInitScript(() => localStorage.setItem("abap2-master-progress", JSON.stringify({version: 2, missions: ["addition"], labs: [], current: "addition", results: {addition: {attempts: 2, passed: true}}})));
   await page.goto("/");
-  const guide = page.locator(".tree-learning-guide");
-  await guide.locator("summary").click();
-  await expect(guide).toContainText("No completion is required");
-  await expect(page.locator(".tree-level")).toHaveCount(9);
   await openLesson(page, "addition");
   const before = await page.evaluate(() => JSON.parse(localStorage.getItem("abap2-master-progress")!));
   await page.locator(".lesson-recommendation button").click();

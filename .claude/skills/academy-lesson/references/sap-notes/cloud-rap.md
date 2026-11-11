@@ -33,3 +33,6 @@ https://raw.githubusercontent.com/SAP-samples/abap-cheat-sheets/main/08_EML_ABAP
 - Exposure is not authorization: CDS access control (DCL) and BDEF authorization are separate.
 - Communication management: communication scenario (design time, lists inbound/outbound services), communication arrangement (scenario + communication system + user, created by an administrator). Code gets a destination with `CL_HTTP_DESTINATION_PROVIDER=>CREATE_BY_COMM_ARRANGEMENT` and `CL_WEB_HTTP_CLIENT_MANAGER=>CREATE_BY_HTTP_DESTINATION`.
 - Not verified against a live system: exact ADT menu names, ATC check variant label, `PA0001`/`HR_READ_INFOTYPE`/`POPUP_TO_CONFIRM` being unreleased.
+- Field control for an externally given key: `field ( readonly : update ) EmployeeId;` (set on create, read-only afterwards). A plain `readonly` key cannot be set by an EML consumer.
+- Outbound calls: `CREATE_BY_COMM_ARRANGEMENT( comm_scenario = ... service_id = ... )` needs an outbound scenario that lists the remote service; an inbound scenario exposes your own service to partners.
+- Validations report with `failed-<entity>` plus `reported-<entity>` using `%msg = new_message_with_text( severity = if_abap_behv_message=>severity-error text = ... )`.

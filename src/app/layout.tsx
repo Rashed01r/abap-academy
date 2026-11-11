@@ -7,7 +7,12 @@ const jetbrains = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrai
 export const metadata: Metadata = {
   title: "ABAP Academy — SAP ABAP for Everyone",
   description:
-    "Learn ABAP through short bilingual lessons, guided simulations, and hands-on challenges. No SAP system needed.",
+    "Learn ABAP through short lessons, guided simulations, and hands-on challenges. No SAP system needed.",
+  openGraph: {
+    title: "ABAP Academy — SAP ABAP for Everyone",
+    description: "Learn ABAP through short lessons, guided simulations, and hands-on challenges. No SAP system needed.",
+    type: "website",
+  },
 };
 export default function RootLayout({
   children,

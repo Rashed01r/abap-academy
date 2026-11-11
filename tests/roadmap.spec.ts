@@ -145,11 +145,8 @@ test("lessons open full width from the drawer and Back to roadmap reveals them a
   await expect(drawer(page).locator("h2")).toHaveText("Joins: combine two tables");
   await expect(drawer(page)).toContainText(c.notStarted); // "In progress" starts with the first challenge attempt
   await expect(roadmapNode(page, "path:database")).toHaveAttribute("aria-expanded", "true");
-  // Planned topics show their status but cannot be opened.
-  await openPath(page, "oop");
-  await page.locator('[data-node^="planned:oop:"] .card, [data-mobile-node^="planned:oop:"]').first().click();
-  await expect(drawer(page)).toContainText(c.plannedText);
-  await expect(drawer(page).getByRole("button", { name: /Open lesson/ })).toHaveCount(0);
+  // Every roadmap topic now has a lesson, so no planned card is left to open.
+  await expect(page.locator('[data-node^="planned:"], [data-mobile-node^="planned:"]')).toHaveCount(0);
 });
 
 test("desktop view controls: zoom buttons, wheel zoom, drag to pan, Fit and Back to ABAP", async ({ page }) => {

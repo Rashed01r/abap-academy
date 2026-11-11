@@ -80,7 +80,7 @@ test("header stays in flow, mirrors logical direction and respects reduced motio
   await expect(header.locator(".lesson-header-back-arrow")).toHaveCSS("transform","matrix(-1, 0, 0, 1, 0, 0)");
   await page.locator(".connected-lesson").evaluate(el=>el.setAttribute("dir","ltr"));
   const top=(await header.boundingBox())!.y;
-  await page.locator(".panel-body").evaluate(el=>el.scrollTop=200);
+  await page.locator(".lesson-view-body").evaluate(el=>el.scrollTop=200);
   expect((await header.boundingBox())!.y).toBeLessThan(top-100);
   await page.reload();
   await expect(header.locator(".lesson-header-status")).toHaveText("Not started");

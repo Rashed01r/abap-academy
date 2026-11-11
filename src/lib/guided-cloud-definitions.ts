@@ -163,8 +163,8 @@ define behavior for ZR_AcademyEmployee alias Employee
   persistent table zaca_employee
   lock master
   authorization master ( instance )`],
-      ["bdef-fields", "2. Field control and operations", "Field control says which fields clients may set. Operations must be enabled explicitly.", "The EML cheat sheet says modifying operations are not enabled by default: write create, update and delete in the behavior definition if the business object should allow them.", `{
-  field ( readonly ) EmployeeId;
+      ["bdef-fields", "2. Field control and operations", "Field control says which fields clients may set. Operations must be enabled explicitly.", "readonly : update lets a client set EmployeeId once, on create, and never change it afterwards. The EML cheat sheet says modifying operations are not enabled by default: write create, update and delete in the behavior definition if the business object should allow them.", `{
+  field ( readonly : update ) EmployeeId;
   field ( mandatory ) Name, Department;
 
   create;
@@ -186,13 +186,17 @@ CLASS lhc_employee IMPLEMENTATION.
       RESULT DATA(employees).
     LOOP AT employees INTO DATA(employee) WHERE Name IS INITIAL.
       APPEND VALUE #( %tky = employee-%tky ) TO failed-employee.
+      APPEND VALUE #( %tky = employee-%tky
+                      %msg = new_message_with_text(
+                               severity = if_abap_behv_message=>severity-error
+                               text     = 'Name is required' ) ) TO reported-employee.
     ENDLOOP.
   ENDMETHOD.
 ENDCLASS.`],
     ],
     artifacts: [
       ["header", "Header", "Implementation type, behavior pool and strictness.", "managed implementation in class zbp_... unique;"],
-      ["fields", "Field control", "Which fields are read-only or mandatory.", "field ( readonly ) EmployeeId;"],
+      ["fields", "Field control", "Which fields are read-only or mandatory.", "field ( readonly : update ) EmployeeId;"],
       ["ops", "Operations", "What clients can do: create, update, delete and actions.", "create; update; delete;"],
       ["rules", "Validations and determinations", "Rules implemented in the behavior pool.", "validation checkName on save { ... }"],
     ],
@@ -324,9 +328,10 @@ define service ZUI_AcademyEmployee {
       ["btp-scenario", "3. A communication scenario", "A communication scenario lists the services that a communication partner may use.", "For your own service, an inbound communication scenario names the service binding. The scenario is a design-time object transported with your code.", `" Communication scenario ZACA_EMPLOYEE_SCN
 "   Inbound service: ZUI_ACADEMYEMPLOYEE_O4
 "   Purpose:         allow a partner to use this service`],
-      ["btp-arrangement", "4. A communication arrangement", "An arrangement connects a scenario to a communication system and user. It is configured, not coded.", "An administrator creates the arrangement. Code then gets its destination from the arrangement and sends the request, so the endpoint and credentials stay out of the source.", `DATA(lo_destination) =
+      ["btp-arrangement", "4. A communication arrangement", "An arrangement connects a scenario to a communication system and user. It is configured, not coded.", "An administrator creates the arrangement. Code then gets its destination from the arrangement and sends the request, so the endpoint and credentials stay out of the source. A call to another system uses an outbound scenario that lists the remote service; the inbound scenario from step 3 is for partners that call you.", `DATA(lo_destination) =
   cl_http_destination_provider=>create_by_comm_arrangement(
-    comm_scenario = 'ZACA_EMPLOYEE_SCN' ).
+    comm_scenario = 'ZACA_PARTNER_OUT_SCN'
+    service_id    = 'ZACA_PARTNER_REST' ).
 DATA(lo_client) =
   cl_web_http_client_manager=>create_by_http_destination( lo_destination ).
 DATA(lo_response) =

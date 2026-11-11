@@ -97,6 +97,8 @@ export const modernLessons: ModernLesson[] = [
         if (s.assoc) L.push("  association [0..1] to ZACA_I_Department as _Department", "    on $projection.Department = _Department.Department");
         const f = ["key employee_id as EmployeeId"]; if (s.name) f.push("employee_name as Name"); if (s.dept) f.push("department as Department"); if (s.assoc) f.push("_Department");
         L.push("{"); f.forEach((x, i) => L.push("  " + x + (i < f.length - 1 ? "," : ""))); L.push("}");
+        // The ON condition uses $projection.Department, so the association needs that field in the view.
+        if (s.assoc && !s.dept) return { code: L.join("\n"), status: [["err", "The association's ON condition uses $projection.Department, but Department is not in the view. Add it back."]] };
         return { code: L.join("\n"), status: [["ok", `${f.length} item${f.length === 1 ? "" : "s"} in the view. A program reads it with SELECT FROM zaca_i_employee.`], s.assoc ? ["ok", "Programs can now reach department details through _Department."] : ["warn", "No association yet: programs would still write their own join."]] };
       },
     },

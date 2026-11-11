@@ -1,3 +1,4 @@
+import { modernLessons } from "../src/lib/modern-lessons";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { educationContent } from "../src/lib/education-content";
@@ -62,4 +63,9 @@ test("review drift gate rejects stale or missing review evidence without promoti
   const errors = educationReviewErrors(review);
   assert.equal(errors.length, 3);
   for (const id of ["conditions", "cloud-introduction", "addition"]) assert.ok(errors.some(e => e.startsWith(`${id}:`)));
+});
+test("CDS view explorer flags an association whose ON condition field is missing", () => {
+  const cds = modernLessons.find(l => l.id === "modern-cds-views")!;
+  assert.equal(cds.explore.build({assoc: true, dept: false}).status[0][0], "err");
+  assert.ok(cds.explore.build({assoc: true, dept: true}).status.every(([s]) => s !== "err"));
 });
