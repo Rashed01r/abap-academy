@@ -1,4 +1,6 @@
 /* Contact page (design option B: centered form). Uses the app's theme tokens from globals.css. */
+/* The app shell is locked to the viewport (overflow:hidden for the roadmap), so <main> must scroll here. */
+.immersive-academy > main:has(> .contact-page) { display: block; overflow-y: auto; overscroll-behavior: contain; }
 .contact-page { max-width: 780px; margin: 0 auto; padding: 40px 16px 64px; text-align: center; min-width: 0; }
 .contact-page h1 { font-size: 32px; line-height: 1.2; margin: 0 0 8px; color: var(--ink); }
 .contact-lead { color: var(--muted); margin: 0 0 28px; }

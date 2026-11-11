@@ -29,8 +29,9 @@ for(const theme of ["light","dark"] as const)test(`legacy Arabic preference: all
   },theme);
   await page.goto("/");
   await expectEnglish(page);
-  await page.locator("header .glossary summary").click();await expectEnglish(page);
-  await page.locator("header .glossary summary").click();
+  // The phone roadmap hides the glossary button (roadmap.css), so it is checked on desktop only.
+  if(!info.project.use.isMobile){await page.locator("header .glossary summary").click();await expectEnglish(page);
+  await page.locator("header .glossary summary").click();}
   for(const id of educationLessonIds){
     await openLesson(page,id);
     for(const mode of ["learn","visualize","challenge"] as const){await tab(page,"en",mode);await expectEnglish(page);}

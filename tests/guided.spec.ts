@@ -6,6 +6,8 @@ import { guidedDefinitions } from "../src/lib/guided-curriculum";
 import { ui } from "../src/lib/i18n";
 import { openLesson, tab } from "./academy-helpers";
 import { cloudLessons } from "../src/lib/cloud-content";
+import { isConceptLesson, isStepLesson } from "../src/lib/application-labs";
+import { isModernLesson } from "../src/lib/modern-lessons";
 
 for (const lang of enabledLocales) for (const [index, d] of guidedDefinitions.entries()) {
   test(`${lang}: ${d.id} reference anatomy, model decisions and durable achievements`, async ({page}) => {
@@ -17,8 +19,11 @@ for (const lang of enabledLocales) for (const [index, d] of guidedDefinitions.en
     }, {lang, dark: index % 2 === 0});
     await page.goto(`/?mission=${d.id}`);
     await expect(page.locator(".lesson-summary h1")).toHaveText(localizedText(d.title, lang));
-    await expect(page.locator(".guided-boundary")).toContainText(localizedText(d.boundary, lang));
-    if (lang === "en") {
+    // Redesigned concept and modern lessons teach Learn in steps, without the reference-code runner.
+    const runnerOnLearn = lang !== "en" || !(isConceptLesson(d.id) || isModernLesson(d.id));
+    if (runnerOnLearn) await expect(page.locator(".guided-boundary")).toContainText(localizedText(d.boundary, lang));
+    if (!runnerOnLearn) await expect(page.locator("[data-lesson-runner]")).toHaveCount(0);
+    else if (lang === "en") {
       // Reference code is explained part by part, with no simulated memory or screen.
       const run = await runnerTo(page, localizedText(d.groups.at(-1)!.title, lang));
       await expect(run.locator(".add-progress")).toContainText(`Part ${d.groups.length} of ${d.groups.length}`);
@@ -32,7 +37,7 @@ for (const lang of enabledLocales) for (const [index, d] of guidedDefinitions.en
     let saved = await page.evaluate(() => JSON.parse(localStorage.getItem("abap2-master-progress")!));
     expect(saved.missions).toEqual(["structures"]); expect(saved.started).not.toContain(d.id);
     await tab(page, lang, "visualize");
-    if (d.id.startsWith("dictionary-") || d.id in cloudLessons) await expect(page.locator(".artifact-explorer")).toHaveCount(0);
+    if (isStepLesson(d.id)) await expect(page.locator(".artifact-explorer")).toHaveCount(0);
     else {
       const explorer = page.locator(".artifact-explorer");
       await expect(explorer.getByRole("button", {name: localizedText(d.artifacts[0].title, lang), exact: false}).first()).toBeVisible();
@@ -62,7 +67,7 @@ for (const lang of enabledLocales) for (const [index, d] of guidedDefinitions.en
     await expect(assessment).toContainText(localizedText(d.decisions[0].hints[0], lang));
     // The intro lesson shows one decision at a time with radio answers; the others use a select per decision.
     const choose = async (decision: typeof d.decisions[number], optionId: string) => {
-      if (!d.id.startsWith("dictionary-")) return assessment.locator(`[data-decision="${decision.id}"] select`).selectOption(optionId);
+      if (!isStepLesson(d.id)) return assessment.locator(`[data-decision="${decision.id}"] select`).selectOption(optionId);
       await assessment.getByRole("button", {name: `Decision ${d.decisions.indexOf(decision) + 1}`, exact: true}).click();
       await assessment.getByRole("radio", {name: localizedText(decision.options.find(o => o.id === optionId)!.text, lang), exact: true}).check();
     };

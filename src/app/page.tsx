@@ -23,8 +23,10 @@ import {
 } from "@/lib/progress";
 import { glossary } from "@/lib/glossary";
 import { RoadmapHome } from "@/features/roadmap/RoadmapHome";
-import { LessonView } from "@/features/roadmap/LessonView";
-import { ContactPage } from "@/components/contact-page";
+import dynamic from "next/dynamic";
+// Loaded on demand so the roadmap (first screen) doesn't download every lesson and the simulator.
+const LessonView = dynamic(() => import("@/features/roadmap/LessonView").then(m => m.LessonView));
+const ContactPage = dynamic(() => import("@/components/contact-page").then(m => m.ContactPage));
 import "./knowledge-tree.css";
 import "./teaching-trace.css";
 import "./lesson-header.css";

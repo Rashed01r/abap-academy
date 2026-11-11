@@ -40,6 +40,17 @@ test("contact page: header link, deep link, back button, details, validation and
   expect(errors).toEqual([]);
 });
 
+test("mouse wheel / touchpad scrolls the contact page on a short screen", async ({ page, isMobile }) => {
+  test.skip(isMobile, "wheel input is desktop-only");
+  await page.setViewportSize({ width: 1280, height: 600 });
+  await page.goto("/?page=contact");
+  const send = page.getByRole("button", { name: "Send message" });
+  await expect(send).not.toBeInViewport();
+  await page.getByRole("heading", { name: "Contact me", level: 1 }).hover();
+  await page.mouse.wheel(0, 2000);
+  await expect(send).toBeInViewport();
+});
+
 test("Send opens a prefilled Gmail draft in a new tab and keeps the text", async ({ page }) => {
   // Record window.open instead of opening Gmail for real.
   await page.addInitScript(() => { (window as unknown as { opened: string[] }).opened = []; window.open = ((url: string) => { (window as unknown as { opened: string[] }).opened.push(url); return { opener: null } as Window; }) as typeof window.open; });

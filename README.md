@@ -1,115 +1,72 @@
-﻿# ABAP Academy 2.0 — SAP ABAP for Everyone
+﻿# ABAP Academy — SAP ABAP for Everyone
 
-A standalone Next.js App Router application. No book PDFs, authentication, backend, telemetry, or paid service is included.
+Learn SAP ABAP in the browser through short lessons, guided simulations and hands-on challenges. No SAP system, account or backend is needed: everything runs on the page, and progress is kept in the browser's local storage.
 
-ABAP Fundamentals now includes Orientation and nine playable missions. The remaining eight paths are future previews. Full-platform implementation and continuation records live in `docs/academy-development/`; start with `NEXT_STEPS.md`. The earlier `docs/PHASE_2_DELIVERY.md` is a historical record.
+## What's inside
 
-## Start locally
+63 lessons in 8 learning paths, laid out on an interactive roadmap:
 
-Requires Node.js 20.9+ and npm. Windows PowerShell users can use `npm.cmd` if execution policy blocks `npm.ps1`.
+1. ABAP Fundamentals
+2. Working with Data
+3. ABAP Dictionary
+4. Database Development
+5. Object-Oriented ABAP
+6. SAP Application Development
+7. Modern ABAP
+8. ABAP Cloud and RAP
 
-```powershell
-npm.cmd ci
-npm.cmd run dev -- --port 3002
+Code lessons run in a built-in **educational ABAP simulator** (`src/lib/engine.ts`): a lexer, a restricted parser, semantic checks and a step-by-step execution trace that shows memory and output after every statement. It covers the subset of ABAP the lessons teach (variables, structures, conditions, loops, internal tables, field symbols, table expressions, ABAP SQL on sample tables, local classes). It is not a real SAP runtime or a full ABAP compiler.
+
+The editor is Monaco, served from the app itself (`predev`/`prebuild` copy it to the ignored `public/monaco/`), so no CDN is needed.
+
+## Run locally
+
+Requires Node.js 20.9+ and npm.
+
+```bash
+npm ci
+npm run dev        # http://localhost:3000
 ```
 
-Open http://localhost:3002. If this project already has a development server, Next.js prints its address; reuse that server. Production:
+Production build:
 
-```powershell
-npm.cmd run build
-npm.cmd start -- --port 3002
+```bash
+npm run build
+npm start
 ```
 
-Monaco is served from this app: `predev` and `prebuild` copy its assets to the ignored `public/monaco/` directory. No editor CDN is required. Dependencies are pinned by `package-lock.json`.
+## Deploy
 
-## Playable curriculum
-
-1. **Syntax Orientation** — statements, keywords, periods, whitespace, comments, naming, editing, and simulation; complete each short token check to earn 25 XP and unlock Mission 1.
-2. **Add Two Numbers** — Syntax Lab, briefing, synchronized demonstration, editable practice, an arithmetic challenge, and reflection quiz. Completing the challenge and quiz earns 100 XP and unlocks Mission 2.
-3. **Create a Structure** — a structure Syntax Lab, employee record demonstration, editable practice, Product record challenge, and reflection quiz. Completion earns 150 XP.
-4. **Make a Decision with IF / ELSE** — purchase approval visualization, comparison and ELSEIF Syntax Labs, threshold practice, three separately checked challenges (positive numbers, employee bonuses, score ranges), and a final quiz. Completion earns 200 XP after Create a Structure.
-
-Missions 04–09 add DO (sequence and running total, 220 XP), WHILE (sequence and loop repair, 220 XP), standard tables (numeric and structured rows, 240 XP), LOOP AT (totals and employee names, 250 XP), EXIT/CONTINUE (skip/stop, 240 XP), and a two-stage employee salary project (350 XP). Each has its own Syntax Lab, practice, two graded challenges and quiz.
-
-The connected roadmap preserves nine learning paths. The original foundation keeps its 3/3 milestone; implemented-content completion uses ten activities. Advanced previews are excluded. Existing completed missions, attempts, preferences and XP are preserved. Completing Fundamentals earns 1,995 XP including Orientation. Its 100% indicator applies to implemented content, not the entire planned academy.
-
-## Connected execution workspace
-
-- The lexer retains offsets and physical source positions; the parser produces a restricted, typed AST.
-- Semantic validation checks declarations, names, structure fields, types, and branch bodies before simulation.
-- Immutable execution events contain source ranges, operation kind, memory/output snapshots, changed fields, condition results, skipped ranges, and localized explanation keys.
-- Monaco decorations highlight the entire active statement, including multi-line TYPES chains. A single `▶` gutter pointer marks its start, distinct from the text cursor; it scrolls into view.
-- Previous, Next, Restart, Play/Pause, and clickable timeline events restore snapshots. Editing immediately clears traces and diagnostics. Building a trace starts from its first event.
-- Memory highlights use labels and borders as well as color. Structure component expressions are clickable in Monaco to identify their field in memory. Fields can also be selected directly.
-- The conditional regression has exactly four events for the provided 1200 example: declare, compare, matching WRITE, and block end. The unselected WRITE is dimmed and labeled as skipped; it is not an executed event.
-
-## Exact simulation scope
-
-This is an **educational simulation, not a real SAP runtime or a full ABAP compiler**. It has no SAP connection.
-
-Supported:
-
-- DATA for integer `i`, `string`, and a previously defined local structure type; optional literal VALUE for scalar variables.
-- Local `TYPES: BEGIN OF type_name, field TYPE i/string, ... END OF type_name.` chains with scalar fields.
-- Scalar and structure-component assignments, integer addition, and WRITE of scalar expressions.
-- IF comparisons (`=`, `<>`, `>`, `<`, `>=`, `<=`) with ordered ELSEIF branches, optional final ELSE, and matching ENDIF, including nested conditions. Only reached comparisons generate execution events.
-- Case-insensitive names, statements spanning physical lines, `*` comments in column 1, double-quote line comments, and doubled single quotes within text literals.
-
-Also supported: DO count TIMES / ENDDO, WHILE comparison / ENDWHILE, read-only sy-index inside DO/WHILE, STANDARD TABLE OF i/string/local_structure WITH EMPTY KEY, APPEND copy semantics, LOOP AT INTO existing or inline DATA work areas, and nearest-loop EXIT/CONTINUE. Each WRITE, WRITE /, or WRITE: / produces one output line. Loop counters and selected rows are snapshot-driven; playback has three speeds.
-
-Not supported: database access, classes/methods, sorted/hashed tables, field symbols, READ/MODIFY/DELETE/INSERT, nested structures/tables, constructor expressions, subtraction/multiplication, AND/OR/NOT, comma-separated WRITE chains, full SAP list formatting and implicit conversions. Ordinary DATA/TYPES must be outside control blocks. Integers are signed 32-bit. Static limits: 16,000 characters, 2,000 tokens, 150 statements, nesting 12. Runtime limits: 100 iterations per loop, 1,000 steps/events, 100 rows per table, 65,536 estimated serialized memory/output bytes and 4,000,000 total serialized trace bytes. Runaway loops stop with educational diagnostics.
-
-No `eval`, Function constructor, remote execution, or keyword-only grading is used. Arithmetic grading checks the parsed declarations, final output, addition, and a second set of input values to reject hardcoded answers. Structure grading checks the type's component types, record values, and WRITE of the actual name component. Conditions checks run multiple boundary and non-boundary inputs against the parsed program, require conditional control flow (including ELSEIF for range classification), and reject overwriting the designated input. A failed probe reports its input and expected/actual output separately from the editor's current trace. These are exercise checks within the supported model, not claims of arbitrary ABAP correctness.
-
-## Languages, appearance, and device progress
-
-All UI, learning explanations, quizzes, errors, hints, and instructional comments support English and Modern Standard Arabic. Code, names, and technical expressions remain LTR inside RTL layouts. Changing language or appearance preserves the current code, trace, and selected event.
-
-Appearance supports Light, Dark, and System, including live OS preference changes. Tokens cover the full UI, and Monaco switches themes. Motion respects reduced-motion preferences. Native dialogs provide modal focus behavior and restore focus on close.
-
-Local storage keys:
-
-- `abap2-master-progress`: completed Syntax Labs, completed missions, current mission, attempts, and last challenge results.
-- `abap2-language`: locale.
-- `abap2-appearance`: light/dark/system preference.
-
-XP and milestones derive from completed activities, so replaying a mission cannot duplicate rewards. Opening a mission does not complete it. Storage failures leave the app usable for the current visit and show a notice. Code drafts and in-progress traces are session-only. Clearing browser storage resets progress. The earlier prototype's `abap2-progress` key is retained but is not imported, because that curriculum did not include the new prerequisite Syntax Labs.
+It is a static Next.js App Router app with no environment variables or server code. Deploy it to any Next.js host (for example Vercel) with the defaults: install `npm ci`, build `npm run build`. The build also validates the lesson content and fails if a lesson is incomplete.
 
 ## Verify
 
-```powershell
-npm.cmd run lint
-npm.cmd run typecheck
-npm.cmd test
-npm.cmd run validate:curriculum
-npm.cmd run build
+```bash
+npm run lint
+npm run typecheck
+npm test                     # unit tests
+npm run validate:curriculum
+npm run build
 ```
 
-For browser tests, start the app first. The configuration defaults to port 3002 and can target any local preview:
+Browser tests (Playwright) need a running app:
 
-```powershell
-$env:PLAYWRIGHT_BASE_URL='http://localhost:3002'
-npm.cmd run test:e2e
+```bash
+PLAYWRIGHT_BASE_URL=http://localhost:3000 npm run test:e2e
 ```
 
-The Playwright config uses installed Windows Chrome and defaults to `http://localhost:3002`, matching the start command. Set its `executablePath` for your environment (or install a Playwright browser and remove the override). Use the same localhost hostname as the development server; Next.js dev origin checks may block resources through a different hostname.
+`playwright.config.ts` uses the installed Windows Chrome; change `executablePath` for other machines.
 
-Tests cover parser diagnostics, multi-line source ranges, arithmetic, structures, conditions, skipped branches, immutable memory/output, grading, prerequisite progression and XP; browser tests cover the full journey in English/Arabic and light/dark on desktop/mobile, system theme changes, Monaco execution pointers, navigation, trace invalidation, diagnostics, reset confirmation, future previews, local progress, and horizontal overflow.
+## Project layout
 
-## Modules
+- `src/app/page.tsx` — app shell: header, roadmap / lesson / contact views, settings, saved progress.
+- `src/features/roadmap/` — the interactive roadmap and the lesson view.
+- `src/components/` — lesson screens, labs, the code editor and the execution workspace.
+- `src/lib/curriculum.ts` — paths, missions and quizzes; other `src/lib/*` files hold lesson content.
+- `src/lib/engine.ts` — the ABAP simulator and challenge grading.
+- `src/lib/progress.ts` — progress, prerequisites and XP.
+- `docs/academy-development/` — development records; start with `NEXT_STEPS.md`.
 
-- `src/lib/curriculum.ts` — structured mission, token, quiz, and roadmap content.
-- `src/lib/i18n.ts` — UI strings, diagnostic explanations, execution narration.
-- `src/lib/engine.ts` — lexer, restricted parser, semantic checks, event generation, challenge grading.
-- `src/lib/progress.ts` — versioned progress shape, normalization, prerequisites, XP.
-- `src/components/syntax-lab.tsx` — reusable token teaching and comprehension quizzes.
-- `src/components/mission-engine.tsx` — mission stages and completion gates.
-- `src/components/code-editor.tsx` — Monaco, source decorations, diagnostics, field selection.
-- `src/components/learning-workspace.tsx` — execution controls, explanation panel, memory, output, timeline, hints and feedback.
-- `src/app/page.tsx` — application shell, appearance/locale settings, roadmap, local persistence.
+## Saved data
 
-## Content accuracy references
-
-Original beginner lessons were checked against [SAP syntax guidance](https://learning.sap.com/courses/learn-the-basics-of-abap-programming-on-sap-btp/introducing-abap-syntax_b815682e-9a5e-4372-a021-66ea71208746), [SAP structured data objects](https://learning.sap.com/courses/basic-abap-programming/declaring-a-structured-data-object_cd245e79-eb25-4099-a5b4-9ad46b1659b6), and [SAP component selectors](https://help.sap.com/docs/abap-cloud/abap-keywords-standard-abap/ABENSTRUCTURE_COMPONENT_SELECTOR.html). Advanced reference content remains separate from beginner missions.
-
-This deliverable is a local application; it has not been deployed.
+Progress, theme and language live in the browser's local storage (`abap2-*` keys). Clearing site data resets progress. Nothing is sent to a server; the Contact form opens a prefilled email draft in the visitor's own mail app.

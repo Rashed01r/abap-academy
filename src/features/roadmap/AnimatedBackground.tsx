@@ -10,7 +10,7 @@ const WORDS = ["SELECT", "FROM", "WHERE", "LOOP AT", "ENDLOOP.", "DATA:", "TYPES
 
 /**
  * Animated canvas behind the roadmap: a particle network that reacts to the cursor and/or
- * falling-up ABAP code tokens. Adapted from docs/roadmap-redesign/AnimatedBackground.tsx:
+ * falling-up ABAP code tokens. Adapted from the roadmap redesign prototype:
  * pauses while the tab is hidden or the mode is "none", uses fewer particles on small
  * screens, and eases its colour toward `tint` when the open path changes.
  */

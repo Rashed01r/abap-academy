@@ -1,5 +1,5 @@
 /* ABAP Academy 2.0 – roadmap home.
-   Ported from docs/roadmap-redesign/roadmap-style.css. Class names and values are kept;
+   Ported from the roadmap redesign prototype. Class names and values are kept;
    every rule is scoped under .roadmap-home so nothing leaks into lessons or the simulator.
    Changes from the prototype file:
    - :root / html / body rules live on .roadmap-home; body.no* toggles are .roadmap-home.no*
