@@ -1,0 +1,67 @@
+/* Phones and tablets: readable text and touch-sized controls.
+   Loaded last on purpose: it adjusts rules from globals, knowledge-tree and lesson-header CSS.
+   Targets: text >= 12px, touch targets >= 44px, form fields >= 16px on touch screens. */
+
+/* Theme menu: the whole visible box opens it, not a thin strip inside it. */
+.immersive-academy .theme-select { padding-block: 0; }
+.immersive-academy .theme-select select { align-self: stretch; padding-block: 6px; cursor: pointer; }
+
+/* Small labels that were 11px. */
+.lesson-header .lesson-header-context,
+.lesson-header .lesson-header-stat dt,
+.lesson-header .lesson-header-status,
+.immersive-academy .header-xp,
+.roadmap-home .rs,
+.immersive-academy .contact-chip small { font-size: 12px; }
+
+/* Shared small-text patterns: section labels, captions, the code editor's header and hint line.
+   !important: these were set to 10-11.5px by many component rules of different specificity. */
+.immersive-academy :is(.eyebrow, .visual-kicker, figcaption, .editor-help, .editor-top) { font-size: 12px !important; }
+/* small stays a little smaller than the text around it (.8 of the parent), but never under 12px. */
+.immersive-academy main small { font-size: max(12px, .8em) !important; }
+
+/* "Reference code…" notices are real content (11px); the memory panel's "Changed this step" was 9px. */
+.immersive-academy .pill.guided-boundary { font-size: 13px; }
+.immersive-academy .memory-heading span,
+.immersive-academy .ml-tag { font-size: 12px; }
+
+/* Roadmap breadcrumb ("ABAP › Learning …") buttons were 23px tall. */
+.roadmap-home .crumb nav button { min-height: 44px; padding-inline: 4px; }
+
+@media (pointer: coarse) {
+  /* 44px touch targets (Apple HIG; WCAG 2.5.5). */
+  .immersive-academy :is(.language, .theme-select) { min-height: 44px; }
+  .immersive-academy > header > .glossary { width: 44px; }
+  .immersive-academy > header > .glossary summary { width: 44px; height: 44px; }
+  .immersive-academy > header nav button { min-height: 44px; }
+  main details > summary { padding-block: 12px; }
+  .immersive-academy :is(.brand, .text-button, .lesson-header-prerequisite, main select) { min-height: 44px; }
+  .immersive-academy .icon-button { min-width: 44px; min-height: 44px; }
+  .immersive-academy .explore-actions label { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; }
+
+  /* iPhone/iPad Safari zooms into any field under 16px when it is tapped. Monaco's hidden input is excluded. */
+  /* !important: several lesson labs set smaller sizes with more specific selectors. */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea:not(.inputarea) { font-size: 16px !important; }
+  /* The theme menu was capped at 85px, which cut "System" off at 16px. */
+  .immersive-academy .theme-select select { max-width: none; }
+}
+
+/* Phones: header in two rows (brand + settings, then navigation) instead of three,
+   so the glossary button no longer sits alone on its own row. */
+@media (max-width: 760px) {
+  .immersive-academy .header-settings { order: 1; margin-inline-start: auto; }
+  .immersive-academy > header > .glossary { order: 2; }
+  .immersive-academy > header nav { order: 3; flex-basis: 100%; }
+
+  /* "Add two numbers" memory boxes shrank to about 9-10px here. */
+  .immersive-academy .add-box code { font-size: .74rem; }
+  .immersive-academy .add-box small { font-size: .72rem; }
+}
+
+/* Smallest phones (320px): drop the theme menu icon so brand, menu and glossary share one row
+   (139 + 105 + 44 + gaps/padding = 328px with the icon). */
+@media (max-width: 359px) {
+  .immersive-academy .theme-select > svg { display: none; }
+}

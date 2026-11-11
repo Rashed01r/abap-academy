@@ -9,6 +9,7 @@ import {
   Monitor,
   Map,
   Code2,
+  Mail,
 } from "lucide-react";
 import { Locale } from "@/lib/engine";
 import { ui } from "@/lib/i18n";
@@ -23,10 +24,25 @@ import {
 import { glossary } from "@/lib/glossary";
 import { RoadmapHome } from "@/features/roadmap/RoadmapHome";
 import { LessonView } from "@/features/roadmap/LessonView";
+import { ContactPage } from "@/components/contact-page";
 import "./knowledge-tree.css";
 import "./teaching-trace.css";
 import "./lesson-header.css";
+import "./touch-usability.css";
 type Appearance = "light" | "dark" | "system";
+function viewUrl(view: string) {
+  const url = new URL(window.location.href);
+  url.searchParams.delete("layout");
+  if (unlocked(view)) url.searchParams.set("mission", view);
+  else url.searchParams.delete("mission");
+  if (view === "contact") url.searchParams.set("page", "contact");
+  else url.searchParams.delete("page");
+  return url;
+}
+function viewFromUrl() {
+  const query = new URLSearchParams(window.location.search), id = query.get("mission");
+  return query.get("page") === "contact" ? "contact" : id && unlocked(id) ? id : "home";
+}
 export default function Academy() {
   const [preference, setLang] = useState<Locale>("en"),
     [appearance, setAppearance] = useState<Appearance>("system"),
@@ -60,9 +76,9 @@ export default function Academy() {
       const a = localStorage.getItem("abap2-appearance");
       if (a === "light" || a === "dark" || a === "system") setAppearance(a);
     } catch { setStorage(false); }
-    const requested = new URLSearchParams(window.location.search).get("mission");
-    if (requested && unlocked(requested)) {
-      setProgress(p => visitMission(p, requested));
+    const requested = viewFromUrl();
+    if (requested !== "home") {
+      if (requested !== "contact") setProgress(p => visitMission(p, requested));
       setView(requested);
     }
     setReady(true);
@@ -70,9 +86,7 @@ export default function Academy() {
     setSystemDark(media.matches);
     const listener = () => setSystemDark(media.matches);
     const restore = () => {
-      const query = new URLSearchParams(window.location.search);
-      const id = query.get("mission");
-      setView(id && unlocked(id) ? id : "home");
+      setView(viewFromUrl());
       const url = new URL(window.location.href);
       url.searchParams.delete("layout");
       window.history.replaceState(null, "", url);
@@ -97,17 +111,10 @@ export default function Academy() {
   /* eslint-enable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!ready) return;
-    const url = new URL(window.location.href);
-    url.searchParams.delete("layout");
-    if (unlocked(view)) url.searchParams.set("mission", view);
-    else url.searchParams.delete("mission");
-    window.history.replaceState(null, "", url);
+    window.history.replaceState(null, "", viewUrl(view));
   }, [view, ready]);
   function navigate(id: string) {
-    const url = new URL(window.location.href);
-    url.searchParams.delete("layout");
-    if (unlocked(id)) url.searchParams.set("mission", id);
-    else url.searchParams.delete("mission");
+    const url = viewUrl(id);
     if (url.href !== window.location.href) window.history.pushState(null, "", url);
     setView(id);
   }
@@ -140,11 +147,20 @@ export default function Academy() {
         </button>
         <nav aria-label={t.path}>
           <button
-            className="nav-active"
+            className={view === "contact" ? undefined : "nav-active"}
+            aria-current={view === "contact" ? undefined : "page"}
             onClick={() => navigate("home")}
           >
             <Map size={16} />
             {t.path}
+          </button>
+          <button
+            className={view === "contact" ? "nav-active" : undefined}
+            aria-current={view === "contact" ? "page" : undefined}
+            onClick={() => { navigate("contact"); window.scrollTo({ top: 0 }); }}
+          >
+            <Mail size={16} />
+            Contact
           </button>
         </nav>
         {view === "home" && <div id="academy-header-search" />}
@@ -180,7 +196,9 @@ export default function Academy() {
         <AcademyGlossary lang={lang} compact />
       </header>
       <main id="main">
-        {view === "home" ? (
+        {view === "contact" ? (
+          <ContactPage />
+        ) : view === "home" ? (
           <RoadmapHome lang={lang} progress={progress} setProgress={setProgress} ready={ready} focusMission={lastLesson} onOpenLesson={open} />
         ) : (
           <LessonView id={view} lang={lang} theme={theme} progress={progress} setProgress={setProgress} ready={ready}

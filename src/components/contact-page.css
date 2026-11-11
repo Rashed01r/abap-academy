@@ -1,0 +1,31 @@
+/* Contact page (design option B: centered form). Uses the app's theme tokens from globals.css. */
+.contact-page { max-width: 780px; margin: 0 auto; padding: 40px 16px 64px; text-align: center; min-width: 0; }
+.contact-page h1 { font-size: 32px; line-height: 1.2; margin: 0 0 8px; color: var(--ink); }
+.contact-lead { color: var(--muted); margin: 0 0 28px; }
+.contact-chips { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; list-style: none; margin: 0 0 28px; padding: 0; }
+.contact-chip { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 9px 16px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line-dim, var(--line)); color: var(--ink); text-decoration: none; font-size: 14px; max-width: 100%; overflow-wrap: anywhere; }
+.contact-chip:hover { border-color: var(--border-hover, var(--accent)); color: var(--accent-text); }
+.contact-chip svg { color: var(--accent); flex-shrink: 0; }
+.contact-chip small { color: var(--text-muted, var(--muted)); }
+
+.contact-card { max-width: 620px; margin: 0 auto; text-align: start; background: var(--surface); border: 1px solid var(--line-dim, var(--line)); border-radius: 14px; padding: 24px; }
+.contact-card h2 { margin: 0 0 16px; font-size: 20px; }
+.contact-card form { display: grid; gap: 16px; }
+.contact-field { display: grid; gap: 6px; min-width: 0; }
+.contact-field label { font-size: 14px; font-weight: 600; }
+.contact-field input, .contact-field textarea { width: 100%; font: inherit; color: var(--ink); background: var(--surface3); border: 1px solid var(--line-dim, var(--line)); border-radius: 10px; padding: 11px 14px; }
+.contact-field textarea { min-height: 150px; resize: vertical; }
+.contact-field input:hover, .contact-field textarea:hover { border-color: var(--border-hover, var(--accent)); }
+.contact-field [aria-invalid="true"] { border-color: var(--danger); }
+.contact-error { color: var(--danger); font-size: 13px; margin: 0; }
+.contact-count { font-size: 12px; color: var(--text-muted, var(--muted)); justify-self: end; }
+.contact-status { margin: 0; padding: 12px 14px; border-radius: 10px; font-size: 14px; }
+.contact-status:empty { display: none; }
+.contact-status.ok { background: var(--accent-soft); color: var(--accent-text); }
+.contact-status.bad { background: var(--danger-bg); color: var(--danger); }
+.contact-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.contact-hint { font-size: 13px; color: var(--text-muted, var(--muted)); }
+.contact-send { min-height: 44px; padding-inline: 22px; }
+/* Off-screen rather than display:none, which some bots skip. */
+.contact-hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+.contact-status a { color: inherit; text-decoration: underline; }
