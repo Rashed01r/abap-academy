@@ -79,7 +79,9 @@ export default function Academy() {
     setSystemDark(media.matches);
     const listener = () => setSystemDark(media.matches);
     const restore = () => {
-      setView(viewFromUrl());
+      const next = viewFromUrl();
+      if (next === "contact") setLastLesson(undefined);
+      setView(next);
       const url = new URL(window.location.href);
       url.searchParams.delete("layout");
       window.history.replaceState(null, "", url);
@@ -108,6 +110,8 @@ export default function Academy() {
   function navigate(id: string) {
     const url = viewUrl(id);
     if (url.href !== window.location.href) window.history.pushState(null, "", url);
+    // Leaving for Contact forgets the last lesson, so the roadmap does not reopen its drawer on return.
+    if (id === "contact") setLastLesson(undefined);
     setView(id);
   }
   function open(id: string) {
