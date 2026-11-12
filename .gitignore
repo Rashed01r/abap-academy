@@ -10,8 +10,6 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
-/coverage
 
 # next.js
 /.next/
@@ -41,5 +39,11 @@ yarn-error.log*
 next-env.d.ts
 
 /public/monaco/
-/playwright-report/
-/test-results/
+
+# local AI tooling and internal dev notes (kept on disk, not published)
+/.claude/
+/CLAUDE.md
+/AGENTS.md
+/NEXT_STEPS.md
+/graphify-out/
+/docs/

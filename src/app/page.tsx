@@ -4,12 +4,9 @@ import { useEffect, useState } from "react";
 import {
   GraduationCap,
   Globe2,
-  Sun,
-  Moon,
-  Monitor,
-  Map,
+  Network,
   Code2,
-  Mail,
+  MessageSquareCode,
 } from "lucide-react";
 import { Locale } from "@/lib/engine";
 import { ui } from "@/lib/i18n";
@@ -31,7 +28,6 @@ import "./knowledge-tree.css";
 import "./teaching-trace.css";
 import "./lesson-header.css";
 import "./touch-usability.css";
-type Appearance = "light" | "dark" | "system";
 function viewUrl(view: string) {
   const url = new URL(window.location.href);
   url.searchParams.delete("layout");
@@ -47,7 +43,6 @@ function viewFromUrl() {
 }
 export default function Academy() {
   const [preference, setLang] = useState<Locale>("en"),
-    [appearance, setAppearance] = useState<Appearance>("system"),
     [systemDark, setSystemDark] = useState(false),
     [progress, setProgress] = useState<Progress>(initialProgress),
     [ready, setReady] = useState(false),
@@ -57,8 +52,8 @@ export default function Academy() {
     [lastLesson, setLastLesson] = useState<string>();
   const lang = resolveLocale(preference);
   const t = ui[lang],
-    theme =
-      appearance === "system" ? (systemDark ? "dark" : "light") : appearance;
+    // No theme picker: lessons follow the device setting; the roadmap and Contact are always dark.
+    theme = systemDark ? "dark" : "light";
   // Hydrate device-only settings after SSR and synchronize browser storage failures.
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
@@ -74,10 +69,6 @@ export default function Academy() {
     }
     try { setLang(resolveLocale(localStorage.getItem("abap2-language"))); }
     catch { setStorage(false); }
-    try {
-      const a = localStorage.getItem("abap2-appearance");
-      if (a === "light" || a === "dark" || a === "system") setAppearance(a);
-    } catch { setStorage(false); }
     const requested = viewFromUrl();
     if (requested !== "home") {
       if (requested !== "contact") setProgress(p => visitMission(p, requested));
@@ -105,11 +96,10 @@ export default function Academy() {
       try {
         if (progressStorageReady) localStorage.setItem("abap2-master-progress", JSON.stringify(progress));
         localStorage.setItem("abap2-language", lang);
-        localStorage.setItem("abap2-appearance", appearance);
       } catch {
         setStorage(false);
       }
-  }, [lang, theme, appearance, progress, ready, progressStorageReady]);
+  }, [lang, theme, progress, ready, progressStorageReady]);
   /* eslint-enable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!ready) return;
@@ -130,7 +120,7 @@ export default function Academy() {
     window.scrollTo({ top: 0 });
   }
   return (
-    <div className={`app immersive-academy ${view === "home" ? "roadmap-home" : ""}`}>
+    <div className={`app immersive-academy ${view === "home" || view === "contact" ? "roadmap-home" : ""}`}>
       <a className="skip" href="#main">
         {t.skip}
       </a>
@@ -144,7 +134,7 @@ export default function Academy() {
             <GraduationCap size={25} />
           </span>
           <span>
-            ABAP <span className="brand-light">Academy</span>
+            ABAP<b className="brand-dot" aria-hidden="true">.</b><span className="brand-light">Academy</span>
           </span>
         </button>
         <nav aria-label={t.path}>
@@ -153,40 +143,21 @@ export default function Academy() {
             aria-current={view === "contact" ? undefined : "page"}
             onClick={() => navigate("home")}
           >
-            <Map size={16} />
-            {t.path}
+            <Network size={16} aria-hidden="true" />
+            <span className="nav-label">{t.path}</span><span className="nav-file" aria-hidden="true">roadmap.abap</span>
           </button>
           <button
             className={view === "contact" ? "nav-active" : undefined}
             aria-current={view === "contact" ? "page" : undefined}
             onClick={() => { navigate("contact"); window.scrollTo({ top: 0 }); }}
           >
-            <Mail size={16} />
-            Contact
+            <MessageSquareCode size={16} aria-hidden="true" />
+            <span className="nav-label">Contact</span><span className="nav-file" aria-hidden="true">contact.abap</span>
           </button>
         </nav>
         {view === "home" && <div id="academy-header-search" />}
         <div className="header-settings">
-          <span className="header-xp pill" key={earnedXP(progress)}>{earnedXP(progress)} XP</span>
-          <label className="theme-select">
-            <span className="sr-only">{t.appearance}</span>
-            {appearance === "system" ? (
-              <Monitor size={16} />
-            ) : appearance === "dark" ? (
-              <Moon size={16} />
-            ) : (
-              <Sun size={16} />
-            )}
-            <select
-              aria-label={t.appearance}
-              value={appearance}
-              onChange={(e) => setAppearance(e.target.value as Appearance)}
-            >
-              <option value="light">{t.light}</option>
-              <option value="dark">{t.dark}</option>
-              <option value="system">{t.system}</option>
-            </select>
-          </label>
+          <span className="header-xp pill" key={earnedXP(progress)}><i aria-hidden="true" />{earnedXP(progress)} XP</span>
           {ENABLE_ARABIC && <button
             className="language"
             onClick={() => setLang(lang === "en" ? "ar" : "en")}
@@ -220,6 +191,10 @@ export default function Academy() {
 function AcademyGlossary({lang, compact = false}: {lang: Locale; compact?: boolean}) {
   return <details className="glossary">
     <summary aria-label={ui[lang].glossary} title={ui[lang].glossary}>{compact ? <><Code2 size={18}/><span className="sr-only">{ui[lang].glossary}</span></> : ui[lang].glossary}</summary>
-    <dl>{glossary.map(([en, ar, enDefinition, arDefinition]) => <div key={en}><dt><bdi dir="ltr">{en}</bdi>{ENABLE_ARABIC && <> · <bdi dir="rtl">{ar}</bdi></>}</dt><dd>{lang === "ar" ? arDefinition : enDefinition}</dd></div>)}</dl>
+    <div className="glossary-pop">
+      <div className="glossary-tb" aria-hidden="true"><i /><i /><i /><span>glossary.abap</span></div>
+      <dl>{glossary.map(([en, ar, enDefinition, arDefinition]) => <div key={en}><dt><bdi dir="ltr">{en}</bdi>{ENABLE_ARABIC && <> · <bdi dir="rtl">{ar}</bdi></>}</dt><dd>{lang === "ar" ? arDefinition : enDefinition}</dd></div>)}</dl>
+      <div className="glossary-foot" aria-hidden="true"><span>{glossary.length} terms</span><span>ABAP · reference</span></div>
+    </div>
   </details>;
 }

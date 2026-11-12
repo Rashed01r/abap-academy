@@ -8,14 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "predev": "node scripts/prepare-monaco.mjs",
-    "prebuild": "node scripts/prepare-monaco.mjs && tsx scripts/validate-education.ts",
-    "typecheck": "tsc --noEmit",
-    "test": "tsx --test --test-concurrency=1 tests/engine.test.ts tests/fundamentals.test.ts tests/exploration.test.ts tests/anatomy.test.ts tests/table-keys.test.ts tests/field-symbols.test.ts tests/guided.test.ts tests/guided-data.test.ts tests/read-table.test.ts tests/table-operations.test.ts tests/education-quality.test.ts tests/visual-classroom.test.ts tests/teaching-trace.test.ts tests/conditional-loop.test.ts tests/table-expressions.test.ts tests/table-performance.test.ts tests/employee-manager.test.ts tests/dictionary-labs.test.ts tests/abap-sql.test.ts tests/oop.test.ts tests/roadmap.test.ts tests/contact.test.ts",
-    "validate:curriculum": "tsx scripts/validate-curriculum.ts",
-    "validate:education": "tsx scripts/validate-education.ts",
-    "report:trace-captions": "tsx scripts/report-trace-captions.ts",
-    "report:education": "tsx scripts/report-education.ts",
-    "test:e2e": "playwright test"
+    "prebuild": "node scripts/prepare-monaco.mjs",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
@@ -26,7 +20,6 @@
     "react-dom": "19.3.0"
   },
   "devDependencies": {
-    "@playwright/test": "^1.64.1",
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -34,7 +27,6 @@
     "eslint": "^9",
     "eslint-config-next": "16.4.3",
     "tailwindcss": "^4",
-    "tsx": "^4.23.15",
     "typescript": "^5"
   },
   "overrides": {

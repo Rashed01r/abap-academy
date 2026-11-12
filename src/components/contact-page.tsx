@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Mail, Phone } from "lucide-react";
 import { composeLinks, contact, LIMITS, looksLikeBot, validateContact, type ContactErrors, type ContactFields } from "@/lib/contact";
 import "./contact-page.css";
@@ -17,6 +17,12 @@ export function ContactPage() {
   const [status, setStatus] = useState<{ ok: boolean; text: string; links?: { gmail: string; mailto: string } } | null>(null);
   const form = useRef<HTMLFormElement>(null);
 
+  // F8 is SAP's "execute" key; the Send button shows it.
+  useEffect(() => {
+    const run = (e: KeyboardEvent) => { if (e.key === "F8") { e.preventDefault(); form.current?.requestSubmit(); } };
+    window.addEventListener("keydown", run);
+    return () => window.removeEventListener("keydown", run);
+  }, []);
   const set = (key: keyof ContactFields) => (e: { target: { value: string } }) => setFields(f => ({ ...f, [key]: e.target.value }));
 
   function submit(e: FormEvent) {
@@ -39,36 +45,47 @@ export function ContactPage() {
     setStatus({ ok: true, text: tab ? "Gmail opened in a new tab with your message ready. Press Send there to send it." : "Your browser blocked the new tab.", links });
   }
 
-  const field = (key: "name" | "email" | "subject", label: string, type: string, autoComplete: string) => (
+  // Each field is labelled like an ABAP declaration; only the plain comment ("Full name") is the accessible label.
+  const declare = (id: string, variable: string, label: string) => <p className="contact-line contact-decl">
+    <span aria-hidden="true"><b>DATA</b> <i>{variable}</i> <b>TYPE</b> string. &quot;</span> <label htmlFor={id}>{label}</label>
+  </p>;
+  const field = (key: "name" | "email" | "subject", variable: string, label: string, type: string, autoComplete: string, hint: string) => (
     <div className="contact-field">
-      <label htmlFor={`contact-${key}`}>{label}</label>
-      <input id={`contact-${key}`} name={key} type={type} autoComplete={autoComplete} required maxLength={LIMITS[key]}
+      {declare(`contact-${key}`, variable, label)}
+      <input id={`contact-${key}`} name={key} type={type} autoComplete={autoComplete} required maxLength={LIMITS[key]} placeholder={hint}
         value={fields[key]} onChange={set(key)} aria-invalid={!!errors[key]} aria-describedby={errors[key] ? `contact-${key}-error` : undefined} />
       {errors[key] && <p className="contact-error" id={`contact-${key}-error`}>{errors[key]}</p>}
     </div>
   );
+  const problems = Object.keys(errors).length;
+  const dirty = Object.entries(fields).some(([k, v]) => k !== "trap" && v);
 
   return <section className="contact-page" aria-labelledby="contact-title">
-    <h1 id="contact-title">Contact me</h1>
-    <p className="contact-lead">Questions, feedback or ideas for ABAP Academy are always welcome.</p>
+    <div className="contact-head">
+      <p className="contact-cm" aria-hidden="true">&quot; contact.abap · questions, feedback and ideas</p>
+      <h1 id="contact-title">Contact me</h1>
+      <p className="contact-lead">Questions, feedback or ideas for ABAP Academy are always welcome.</p>
+    </div>
     <ul className="contact-chips" aria-label="Contact details">
-      <li><a className="contact-chip" href={`mailto:${contact.email}`}><Mail size={16} aria-hidden="true" />{contact.email}</a></li>
-      <li><a className="contact-chip" href={contact.phoneHref}><Phone size={16} aria-hidden="true" /><span dir="ltr">{contact.phoneDisplay}</span><small>Saudi Arabia</small></a></li>
-      <li><a className="contact-chip" href={contact.linkedin} target="_blank" rel="noopener noreferrer"><LinkedInIcon />LinkedIn</a></li>
-      <li><a className="contact-chip" href={contact.github} target="_blank" rel="noopener noreferrer"><GitHubIcon />GitHub</a></li>
+      <li><a className="contact-chip" href={`mailto:${contact.email}`}><span className="contact-bar"><Mail size={13} aria-hidden="true" />email<span className="go" aria-hidden="true">→</span></span><span className="val">{contact.email}</span></a></li>
+      <li><a className="contact-chip" href={contact.phoneHref}><span className="contact-bar"><Phone size={13} aria-hidden="true" />phone<span className="go" aria-hidden="true">→</span></span><span className="val"><span dir="ltr">{contact.phoneDisplay}</span><small>Saudi Arabia</small></span></a></li>
+      <li><a className="contact-chip" href={contact.linkedin} target="_blank" rel="noopener noreferrer"><span className="contact-bar"><LinkedInIcon />LinkedIn<span className="go" aria-hidden="true">↗</span></span><span className="val">rashed-balhareth</span></a></li>
+      <li><a className="contact-chip" href={contact.github} target="_blank" rel="noopener noreferrer"><span className="contact-bar"><GitHubIcon />GitHub<span className="go" aria-hidden="true">↗</span></span><span className="val">Rashed01r</span></a></li>
     </ul>
 
     <div className="contact-card">
-      <h2>Send a message</h2>
+      <div className="contact-tb" aria-hidden="true"><i /><i /><i /><span className={dirty ? "dirty" : undefined}>message.abap</span></div>
+      <h2 className="sr-only">Send a message</h2>
       <form ref={form} onSubmit={submit} noValidate>
-        {field("name", "Full name", "text", "name")}
-        {field("email", "Email", "email", "email")}
-        {field("subject", "Subject", "text", "off")}
+        <p className="contact-line contact-c" aria-hidden="true">&quot; Send a message. Fill in the fields, then run it.</p>
+        <p className="contact-line" aria-hidden="true"><b>REPORT</b> <i>z_contact_me</i>.</p>
+        {field("name", "lv_full_name", "Full name", "text", "name", "'Your name'")}
+        {field("email", "lv_email", "Email", "email", "email", "'you@example.com'")}
+        {field("subject", "lv_subject", "Subject", "text", "off", "'What is it about?'")}
         <div className="contact-field">
-          <label htmlFor="contact-message">Message</label>
-          <textarea id="contact-message" name="message" required maxLength={LIMITS.message} value={fields.message} onChange={set("message")}
+          {declare("contact-message", "lv_message", "Message")}
+          <textarea id="contact-message" name="message" required maxLength={LIMITS.message} value={fields.message} onChange={set("message")} placeholder="'Write your message here…'"
             aria-invalid={!!errors.message} aria-describedby={errors.message ? "contact-message-error" : undefined} />
-          <span className="contact-count">{fields.message.length} / {LIMITS.message}</span>
           {errors.message && <p className="contact-error" id="contact-message-error">{errors.message}</p>}
         </div>
         {/* Honeypot: hidden from people and screen readers; bots that fill it are ignored.
@@ -77,6 +94,7 @@ export function ContactPage() {
           <label htmlFor="contact-trap">Leave this field empty</label>
           <input id="contact-trap" name="contact_trap_q7" tabIndex={-1} autoComplete="off" value={fields.trap} onChange={set("trap")} />
         </div>
+        <p className="contact-line contact-call" aria-hidden="true"><b>CALL FUNCTION</b> <s>&apos;SEND_MESSAGE&apos;</s>. <span className="contact-c">&quot; opens Gmail, you press Send</span></p>
         <p className={`contact-status ${status?.ok ? "ok" : "bad"}`} role="status">{status?.text}{status?.links && <>
           {" "}<a href={status.links.gmail} target="_blank" rel="noopener noreferrer">Open Gmail again</a>
           {" · "}<a href={status.links.mailto}>Use another email app</a>
@@ -84,9 +102,14 @@ export function ContactPage() {
         </>}</p>
         <div className="contact-actions">
           <span className="contact-hint">Opens Gmail with your message ready; you press Send.</span>
-          <button className="primary contact-send" type="submit">Send message</button>
+          <button className="contact-send" type="submit"><span aria-hidden="true">▶</span> Send message <kbd aria-hidden="true">F8</kbd></button>
         </div>
       </form>
+      <div className={`contact-statusbar${problems ? " err" : ""}`} aria-hidden="true">
+        <span>{problems ? `${problems} problem${problems > 1 ? "s" : ""} found` : "Ready"}</span>
+        <span className="contact-count">{fields.message.length} / {LIMITS.message}</span>
+        <span>ABAP · UTF-8</span>
+      </div>
     </div>
   </section>;
 }

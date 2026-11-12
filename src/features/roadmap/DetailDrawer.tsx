@@ -5,7 +5,7 @@ import type { Locale } from "@/lib/engine";
 import type { RoadmapCopy } from "@/lib/tree-copy";
 import type { RoadmapNode } from "./data/roadmap-tree";
 import { TCODE_XP } from "./data/tcodes";
-import { FrequencyDots, frequencyLabel } from "./NodeCard";
+import { FrequencyDots, frequencyLabel, lessonFile } from "./NodeCard";
 
 export type LessonStatus = "completed" | "started" | "new";
 
@@ -21,7 +21,7 @@ export function DetailDrawer({ node, open, lang, c, learned, lessonStatus, onClo
   }, [open, node?.id]);
   const parent = node?.parent ? localizedText(node.parent.label, lang) : "";
   return <aside
-    className={`drawer${open ? " open" : ""}`}
+    className={`drawer${open ? " open" : ""}${node?.kind === "lesson" ? " ide" : ""}`}
     style={node ? ({ "--c": node.color } as CSSProperties) : undefined}
     aria-label={node ? localizedText(node.label, lang) : undefined}
     aria-hidden={!open}
@@ -82,22 +82,23 @@ function TCodeDetail({ node, lang, c, parent, learned, onLearn }: {
 function LessonDetail({ node, lang, c, parent, status, onOpenLesson }: {
   node: RoadmapNode; lang: Locale; c: RoadmapCopy; parent: string; status: LessonStatus; onOpenLesson: (n: RoadmapNode) => void;
 }) {
-  if (node.planned) return <>
-    <span className="tag">{c.plannedTag} · {localizedText(node.level, lang)}</span>
-    <h2>{localizedText(node.label, lang)}</h2>
-    <p>{c.plannedText}</p>
-    <h4>{c.partOf}</h4><p>{parent}</p>
-  </>;
-  const statusText = status === "completed" ? c.completed : status === "started" ? c.inProgress : c.notStarted;
+  const statusText = node.planned ? c.plannedTag : status === "completed" ? c.completed : status === "started" ? c.inProgress : c.notStarted;
+  // Styled like a source file: tab bar, ABAP comment line, key/value table.
   return <>
-    <span className="tag">{c.lessonTag} · {localizedText(node.level, lang)}</span>
-    <h2>{localizedText(node.label, lang)}</h2>
-    <h4>{c.youWillLearn}</h4><p>{localizedText(node.sub, lang)}</p>
-    <h4>{c.partOf}</h4><p>{parent}</p>
-    <h4>{statusText}</h4>
-    <p>{node.xp} {c.xp}{node.minutes ? ` · ${c.duration.replace("{n}", String(node.minutes))}` : ""}</p>
-    <button type="button" className={`primary${status === "completed" ? " off" : ""}`} onClick={() => onOpenLesson(node)}>
-      {status === "completed" ? `${c.completed} ✓ · ${c.openLesson}` : c.openLesson}
-    </button>
+    <div className="tb" dir="ltr"><i aria-hidden="true" /><i aria-hidden="true" /><i aria-hidden="true" /><span className="f">{lessonFile(node)}.abap</span></div>
+    <div className="pad">
+      <div className="cm">&quot; {node.planned ? c.plannedTag : c.lessonTag} · {localizedText(node.level, lang)} · {parent}</div>
+      <h2>{localizedText(node.label, lang)}</h2>
+      <p>{node.planned ? c.plannedText : localizedText(node.sub, lang)}</p>
+      <dl className="kv">
+        <div><dt>{c.partOf}</dt><dd className="str">&apos;{parent}&apos;</dd></div>
+        <div><dt>status</dt><dd>{statusText}</dd></div>
+        {!node.planned && <div><dt>{c.xp}</dt><dd>{node.xp}</dd></div>}
+        {!!node.minutes && <div><dt>time</dt><dd>{c.duration.replace("{n}", String(node.minutes))}</dd></div>}
+      </dl>
+      {!node.planned && <button type="button" className={`cta${status === "completed" ? " off" : ""}`} onClick={() => onOpenLesson(node)}>
+        <span>{status === "completed" ? `${c.completed} ✓ · ${c.openLesson}` : c.openLesson}</span><span aria-hidden="true">▶</span>
+      </button>}
+    </div>
   </>;
 }

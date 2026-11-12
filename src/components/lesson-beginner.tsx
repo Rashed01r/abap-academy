@@ -82,6 +82,11 @@ export function LessonRunner({ id, code: example }: { id: string; code: string }
   // Runnable lessons step one executed statement at a time; reference lessons step one part at a time.
   const total = events ? events.length : groups.length;
   const event = events && step ? events[step - 1] : undefined;
+  // Loops replay lines the learner has already seen. Once the next line is a replay, offer a jump to the
+  // first line that has not run yet, or to the end (then "Start over"), instead of clicking every pass.
+  const seen = new Set(events?.slice(0, step).map(e => e.range.startLine));
+  const fresh = events ? events.findIndex((e, i) => i >= step && !seen.has(e.range.startLine)) : -1;
+  const skipTo = events && step < total && seen.has(events[step].range.startLine) ? (fresh < 0 ? total : fresh) : 0;
   const overlaps = (e: { range: { startLine: number; endLine: number } }, g: (typeof groups)[number]) => e.range.startLine <= g.range.endLine && e.range.endLine >= g.range.startLine;
   const gi = picked ?? (events ? (event ? groupOf(event.range.startLine) : -1) : step - 1);
   const group = gi >= 0 ? groups[gi] : undefined;
@@ -155,7 +160,10 @@ export function LessonRunner({ id, code: example }: { id: string; code: string }
     <div className="add-controls">
       <button type="button" onClick={() => go(step - 1)} disabled={!step}><span aria-hidden="true">← </span>Back</button>
       <span className="add-progress">{skipped && group ? `Skipped with these values · ${group.title.en}` : group && (step || !events) ? `${events ? "Line" : "Part"} ${step} of ${total} · ${group.title.en}` : events ? "Ready to run" : "Ready"}</span>
-      <button type="button" className="primary" onClick={() => go(step === total ? 0 : step + 1)}>{step === total ? "Start over" : nextLabel}</button>
+      <span className="add-next">
+        {skipTo - step > 1 && <button type="button" onClick={() => go(skipTo)}>{skipTo === total ? "Skip to the result" : "Skip the repeats"} · {skipTo - step} lines</button>}
+        <button type="button" className="primary" onClick={() => go(step === total ? 0 : step + 1)}>{step === total ? "Start over" : nextLabel}</button>
+      </span>
     </div>
   </section>;
 }

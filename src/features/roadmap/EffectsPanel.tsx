@@ -32,29 +32,41 @@ export function EffectsPanel({ open, onToggle, effects, onChange, c }: {
   open: boolean; onToggle: () => void; effects: Effects; onChange: (e: Effects) => void; c: RoadmapCopy;
 }) {
   const set = (patch: Partial<Effects>) => onChange({ ...effects, ...patch });
-  const modes: [BackgroundMode, string][] = [["network", c.network], ["code", c.codeRain], ["both", c.both], ["none", c.none]];
+  // Short code-style names on screen; the full names stay for screen readers.
+  const modes: [BackgroundMode, string, string][] = [["network", "network", c.network], ["code", "rain", c.codeRain], ["both", "both", c.both], ["none", "none", c.none]];
+  const flags: ["aurora" | "grid" | "flow", string, string][] = [["aurora", "aurora_glow", c.aurora], ["grid", "grid_drift", c.grid], ["flow", "flow_connectors", c.flow]];
   return <>
     <div className={`fx${open ? " open" : ""}`} id="roadmap-effects" role="dialog" aria-label={c.effectsTitle} hidden={!open}>
-      <h3>{c.effectsTitle}</h3>
-      <p>{c.effectsIntro}</p>
-      <fieldset className="seg">
-        <legend className="sr-only">{c.mode}</legend>
-        {modes.map(([value, label]) => <label key={value}>
-          <input type="radio" name="roadmap-fx-mode" value={value} checked={effects.mode === value} onChange={() => set({ mode: value })} />
-          <span>{label}</span>
-        </label>)}
-      </fieldset>
-      <label className="chk"><input type="checkbox" checked={effects.aurora} onChange={e => set({ aurora: e.target.checked })} /> {c.aurora}</label>
-      <label className="chk"><input type="checkbox" checked={effects.grid} onChange={e => set({ grid: e.target.checked })} /> {c.grid}</label>
-      <label className="chk"><input type="checkbox" checked={effects.flow} onChange={e => set({ flow: e.target.checked })} /> {c.flow}</label>
-      <label className="chk" style={{ flexDirection: "column", alignItems: "stretch", gap: 4 }}>
-        {c.intensity}
-        <input type="range" min={20} max={100} value={Math.round(effects.intensity * 100)} onChange={e => set({ intensity: Number(e.target.value) / 100 })} />
-      </label>
+      <div className="fx-tb"><i aria-hidden="true" /><i aria-hidden="true" /><i aria-hidden="true" /><h3>effects.config</h3>
+        <button type="button" aria-label={c.close} onClick={onToggle}>✕</button></div>
+      <div className="fx-body">
+        <p className="fx-cm">&quot; {c.effectsIntro}</p>
+        <fieldset className="seg">
+          <legend><b>mode</b> =<span className="sr-only"> {c.mode}</span></legend>
+          {modes.map(([value, short, label]) => <label key={value} title={label}>
+            <input type="radio" name="roadmap-fx-mode" value={value} aria-label={label} checked={effects.mode === value} onChange={() => set({ mode: value })} />
+            <span aria-hidden="true">{short}</span>
+          </label>)}
+        </fieldset>
+        <div className="fx-flags">{flags.map(([key, name, label]) => <label className="chk" key={key}>
+          <input type="checkbox" checked={effects[key]} onChange={e => set({ [key]: e.target.checked })} />
+          <span className="box" aria-hidden="true">{effects[key] ? "[x]" : "[ ]"}</span>
+          <span className="nm" aria-hidden="true">{name}</span><span className="sr-only">{label}</span>
+          <span className="val" aria-hidden="true">{effects[key] ? "abap_true" : "abap_false"}</span>
+        </label>)}</div>
+        <label className="fx-rng">
+          <span><b>intensity</b> =<span className="sr-only"> {c.intensity}</span></span>
+          <span className="row">
+            <input type="range" min={20} max={100} value={Math.round(effects.intensity * 100)} onChange={e => set({ intensity: Number(e.target.value) / 100 })} />
+            <output aria-hidden="true">{Math.round(effects.intensity * 100)}</output>
+          </span>
+        </label>
+      </div>
+      <div className="fx-foot" aria-hidden="true"><span>● live preview</span><span>saved on this device</span></div>
     </div>
     <button type="button" className="fxbtn" aria-expanded={open} aria-controls="roadmap-effects" onClick={onToggle}>
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="M12 3l2.2 5.6L20 11l-5.8 2.4L12 19l-2.2-5.6L4 11l5.8-2.4z" /></svg>
-      {c.effects}
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1" /></svg>
+      <span className="fx-name">{c.effects}</span><kbd aria-hidden="true">E</kbd>
     </button>
   </>;
 }

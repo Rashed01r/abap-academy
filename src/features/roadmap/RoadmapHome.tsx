@@ -10,6 +10,7 @@ import { TCODE_XP } from "./data/tcodes";
 import AnimatedBackground from "./AnimatedBackground";
 import { RoadmapCanvas, type RoadmapCanvasHandle } from "./RoadmapCanvas";
 import { DetailDrawer, type LessonStatus } from "./DetailDrawer";
+import { lessonFile } from "./NodeCard";
 import { EffectsPanel, EFFECTS_KEY, defaultEffects, readEffects, type Effects } from "./EffectsPanel";
 import { MobileRoadmap } from "./MobileRoadmap";
 import "./roadmap.css";
@@ -131,9 +132,14 @@ export function RoadmapHome({ lang, progress, setProgress, ready, focusMission, 
     window.setTimeout(() => canvas.current?.flash(n.id), 60);
   }, [reset]);
 
-  // Escape closes the drawer, the search results and the effects panel.
+  // Escape closes the drawer, the search results and the effects panel; "/" jumps to search and "E" toggles effects.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      const typing = e.target instanceof HTMLElement && (e.target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName));
+      if (!typing && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        if (e.key === "/") { e.preventDefault(); document.querySelector<HTMLInputElement>(".roadmap-home .q")?.focus(); return; }
+        if (e.key === "e" || e.key === "E") { setFxOpen(o => !o); return; }
+      }
       if (e.key !== "Escape") return;
       setResultsOpen(false);
       setFxOpen(false);
@@ -164,6 +170,7 @@ export function RoadmapHome({ lang, progress, setProgress, ready, focusMission, 
   const kindLabel = (n: RoadmapNode) => n.tcode ? n.tcode.code : n.kind === "lesson" ? c.resultLesson : n.kind === "cat" ? (n.branch === "tcodes" ? c.resultGroup : c.resultTopic) : c.resultPath;
   const searchSlot = ready ? document.getElementById("academy-header-search") : null;
   const search = <div className="searchwrap" onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setResultsOpen(false); }}>
+    <span className="q-prompt" aria-hidden="true">›</span><kbd className="q-key" aria-hidden="true">/</kbd>
     <input className="q" type="search" role="combobox" aria-autocomplete="list" autoComplete="off" value={query} placeholder={c.search} aria-label={c.searchLabel}
       aria-expanded={resultsOpen && !!query.trim()} aria-controls="roadmap-search-results"
       onFocus={() => setResultsOpen(true)}
@@ -198,8 +205,9 @@ export function RoadmapHome({ lang, progress, setProgress, ready, focusMission, 
     n.kind === "tcode" ? !!progress.tcodes?.includes(n.id)
       : n.kind === "lesson" && n.missionId ? (n.missionId === "orientation" ? progress.labs.includes("orientation") : progress.missions.includes(n.missionId))
         : false, [progress]);
+  const isStarted = useCallback((n: RoadmapNode) => !!n.missionId && !!progress.started?.includes(n.missionId), [progress]);
   const lessonStatus: LessonStatus = selected?.missionId
-    ? isDone(selected) ? "completed" : progress.started?.includes(selected.missionId) ? "started" : "new"
+    ? isDone(selected) ? "completed" : isStarted(selected) ? "started" : "new"
     : "new";
 
   function learn(n: RoadmapNode) {
@@ -231,22 +239,29 @@ export function RoadmapHome({ lang, progress, setProgress, ready, focusMission, 
     {searchSlot ? createPortal(search, searchSlot) : null}
     <div className="crumb">
       <nav aria-label={c.breadcrumb}>
+        {/* Shown as a file path (abap / learn / fundamentals); the button keeps the readable name for screen readers. */}
         {crumbs.map((n, i) => <span key={n.id} style={{ display: "contents" }}>
-          {i > 0 && <i aria-hidden="true">→</i>}
-          <button type="button" aria-current={i === crumbs.length - 1 ? "location" : undefined} onClick={() => reveal(n)}>
-            {n.tcode ? n.tcode.code : localizedText(n.label, lang)}
+          {i > 0 && <i aria-hidden="true">/</i>}
+          <button type="button" aria-current={i === crumbs.length - 1 ? "location" : undefined} onClick={() => reveal(n)}
+            aria-label={n.tcode ? n.tcode.code : localizedText(n.label, lang)}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              {n.kind === "root" ? <><circle cx="12" cy="12" r="3" /><circle cx="12" cy="12" r="9" /></>
+                : n.kind === "lesson" || n.kind === "tcode" ? <><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" /><path d="M14 3v6h6" /></>
+                : <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />}
+            </svg>
+            <span dir="ltr">{n.kind === "root" ? "abap" : n.tcode ? `${n.tcode.code}.tcode` : n.kind === "lesson" ? `${lessonFile(n)}.abap` : n.id.split(":").pop()}</span>
           </button>
         </span>)}
       </nav>
-      <span className="hint">{c.hint}</span>
+      <span className="hint">&quot; {c.hint}</span>
     </div>
     {mobile
-      ? <MobileRoadmap root={root} expanded={expanded} selectedId={selectedId} lang={lang} c={c} isDone={isDone} onSelect={select}>
+      ? <MobileRoadmap root={root} expanded={expanded} selectedId={selectedId} lang={lang} c={c} isDone={isDone} isStarted={isStarted} onSelect={select}>
           {drawer}
           <EffectsPanel open={fxOpen} onToggle={() => setFxOpen(o => !o)} effects={effects} onChange={changeEffects} c={c} />
         </MobileRoadmap>
       : <RoadmapCanvas ref={canvas} root={root} all={all} expanded={expanded} selectedId={selectedId} drawerOpen={drawerOpen}
-          lang={lang} c={c} reduceMotion={reduceMotion} tintRef={tintRef} isDone={isDone} onSelect={select} onReset={reset}>
+          lang={lang} c={c} reduceMotion={reduceMotion} tintRef={tintRef} isDone={isDone} isStarted={isStarted} onSelect={select} onReset={reset}>
           {drawer}
           <EffectsPanel open={fxOpen} onToggle={() => setFxOpen(o => !o)} effects={effects} onChange={changeEffects} c={c} />
         </RoadmapCanvas>}

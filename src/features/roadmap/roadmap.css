@@ -53,7 +53,6 @@
 .roadmap-home .xp,.roadmap-home .header-xp{padding:7px 14px;border-radius:999px;border:0;background:rgba(var(--tint),.12);color:rgb(var(--tint));font-size:14px;transition:transform .3s;animation:rm-xp-pop .45s ease}
 @keyframes rm-xp-pop{40%{transform:scale(1.18)}}
 .roadmap-home .pill,.roadmap-home .theme-select{height:44px;display:flex;align-items:center;gap:10px;padding:0 16px;border-radius:12px;border:1px solid rgba(var(--tint),.22);background:rgba(14,31,25,.8);font-size:14px}
-.roadmap-home .theme-select select{color:var(--tx);font-size:14px}
 .roadmap-home > header > .glossary summary,.roadmap-home .sq{width:44px;height:44px;border-radius:12px;border:1px solid rgba(var(--tint),.22);background:rgba(14,31,25,.8);display:grid;place-items:center}
 .roadmap-home > header > .glossary dl{background:#0d1d17;border-color:rgba(var(--tint),.3)}
 
@@ -200,9 +199,6 @@
 .roadmap-home .m-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
 .roadmap-home .m-list .m-list{margin-top:10px;padding-inline-start:14px;border-inline-start:1px solid rgba(var(--tint),.25)}
 .roadmap-home .m-item .card{min-height:72px;height:auto;padding-inline-end:44px}
-.roadmap-home .m-item .k-path{min-height:104px}
-.roadmap-home .m-item .k-path .chip{position:static;margin-top:6px}
-.roadmap-home .m-item .k-tcode{padding-inline-end:70px}
 .roadmap-home .m-item .card:hover{transform:none}
 @media(max-width:820px){
   .roadmap-home .crumb{padding:10px 16px;overflow-x:auto}
@@ -215,3 +211,237 @@
 .lesson-view .lesson-view-body.connected-lesson-node{position:relative;min-width:0;width:100%;max-height:none;height:auto;margin:0;resize:none;border:0;border-radius:0;touch-action:auto}
 .lesson-view-bar .secondary{min-height:40px}
 .lesson-view-bar nav span[aria-current]{color:var(--ink)}
+
+/* lesson cards + lesson drawer: "IDE Terminal" style (docs/roadmap-redesign/lesson-card-styles.html, option B) */
+.roadmap-home .k-lesson{padding:0;gap:0;border-radius:10px;background:#0a1813;border-color:rgba(var(--c),.18);backdrop-filter:none}
+.roadmap-home .k-lesson .bar{display:flex;align-items:center;gap:0;padding:6px 10px;font-family:var(--mono);font-size:10.5px;color:var(--mu);border-bottom:1px solid rgba(var(--c),.12);background:rgba(var(--c),.04);white-space:nowrap}
+.roadmap-home .k-lesson .bar .id{color:rgb(var(--c));overflow:hidden;text-overflow:ellipsis;min-width:0}
+.roadmap-home .k-lesson .led{margin-inline-start:auto;padding-inline-start:8px;display:flex;align-items:center;gap:5px}
+.roadmap-home .k-lesson .led i{width:7px;height:7px;border-radius:50%;background:rgba(148,181,168,.4)}
+.roadmap-home .k-lesson.started .led i{background:#f0c969}
+.roadmap-home .k-lesson.done .led i{background:rgb(var(--c));box-shadow:0 0 8px rgb(var(--c))}
+.roadmap-home .k-lesson.done::after{content:none}
+.roadmap-home .k-lesson .in{padding:8px 10px 0;display:flex;flex-direction:column;gap:2px;min-width:0}
+.roadmap-home .k-lesson .t{font-family:var(--mono);font-size:13.5px;font-weight:600;-webkit-line-clamp:1}
+.roadmap-home .k-lesson .t::before{content:'› ';color:rgb(var(--c))}
+.roadmap-home .k-lesson .s{font-size:11.5px;padding-inline-start:14px}
+.roadmap-home .k-lesson:hover{border-color:rgba(var(--c),.5);background:#0c1d17;transform:none}
+.roadmap-home .k-lesson:hover .t::after{content:'_';color:rgb(var(--c));animation:rm-blink 1s steps(1) infinite}
+.roadmap-home .k-lesson.act{border-color:rgb(var(--c));background:#0a1813;box-shadow:0 0 0 3px rgba(var(--c),.12)}
+.roadmap-home .k-lesson.act .bar{background:rgba(var(--c),.14);color:var(--tx)}
+.roadmap-home .k-lesson.planned{opacity:.7}
+.roadmap-home .m-item .k-lesson{padding:0 0 10px}
+
+.roadmap-home .drawer.ide{padding:0;border-radius:14px;background:#08150f;display:flex;flex-direction:column}
+.roadmap-home .ide .x{top:6px;inset-inline-end:8px;width:28px;height:28px;border:0;border-radius:6px;color:var(--mu)}
+.roadmap-home .ide .x:hover{background:rgba(255,255,255,.07);color:var(--tx)}
+.roadmap-home .ide .tb{display:flex;align-items:center;gap:7px;padding:12px 12px;border-bottom:1px solid rgba(var(--c),.15);background:#0b1c16}
+.roadmap-home .ide .tb i{width:10px;height:10px;border-radius:50%;background:#2a4239}
+.roadmap-home .ide .tb .f{font-family:var(--mono);font-size:12px;color:var(--mu);margin-inline-start:8px}
+.roadmap-home .ide .pad{padding:20px;display:flex;flex-direction:column;gap:16px;flex:1}
+.roadmap-home .ide .cm{font-family:var(--mono);font-size:12px;color:#5c7a6f}
+.roadmap-home .ide h2{font-family:var(--mono);font-size:21px;margin:0;padding:0}
+.roadmap-home .ide .kv{margin:0;font-family:var(--mono);font-size:13px;border:1px solid rgba(var(--c),.12);border-radius:10px;overflow:hidden}
+.roadmap-home .ide .kv div{display:grid;grid-template-columns:120px 1fr;padding:9px 12px;border-bottom:1px solid rgba(var(--c),.08)}
+.roadmap-home .ide .kv div:last-child{border:0}
+.roadmap-home .ide .kv dt{color:#7fb5d6}
+.roadmap-home .ide .kv dd{margin:0;color:var(--tx);font-family:var(--font-inter),Inter,system-ui,sans-serif;font-size:13.5px}
+.roadmap-home .ide .kv dd.str{color:#f0c969}
+.roadmap-home .ide .cta{margin-top:auto;display:flex;align-items:center;justify-content:space-between;width:100%;padding:13px 16px;border-radius:10px;border:1px solid rgb(var(--c));background:rgba(var(--c),.12);color:rgb(var(--c));font-family:var(--mono);font-weight:600;transition:background .15s,color .15s}
+.roadmap-home .ide .cta:hover{background:rgb(var(--c));color:#04120c}
+.roadmap-home .ide .cta.off{background:transparent}
+@media (prefers-reduced-motion: reduce){.roadmap-home .k-lesson:hover .t::after{animation:none}}
+
+/* T-code cards: same "IDE Tab" card as lessons, in amber (docs/roadmap-redesign/tcode-card-styles.html, option C) */
+.roadmap-home .k-tcode,.roadmap-home .m-item .k-tcode{padding:0;gap:0;border-radius:10px;background:#0f150e;border-color:rgba(var(--c),.18);backdrop-filter:none}
+.roadmap-home .k-tcode .bar{display:flex;align-items:center;padding:6px 10px;font-family:var(--mono);font-size:10.5px;color:var(--mu);border-bottom:1px solid rgba(var(--c),.12);background:rgba(var(--c),.05);white-space:nowrap}
+.roadmap-home .k-tcode .code{font-size:12px;font-weight:700}
+.roadmap-home .k-tcode .cl{margin-left:8px;font-family:var(--font-inter),Inter,system-ui,sans-serif;font-size:10px;border:1px solid rgba(148,181,168,.3);border-radius:4px;padding:0 5px}
+/* frequency dots become signal bars on the card; the drawer keeps dots */
+.roadmap-home .k-tcode .dots{position:static;margin-left:auto;align-items:flex-end;gap:2px;height:12px}
+.roadmap-home .k-tcode .dots b{width:3px;height:5px;border:0;border-radius:1px;background:rgba(var(--c),.22)}
+.roadmap-home .k-tcode .dots b:nth-child(2){height:8px}
+.roadmap-home .k-tcode .dots b:nth-child(3){height:12px}
+.roadmap-home .k-tcode .dots b.on{background:rgb(var(--c))}
+.roadmap-home .k-tcode .in{padding:8px 10px 0;display:flex;flex-direction:column;gap:2px;min-width:0}
+.roadmap-home .k-tcode .t{font-family:var(--mono);font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.roadmap-home .k-tcode .t::before{content:'› ';color:rgb(var(--c))}
+.roadmap-home .k-tcode .s{font-size:11.5px;padding-inline-start:14px;-webkit-line-clamp:1}
+.roadmap-home .m-item .k-tcode{padding-bottom:10px}
+.roadmap-home .m-item .k-tcode .s{-webkit-line-clamp:2}
+.roadmap-home .k-tcode:hover{border-color:rgba(var(--c),.5);background:#141a10;transform:none}
+.roadmap-home .k-tcode:hover .t::after{content:'_';color:rgb(var(--c));animation:rm-blink 1s steps(1) infinite}
+.roadmap-home .k-tcode.act{border-color:rgb(var(--c));background:#0f150e;box-shadow:0 0 0 3px rgba(var(--c),.12)}
+.roadmap-home .k-tcode.act .bar{background:rgba(var(--c),.15);color:var(--tx)}
+.roadmap-home .k-tcode.done::after{content:none}
+.roadmap-home .k-tcode.done .bar::after{content:'✓';margin-left:6px;width:14px;height:14px;border-radius:50%;background:rgb(var(--c));color:#1a1205;display:grid;place-items:center;font-size:9px;font-family:var(--font-inter),Inter,system-ui,sans-serif;font-weight:700;box-shadow:0 0 8px rgb(var(--c))}
+@media (prefers-reduced-motion: reduce){.roadmap-home .k-tcode:hover .t::after{animation:none}}
+
+/* path and group cards: "IDE Tab" folders that hold the lesson and T-code files */
+.roadmap-home .k-path,.roadmap-home .k-cat,.roadmap-home .m-item .k-path,.roadmap-home .m-item .k-cat{padding:0;gap:0;border-radius:10px;background:#0b1712;border-color:rgba(var(--c),.22);backdrop-filter:none}
+.roadmap-home .k-path{border-color:rgba(var(--c),.5);border-radius:12px}
+.roadmap-home .k-path .bar,.roadmap-home .k-cat .bar{display:flex;align-items:center;gap:6px;padding:6px 8px 6px 10px;font-family:var(--mono);font-size:11px;color:rgb(var(--c));border-bottom:1px solid rgba(var(--c),.14);background:rgba(var(--c),.06);white-space:nowrap}
+.roadmap-home .k-path .bar{padding-block:8px;background:rgba(var(--c),.1)}
+.roadmap-home .k-path .ico{flex:none;width:14px;height:14px;margin:0;background:none;border-radius:0}
+.roadmap-home .k-path .chip,.roadmap-home .k-cat .chip{position:static;margin:0 0 0 auto;font-family:var(--font-inter),Inter,system-ui,sans-serif;font-size:10.5px;padding:1px 7px;border-radius:5px}
+.roadmap-home .k-path .chev,.roadmap-home .k-cat .chev{position:static;flex:none;width:16px;height:16px;font-size:10px}
+.roadmap-home .k-path .in,.roadmap-home .k-cat .in{padding:8px 10px 0;display:flex;flex-direction:column;gap:3px;min-width:0}
+.roadmap-home .k-path .t,.roadmap-home .k-cat .t{font-family:var(--mono);font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.roadmap-home .k-path .t{font-size:16px}
+.roadmap-home .k-path .t::before,.roadmap-home .k-cat .t::before{content:'› ';color:rgb(var(--c))}
+.roadmap-home .k-path .s,.roadmap-home .k-cat .s{font-size:11.5px;padding-inline-start:14px}
+.roadmap-home .m-item .k-path,.roadmap-home .m-item .k-cat{padding-bottom:10px}
+.roadmap-home .k-path:hover,.roadmap-home .k-cat:hover{border-color:rgba(var(--c),.6);background:#0e1c16;transform:none}
+.roadmap-home .k-path:hover .t::after,.roadmap-home .k-cat:hover .t::after{content:'_';color:rgb(var(--c));animation:rm-blink 1s steps(1) infinite}
+.roadmap-home .k-path.act,.roadmap-home .k-cat.act{border-color:rgb(var(--c));background:#0b1712;box-shadow:0 0 0 3px rgba(var(--c),.12),0 0 26px -8px rgba(var(--c),.5)}
+.roadmap-home .k-path.act .bar,.roadmap-home .k-cat.act .bar{background:rgba(var(--c),.18);color:var(--tx)}
+@media (prefers-reduced-motion: reduce){.roadmap-home .k-path:hover .t::after,.roadmap-home .k-cat:hover .t::after{animation:none}}
+
+/* ABAP hub: "IDE Tab" editor window, keeps its glow and spinning edge light */
+.roadmap-home .k-root{padding:0;gap:0;justify-content:flex-start;align-items:stretch;border-radius:14px;background:radial-gradient(circle at 50% 65%,rgba(var(--c),.2),#08150f 75%)}
+.roadmap-home .k-root::after{border-radius:20px}
+.roadmap-home .k-root .bar{display:flex;align-items:center;gap:5px;padding:7px 10px;border-bottom:1px solid rgba(var(--c),.2);background:rgba(var(--c),.08);border-radius:13px 13px 0 0}
+.roadmap-home .k-root .bar i{width:7px;height:7px;border-radius:50%;background:#2a4239}
+.roadmap-home .k-root .bar i:first-child{background:rgb(var(--c));box-shadow:0 0 6px rgb(var(--c))}
+.roadmap-home .k-root .f{margin-inline-start:4px;font-family:var(--mono);font-size:10.5px;color:var(--mu)}
+.roadmap-home .k-root .in{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.roadmap-home .k-root .rt{font-family:var(--mono);font-size:40px;letter-spacing:-2px;line-height:1}
+.roadmap-home .k-root .rt::after{content:'_';font-weight:400;opacity:.8;animation:rm-blink 1s steps(1) infinite}
+.roadmap-home .k-root .rs{font-family:var(--mono);font-size:10px}
+@media (prefers-reduced-motion: reduce){.roadmap-home .k-root .rt::after{animation:none}}
+
+/* ===== "IDE" chrome: header as a title bar, breadcrumb as a path, toolbar as a debugger bar, effects as a config file.
+   Roadmap and Contact only; lesson pages keep the app header. ===== */
+.roadmap-home{--dim:#5c7a6f;--str:#f0c969;--key:#7fb5d6}
+.roadmap-home kbd{font-family:var(--mono);font-size:10.5px;padding:1px 5px;border-radius:4px;border:1px solid rgba(var(--tint),.3);color:var(--mu);background:rgba(var(--tint),.05)}
+.roadmap-home > header{gap:0;padding:0;min-height:52px;align-items:stretch;background:rgba(8,20,15,.9)}
+.roadmap-home .brand{margin:0;min-height:52px;padding:0 18px;gap:10px;border-radius:0;border-inline-end:1px solid rgba(var(--tint),.12);font-family:var(--mono);font-size:15px;font-weight:700;letter-spacing:0;text-transform:lowercase}
+.roadmap-home .brand-icon{width:30px;height:30px;border-radius:8px}
+.roadmap-home .brand-icon svg{width:18px;height:18px}
+.roadmap-home .brand-dot{display:inline;color:rgb(var(--tint))}
+.roadmap-home .brand-light{margin:0;font-weight:700}
+/* nav = editor tabs */
+.roadmap-home > header nav{margin:0;gap:0;align-items:stretch}
+.roadmap-home > header nav button{position:relative;height:auto;padding:0 16px;gap:8px;border:0;border-inline-end:1px solid rgba(var(--tint),.08);border-radius:0;font-family:var(--mono);font-size:12.5px;color:var(--mu)}
+.roadmap-home > header nav button:hover{color:var(--tx);background:rgba(var(--tint),.04)}
+.roadmap-home > header nav .nav-active{color:var(--tx);background:var(--bg)}
+.roadmap-home > header nav .nav-active svg{color:rgb(var(--tint))}
+.roadmap-home > header nav .nav-active::before{content:"";position:absolute;inset:0 0 auto;height:2px;background:rgb(var(--tint));box-shadow:0 0 8px rgb(var(--tint))}
+.roadmap-home .nav-label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.roadmap-home .nav-file{display:inline}
+/* search = command bar */
+.roadmap-home #academy-header-search{display:flex;align-items:center;max-width:none;padding:0 14px}
+.roadmap-home .searchwrap{width:100%;max-width:680px;margin:0 auto}
+.roadmap-home .q{height:34px;border-radius:8px;padding:0 40px 0 30px;font-family:var(--mono);font-size:12.5px;background:#0a1813;border-color:rgba(var(--tint),.2)}
+.roadmap-home .q:focus-visible{outline:none;border-color:rgb(var(--tint));box-shadow:0 0 0 3px rgba(var(--tint),.12)}
+.roadmap-home .q-prompt{position:absolute;inset-inline-start:12px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-weight:700;color:rgb(var(--tint));pointer-events:none}
+.roadmap-home .q-key{position:absolute;inset-inline-end:8px;top:50%;transform:translateY(-50%);pointer-events:none}
+.roadmap-home .searchwrap:focus-within .q-key{display:none}
+.roadmap-home .sr{top:40px}
+/* right side = status widgets */
+.roadmap-home .header-settings{padding:0 8px 0 14px;gap:8px}
+.roadmap-home .header-xp{display:flex;align-items:center;gap:6px;height:30px;padding:0 10px;border-radius:7px;border:1px solid rgba(var(--tint),.25);background:rgba(var(--tint),.08);font-family:var(--mono);font-size:12px}
+.roadmap-home .header-xp i{width:7px;height:7px;border-radius:50%;background:rgb(var(--tint));box-shadow:0 0 6px rgb(var(--tint))}
+.roadmap-home > header > .glossary{align-self:center;margin-inline-end:14px}
+.roadmap-home > header > .glossary summary{width:30px;height:30px;border-radius:7px;color:var(--mu)}
+
+/* breadcrumb = file path */
+.roadmap-home .crumb{align-items:center;min-height:34px;padding:0 18px;font-family:var(--mono);font-size:12.5px}
+.roadmap-home .crumb nav{gap:4px;flex-wrap:nowrap;white-space:nowrap;color:var(--mu)}
+.roadmap-home .crumb nav button{display:flex;align-items:center;gap:6px;padding:3px 6px;border-radius:5px;color:var(--mu)}
+.roadmap-home .crumb nav button:hover{background:rgba(var(--tint),.08);color:var(--tx);text-decoration:none}
+.roadmap-home .crumb nav button svg{color:rgb(var(--tint));opacity:.8}
+.roadmap-home .crumb nav [aria-current]{color:rgb(var(--tint));font-weight:600}
+.roadmap-home .crumb nav i{color:#3b5a4f;opacity:1}
+.roadmap-home .crumb .hint{color:var(--dim)}
+
+/* view toolbar = debugger bar */
+.roadmap-home .tools{gap:0;padding:0;align-items:stretch;border-radius:10px;border-color:rgba(var(--tint),.28);overflow:hidden;font-family:var(--mono);box-shadow:0 14px 30px -12px rgba(0,0,0,.7)}
+.roadmap-home .tools .grp{display:flex;align-items:center;gap:2px;padding:4px;border-inline-end:1px solid rgba(var(--tint),.12)}
+.roadmap-home .tools .grp:last-child{border:0}
+.roadmap-home .tools button{display:flex;align-items:center;gap:7px;height:32px;padding:0 10px;border-radius:6px;font-size:12.5px}
+.roadmap-home .tools button svg{color:rgb(var(--tint))}
+.roadmap-home .tools .ico{width:32px;padding:0;justify-content:center;font-size:16px;color:rgb(var(--tint))}
+.roadmap-home .tools output{min-width:52px;font-size:12.5px;color:var(--str)}
+
+/* effects = config file */
+.roadmap-home .fxbtn{height:42px;padding:0 14px;border-radius:10px;font-family:var(--mono);font-size:12.5px}
+.roadmap-home .fxbtn svg{color:rgb(var(--tint))}
+.roadmap-home .fxbtn[aria-expanded=true]{border-color:rgb(var(--tint));background:rgba(var(--tint),.12)}
+.roadmap-home .fx-name{text-transform:lowercase}
+.roadmap-home .fx{width:330px;bottom:70px;padding:0;gap:0;border-radius:12px;overflow:hidden;font-family:var(--mono);font-size:12.5px;box-shadow:0 30px 60px rgba(0,0,0,.55)}
+.roadmap-home .fx-tb{display:flex;align-items:center;gap:6px;padding:9px 10px;border-bottom:1px solid rgba(var(--tint),.14);background:#0b1c16}
+.roadmap-home .fx-tb i{width:9px;height:9px;border-radius:50%;background:#2a4239}
+.roadmap-home .fx-tb i:first-child{background:rgb(var(--tint));box-shadow:0 0 6px rgb(var(--tint))}
+.roadmap-home .fx .fx-tb h3{margin:0 0 0 6px;font-size:11.5px;font-weight:400;color:var(--mu)}
+.roadmap-home .fx-tb button{margin-inline-start:auto;width:24px;height:24px;border:0;border-radius:5px;background:none;color:var(--mu)}
+.roadmap-home .fx-tb button:hover{background:rgba(255,255,255,.07);color:var(--tx)}
+.roadmap-home .fx-body{display:flex;flex-direction:column;gap:12px;padding:12px 14px 14px}
+.roadmap-home .fx .fx-cm{margin:0;font-size:11.5px;line-height:1.5;color:var(--dim)}
+.roadmap-home .fx .seg{grid-template-columns:repeat(4,1fr);gap:4px}
+.roadmap-home .fx legend{padding:0;margin-bottom:7px;color:var(--key)}
+.roadmap-home .fx legend b,.roadmap-home .fx-rng b{color:rgb(var(--tint));font-weight:600}
+.roadmap-home .fx .seg span{padding:7px 0;border-radius:6px;font-size:11.5px;color:var(--mu);border-color:rgba(var(--tint),.18)}
+.roadmap-home .fx .seg input:checked+span{color:var(--str);background:rgba(var(--tint),.14)}
+.roadmap-home .fx .seg input:checked+span::before,.roadmap-home .fx .seg input:checked+span::after{content:"\27"}
+.roadmap-home .fx-flags{display:flex;flex-direction:column;gap:2px}
+.roadmap-home .fx .chk{position:relative;gap:10px;padding:5px 6px;border-radius:6px;font-size:12.5px;cursor:pointer}
+.roadmap-home .fx .chk:hover{background:rgba(var(--tint),.06)}
+.roadmap-home .fx .chk input{position:absolute;opacity:0;width:1px;height:1px}
+.roadmap-home .fx .chk .box{width:28px;color:var(--dim)}
+.roadmap-home .fx .chk input:checked~.box{color:rgb(var(--tint))}
+.roadmap-home .fx .chk input:focus-visible~.box{outline:2px solid rgb(var(--tint));outline-offset:2px;border-radius:3px}
+.roadmap-home .fx .chk .val{margin-inline-start:auto;font-size:11px;color:var(--dim)}
+.roadmap-home .fx .chk input:checked~.val{color:var(--str)}
+.roadmap-home .fx-rng{display:flex;flex-direction:column;gap:4px;color:var(--key)}
+.roadmap-home .fx-rng .row{display:flex;align-items:center;gap:10px}
+.roadmap-home .fx-rng input{flex:1}
+.roadmap-home .fx-rng output{min-width:26px;text-align:end;color:var(--str)}
+.roadmap-home .fx-foot{display:flex;justify-content:space-between;padding:5px 12px;font-size:10.5px;color:#04120c;background:rgb(var(--tint))}
+
+@media(max-width:820px){
+  .roadmap-home > header{flex-wrap:wrap}
+  .roadmap-home .brand{border:0;min-height:50px}
+  .roadmap-home > header nav{margin-inline-start:auto}
+  .roadmap-home > header nav button{min-height:50px;padding:0 14px}
+  .roadmap-home > header nav button:first-child{border-inline-start:1px solid rgba(var(--tint),.08)}
+  .roadmap-home .nav-file{display:none}
+  .roadmap-home #academy-header-search{padding:0 12px 10px}
+  .roadmap-home .q-key{display:none}
+  .roadmap-home .header-settings{padding:0 12px}
+  .roadmap-home .crumb .hint{display:none}
+}
+/* beat the app-wide #academy-header-search input and nav .nav-active rules */
+.roadmap-home #academy-header-search input.q{min-height:0;height:34px;padding:0 40px 0 30px;font-size:12.5px;background:#0a1813}
+.roadmap-home.immersive-academy > header nav button,.roadmap-home.immersive-academy > header nav button.nav-active{border:0;border-inline-end:1px solid rgba(var(--tint),.08)}
+/* tabs: fill the title bar; the active tab opens into the breadcrumb bar like an editor tab */
+.roadmap-home.immersive-academy > header{padding:0;min-height:52px;gap:0;align-items:stretch}
+.roadmap-home.immersive-academy > header nav{align-self:stretch;align-items:stretch;gap:0;margin:0}
+.roadmap-home.immersive-academy > header nav button{position:relative;display:flex;align-items:center;gap:9px;min-height:0;height:auto;margin:0;padding:0 20px;border:0;border-inline-end:1px solid rgba(var(--tint),.1);border-radius:0;background:transparent;color:var(--mu);font-family:var(--mono);font-size:12.5px;transition:color .15s,background .15s}
+.roadmap-home.immersive-academy > header nav button svg{width:15px;height:15px;color:var(--dim);transition:color .15s}
+.roadmap-home.immersive-academy > header nav button:hover{color:var(--tx);background:rgba(var(--tint),.05)}
+.roadmap-home.immersive-academy > header nav button:hover svg{color:var(--mu)}
+.roadmap-home.immersive-academy > header nav button.nav-active{color:var(--tx);background:linear-gradient(rgba(var(--tint),.09),rgba(7,18,14,.6))}
+.roadmap-home.immersive-academy > header nav button.nav-active svg{color:rgb(var(--tint))}
+.roadmap-home.immersive-academy > header nav button.nav-active::after{content:"";position:absolute;inset:auto 0 -1px;height:1px;background:rgba(7,18,14,1)}
+@media(max-width:820px){.roadmap-home.immersive-academy > header nav button{min-height:50px;padding:0 16px}.roadmap-home.immersive-academy > header nav button.nav-active::after{display:none}}
+.roadmap-home.immersive-academy > header > .glossary{align-self:center;margin:0 14px 0 0}
+@media(max-width:820px){.roadmap-home.immersive-academy > header{flex-wrap:wrap}.roadmap-home.immersive-academy > header nav{order:1;flex:0 0 auto;width:auto;margin-inline-start:auto;justify-content:flex-end}.roadmap-home.immersive-academy > header .brand{order:0}.roadmap-home #academy-header-search{order:5;flex-basis:100%}}
+
+/* glossary popover = an editor window "glossary.abap": numbered term lines, definitions as ABAP comments */
+.roadmap-home.immersive-academy > header > .glossary .glossary-pop{position:absolute;inset-inline-end:0;top:calc(100% + 8px);z-index:40;width:min(520px,92vw);display:flex;flex-direction:column;border-radius:12px;border:1px solid rgba(var(--tint),.32);background:rgba(8,21,15,.98);backdrop-filter:blur(12px);box-shadow:0 30px 60px rgba(0,0,0,.55);overflow:hidden;font-family:var(--mono)}
+.roadmap-home .glossary-tb{display:flex;align-items:center;gap:6px;padding:9px 12px;border-bottom:1px solid rgba(var(--tint),.14);background:#0b1c16}
+.roadmap-home .glossary-tb i{width:9px;height:9px;border-radius:50%;background:#2a4239}
+.roadmap-home .glossary-tb i:first-child{background:rgb(var(--tint));box-shadow:0 0 6px rgb(var(--tint))}
+.roadmap-home .glossary-tb span{margin-inline-start:6px;font-size:11.5px;color:var(--mu)}
+.roadmap-home.immersive-academy > header > .glossary .glossary-pop dl{position:static;width:auto;max-height:min(460px,60dvh);margin:0;padding:10px 0;overflow:auto;border:0;border-radius:0;background:linear-gradient(90deg,transparent 41px,rgba(var(--tint),.08) 41px 42px,transparent 42px);box-shadow:none;
+  display:block;counter-reset:gl}
+.roadmap-home .glossary-pop dl > div{position:relative;padding:7px 16px 7px 56px;counter-increment:gl;border-radius:0}
+.roadmap-home .glossary-pop dl > div:hover{background:rgba(var(--tint),.05)}
+.roadmap-home .glossary-pop dl > div::before{content:counter(gl);position:absolute;inset-inline-start:0;top:8px;width:32px;text-align:end;font-size:11px;color:#3b5a4f}
+.roadmap-home .glossary-pop dt{font-size:13px;font-weight:600;color:var(--tx)}
+.roadmap-home .glossary-pop dt::before{content:"› ";color:rgb(var(--tint))}
+.roadmap-home .glossary-pop dd{margin:3px 0 0;font-size:12px;line-height:1.55;color:var(--mu)}
+.roadmap-home .glossary-pop dd::before{content:'" ';color:var(--dim)}
+.roadmap-home .glossary-foot{display:flex;justify-content:space-between;padding:5px 12px;font-size:10.5px;color:#04120c;background:rgb(var(--tint))}
+.roadmap-home > header > .glossary[open] summary{border-color:rgb(var(--tint));color:rgb(var(--tint));background:rgba(var(--tint),.12)}

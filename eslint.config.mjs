@@ -10,8 +10,6 @@ const eslintConfig = defineConfig([
     // Default ignores of eslint-config-next:
     ".next/**",
     "public/monaco/**",
-    "playwright-report/**",
-    "test-results/**",
     "out/**",
     "build/**",
     "next-env.d.ts",

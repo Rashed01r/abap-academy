@@ -77,6 +77,8 @@
 .add-controls { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .75rem; margin-top: 1rem; }
 .add-controls > button:first-child { padding: .5rem .9rem; border: 1px solid var(--line); border-radius: 8px; background: transparent; }
 .add-progress { color: var(--muted); font-size: .9rem; }
+.add-next { display: flex; flex-wrap: wrap; gap: .5rem; }
+.add-next > button:not(.primary) { padding: .5rem .9rem; border: 1px solid var(--line); border-radius: 8px; background: transparent; }
 
 .add-mistakes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; }
 .add-mistakes article { min-width: 0; padding: .9rem; border: 1px solid var(--line); border-radius: 10px; background: var(--surface2); }

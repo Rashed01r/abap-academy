@@ -173,8 +173,9 @@ header {
 }
 .brand-light {
   font-weight: 400;
-  margin-inline-start: 3px;
+  margin-inline-start: .3em;
 }
+.brand-dot, .nav-file, .glossary-tb, .glossary-foot { display: none; }
 .brand sup {
   font-size: 10px;
   letter-spacing: 0;
